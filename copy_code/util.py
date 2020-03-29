@@ -1,4 +1,3 @@
-from step0_access_path import access_path
 import numpy as np  
 import cv2 
 import os
@@ -164,6 +163,7 @@ def method2(x, y, color_shift=1):       ### 最大位移量不可以超過 255�
 
 #######################################################
 def predict_unet_move_maps_back(predict_move_maps):
+    from step0_access_path import access_path
     train_move_maps = get_dir_move(access_path+"datasets/pad2000-512to256/train/move_maps")
     max_train_move = train_move_maps.max()
     min_train_move = train_move_maps.min()
@@ -196,6 +196,7 @@ def time_util(cost_time):
 #######################################################
 
 if(__name__=="__main__"):
+    from step0_access_path import access_path
     # in_imgs = get_dir_img(access_path+"datasets/wei_book/in_imgs")
     # gt_imgs = get_dir_img(access_path+"datasets/wei_book/gt_imgs")
     

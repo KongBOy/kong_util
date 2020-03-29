@@ -2,7 +2,6 @@ import os
 import shutil
 import cv2
 import numpy as np
-import scipy.misc
 import random
 
 
@@ -141,6 +140,7 @@ def Crop_use_center(ord_dir = "",
 
 
 def Resize(ord_dir,dst_dir,width = 300, height = 400):
+    import scipy.misc
     '''
     在這裡寫註解，就可以看到
     '''
