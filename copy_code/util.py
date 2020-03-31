@@ -194,9 +194,49 @@ def time_util(cost_time):
     return "%02i:%02i:%02i"%(hour, minute, second)
 
 #######################################################
+def Show_3d_bar(one_channel_img = ""):
+    import matplotlib.pyplot as plt 
+    from mpl_toolkits.mplot3d import Axes3D
+    import numpy as np 
+    import cv2
+
+
+    fig = plt.figure(0)
+    ax = Axes3D(fig)
+
+    ax.set_xlabel("x")
+    ax.set_ylabel("y")
+    ax.set_zlabel("z")
+
+    height, width = one_channel_img.shape[:2]
+    draw_x = np.zeros(one_channel_img.shape[:2]) + np.arange(width ).reshape(1,-1) 
+    ### draw_x 長得像：
+    # [[ 0.  1.  2. ... 37. 38. 39.]
+    # [ 0.  1.  2. ... 37. 38. 39.]
+    # [ 0.  1.  2. ... 37. 38. 39.]
+    # ...
+    # [ 0.  1.  2. ... 37. 38. 39.]
+    # [ 0.  1.  2. ... 37. 38. 39.]
+    # [ 0.  1.  2. ... 37. 38. 39.]]
+    draw_y = np.zeros(one_channel_img.shape[:2]) + np.arange(height).reshape(-1,1)
+    ### draw_y 長得像：
+    # [[ 0.  0.  0. ...  0.  0.  0.]
+    # [ 1.  1.  1. ...  1.  1.  1.]
+    # [ 2.  2.  2. ...  2.  2.  2.]
+    # ...
+    # [37. 37. 37. ... 37. 37. 37.]
+    # [38. 38. 38. ... 38. 38. 38.]
+    # [39. 39. 39. ... 39. 39. 39.]]
+
+    ### ravel是拉平的意思，相當於flatten的概念
+    ax.bar3d( draw_x.ravel(), draw_y.ravel(), np.zeros(height*width), 1, 1, one_channel_img.ravel())#s = 1,edgecolors = "black")
+
+    cv2.imshow("one_channel_img",one_channel_img)
+    plt.show()
+
 
 if(__name__=="__main__"):
-    from step0_access_path import access_path
+    # from step0_access_path import access_path
     # in_imgs = get_dir_img(access_path+"datasets/wei_book/in_imgs")
     # gt_imgs = get_dir_img(access_path+"datasets/wei_book/gt_imgs")
     
