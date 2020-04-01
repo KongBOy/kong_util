@@ -194,7 +194,102 @@ def time_util(cost_time):
     return "%02i:%02i:%02i"%(hour, minute, second)
 
 #######################################################
-def Show_3d_bar(one_channel_img = ""):
+def Show_3d_scatter(one_channel_img, save_name):
+    import matplotlib.pyplot as plt 
+    from mpl_toolkits.mplot3d import Axes3D
+    import numpy as np 
+    import cv2 
+
+    fig, ax = plt.subplots(1,1)
+    fig.set_size_inches(10,10)
+    ax = Axes3D(fig)
+    ax.set_xlabel("x"); ax.set_ylabel("y"); ax.set_zlabel("z") ### 設定 x,y,z軸顯示的字
+    # ax.set_zlim(-20, 30) ### 設定 z範圍
+
+
+    row, col = one_channel_img.shape[:2]
+    x, y = get_xy_map(row,col)
+    ax.scatter(x,y,one_channel_img, 
+               s=1,                     ### 點點的 大小
+            #    linewidths = 1,        ### 點點的 邊寬
+            #    edgecolors = "black"   ### 點點的 邊邊顏色
+              c = np.arange(row*col),   ### 彩色
+              )
+
+    fig_img, ax_img = plt.subplots(1,1)
+    ax_img.imshow(one_channel_img)
+    plt.show()
+
+
+
+def Show_3d_scatter_along_xy(one_channel_img, along, save_name):
+    import matplotlib.pyplot as plt 
+    from mpl_toolkits.mplot3d import Axes3D
+    import numpy as np 
+    import cv2 
+    import time
+
+    ### 第一張圖：one_channel_img的長相
+    fig_img, ax_img = plt.subplots(1,1) ### 建立新畫布
+    ax_img.imshow(one_channel_img)      ### 畫上原影像
+
+    ### 第二張圖：沿著x走一個個col顯示結果 或 沿著y走一個個row顯示結果
+    row, col = one_channel_img.shape[:2]  ### 取得row, col
+    x, y = get_xy_map(row,col)            ### 取得 x=[[0,1,2,...,col],[0,1,2,...,col],...,[0,1,2,...,col]] 和 y=[[0,0,...,0],[1,1,...,1],...,[row,row,...,row]]
+
+    fig, ax = plt.subplots(1,1) ### 建立新畫布
+    fig.set_size_inches(10,10)  ### 設定畫布大小
+    ax = Axes3D(fig)            ### 轉成3D畫布
+    ax.set_xlabel("x") ; ax.set_ylabel("y") ; ax.set_zlabel("z")    ### 設定 x,y,z軸顯示的字
+    ax.set_xlim(0, col); ax.set_ylim(0, row); ax.set_zlim(-30,  30) ### 設定 x,y,z顯示的範圍
+
+    plt.ion()
+    plt.show()
+    ### 沿著x走一個個col顯示結果
+    if  (along=="x"): 
+        for go_x in range(col): 
+            print("go_x=",go_x)
+            ax.scatter(np.ones(row)*go_x, y[:, go_x] ,one_channel_img[:, go_x], s=1,c = np.arange(row),)
+            plt.pause(1)
+    ### 沿著y走一個個row顯示結果
+    elif(along=="y"): 
+        for go_y in range(row): 
+            print("go_y=",go_y)
+            ax.scatter(x[go_y], np.ones(col)*go_y ,one_channel_img[go_y], s=1,c = np.arange(col),)
+            plt.pause(1)
+    
+    plt.show()
+
+def Show_2d_scatter_along_x(one_channel_img, save_name):
+    import matplotlib.pyplot as plt 
+    from mpl_toolkits.mplot3d import Axes3D
+    import numpy as np 
+    import cv2 
+
+    fig, ax = plt.subplots(1,1)
+    fig.set_size_inches(10,10)
+    ax.set_xlabel("y"); ax.set_ylabel("z") ### 設定 x,y軸顯示的字
+    # ax.set_zlim(-20, 30) ### 設定 z範圍
+
+
+    row, col = one_channel_img.shape[:2]
+    x, y = get_xy_map(row,col)
+    ax.scatter(y[:,0],one_channel_img[:,0], 
+               s=1,                     ### 點點的 大小
+            #    linewidths = 1,        ### 點點的 邊寬
+            #    edgecolors = "black"   ### 點點的 邊邊顏色
+              c = np.arange(row),   ### 彩色
+              )
+
+    for go_x in range(col):
+        ax.set_offsets(one_channel_img[:,go_x]) 
+
+    fig_img, ax_img = plt.subplots(1,1)
+    ax_img.imshow(one_channel_img)
+    plt.show()
+
+
+def Show_3d_bar(one_channel_img, save_name):
     import matplotlib.pyplot as plt 
     from mpl_toolkits.mplot3d import Axes3D
     import numpy as np 
@@ -202,12 +297,16 @@ def Show_3d_bar(one_channel_img = ""):
 
 
     fig = plt.figure(0)
+    fig.set_size_inches(10, 10)
     ax = Axes3D(fig)
+    ax.set_xlabel("x"); ax.set_ylabel("y"); ax.set_zlabel("z")
+    ax.set_zlim(-20, 30)
 
-    ax.set_xlabel("x")
-    ax.set_ylabel("y")
-    ax.set_zlabel("z")
-
+    h = 360
+    w = 270
+    sub = 5
+    one_channel_img = cv2.resize(one_channel_img, (int(w/sub), int(h/sub))) 
+    print("one_channel_img.shape",one_channel_img.shape)
     height, width = one_channel_img.shape[:2]
     draw_x = np.zeros(one_channel_img.shape[:2]) + np.arange(width ).reshape(1,-1) 
     ### draw_x 長得像：
@@ -232,6 +331,7 @@ def Show_3d_bar(one_channel_img = ""):
     ax.bar3d( draw_x.ravel(), draw_y.ravel(), np.zeros(height*width), 1, 1, one_channel_img.ravel())#s = 1,edgecolors = "black")
 
     cv2.imshow("one_channel_img",one_channel_img)
+    # plt.savefig( save_name+".png" )
     plt.show()
 
 
