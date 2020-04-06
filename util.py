@@ -335,8 +335,25 @@ def Show_3d_bar(one_channel_img, save_name):
     plt.show()
 
 
+def Show_move_map_apply(move_map):
+    import matplotlib.pyplot as plt
+    row, col = move_map.shape[:2] ### 取得 row, col
+    x, y = get_xy_map(row, col)   ### 取得 x, y 起始座標
+    xy = np.dstack((x, y))        ### concat起來
+    xy_move = xy + move_map       ### apply move
+
+
+    fig, ax = plt.subplots(1,1)  ### 建立新圖
+    ax.set_title("move_map_apply") ### 設定圖的title
+    # ax_img = ax.scatter(xy_move[...,0],xy_move[...,1]) ### 單色
+    ax_img = ax.scatter(xy_move[...,0],xy_move[...,1], c = np.arange(row*col).reshape(row,col), cmap="brg") ### 彩色
+    ax = ax.invert_yaxis() ### 整張圖上下顛倒，為了符合影像是左上角(0,0)
+    fig.colorbar(ax_img,ax=ax)
+    plt.show()
+
+
 if(__name__=="__main__"):
-    # from step0_access_path import access_path
+    from step0_access_path import access_path
     # in_imgs = get_dir_img(access_path+"datasets/wei_book/in_imgs")
     # gt_imgs = get_dir_img(access_path+"datasets/wei_book/gt_imgs")
     
