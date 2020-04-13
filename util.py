@@ -21,12 +21,22 @@ def get_dir_certain_file_name(ord_dir, certain_word):
     file_names = [file_name for file_name in os.listdir(ord_dir) if (certain_word in file_name)]
     return file_names
 
-def get_dir_certain_img(ord_dir, certain_word):
+def get_dir_dir_name(ord_dir):
+    file_names = [file_name for file_name in os.listdir(ord_dir) if os.path.isdir(ord_dir+"/"+file_name) ]
+    return file_names
+
+def get_dir_certain_dir_name(ord_dir, certain_word):
+    file_names = [file_name for file_name in os.listdir(ord_dir) if ((certain_word in file_name) and os.path.isdir(ord_dir+"/"+file_name)) ]
+    return file_names
+
+
+def get_dir_certain_img(ord_dir, certain_word, float_return =True):
     file_names = [file_name for file_name in os.listdir(ord_dir) if check_img_file_name(file_name) and (certain_word in file_name) ]
     img_list = []
     for file_name in file_names:
         img_list.append( cv2.imread(ord_dir + "/" + file_name) )
-    img_list = np.array(img_list, dtype=np.float32)
+    if(float_return): img_list = np.array(img_list, dtype=np.float32)
+    else:             img_list = np.array(img_list, dtype=np.uint8)
     return img_list
 
 def get_dir_certain_move(ord_dir, certain_word):
@@ -37,12 +47,13 @@ def get_dir_certain_move(ord_dir, certain_word):
     move_map_list = np.array(move_map_list, dtype=np.float32)
     return move_map_list
 
-def get_dir_img(ord_dir):
+def get_dir_img(ord_dir, float_return =True):
     file_names = [file_name for file_name in os.listdir(ord_dir) if check_img_file_name(file_name) ]
     img_list = []
     for file_name in file_names:
         img_list.append( cv2.imread(ord_dir + "/" + file_name) )
-    img_list = np.array(img_list, dtype=np.uint8)
+    if(float_return): img_list = np.array(img_list, dtype=np.float32)
+    else:             img_list = np.array(img_list, dtype=np.uint8)
     return img_list
 
 
