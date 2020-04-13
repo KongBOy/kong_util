@@ -6,7 +6,7 @@ import random
 
 
 def Check_img_filename(file_name):
-    if(".jpg" in file_name.lower() or "jpeg" in file_name.lower() or ".png" in file_name.lower()):
+    if(".jpg" in file_name.lower() or "jpeg" in file_name.lower() or ".png" in file_name.lower() or ".bmp" in file_name.lower()):
         return True
     else:
         return False
@@ -139,8 +139,7 @@ def Crop_use_center(ord_dir = "",
         # print(left_top_file_name, "finished!!")
 
 
-def Resize(ord_dir,dst_dir,width = 300, height = 400):
-    import scipy.misc
+def Resize_hw(ord_dir, dst_dir, height, width, method="cv2"):
     '''
     在這裡寫註解，就可以看到
     '''
@@ -152,12 +151,16 @@ def Resize(ord_dir,dst_dir,width = 300, height = 400):
     file_names = [file_name for file_name in file_names if Check_img_filename(file_name)]
     for file_name in file_names:
         ord_img = cv2.imread(ord_dir + "/" + file_name)
-        #resize = cv2.resize(ord_img, (width, height), interpolation=cv2.INTER_CUBIC)
-        resize = scipy.misc.imresize(ord_img, [height,width])
+        if(method=="cv2"):
+            resize = cv2.resize(ord_img, (width, height), interpolation=cv2.INTER_CUBIC)
+        else:
+            import scipy.misc
+            resize = scipy.misc.imresize(ord_img, [height,width])
+
         #cv2.imshow("resize",resize)
         #cv2.waitKey(0)
         cv2.imwrite(dst_dir + "/" + file_name, resize)
-        print(dst_dir + "/" + file_name,"finished!")
+        print("Resize:", dst_dir + "/" + file_name,"finished!")
 
 def Crop_row_random(ord_dir = "",dst_dir = "",seed = 10,crop_num = 4,
                     image_range_width = 800, image_range_height = 1068 ,
@@ -337,8 +340,35 @@ def Photo_frame_padding(ord_dir, dst_dir, left_pad=140, top_pad=50, right_pad=14
         print(dst_dir + "/" + file_name, "finished!!")
 
 
+def Save_as_bmp(ord_dir, dst_dir):
+    ### 建立放結果的資料夾，如果有上次建立的結果要先刪掉
+    Check_dir_exist_and_build(dst_dir)
+
+    file_names = [file_name for file_name in os.listdir(ord_dir) if Check_img_filename(file_name)]
+    for file_name in file_names:
+        file_title, file_ext = file_name.split(".") ### 把 檔名前半 後半 分開
+        if(file_ext != "bmp"):                ### 如果附檔名不是bmp，把圖讀出來，存成bmp
+            import cv2 
+            img = cv2.imread(ord_dir + "/" + file_name)       ### 把圖讀出來
+            cv2.imwrite(dst_dir + "/" + file_title+".bmp", img) ### 存成bmp
+            print("Save_as_bmp", ord_dir + "/" + file_name, "save as", dst_dir + "/" + file_title+".bmp", "finish~~")
 
 
+def Pad_lrtd_and_resize_same_size(ord_dir, dst_dir,l,r,t,d):
+    ### 建立放結果的資料夾，如果有上次建立的結果要先刪掉
+    Check_dir_exist_and_build(dst_dir)
+
+    print("ord_dir",ord_dir)
+    file_names = [file_name for file_name in os.listdir(ord_dir) if Check_img_filename(file_name)]
+    print("file_names",file_names)
+    for file_name in file_names:
+        img = cv2.imread(ord_dir + "/" + file_name)       ### 把圖讀出來
+        ord_h, ord_w = img.shape[:2]
+        pad_img = np.pad(img, ( (t,d), (l,r), (0,0) ), "constant")
+        pad_resize_img = cv2.resize(pad_img, (ord_w, ord_h), interpolation=cv2.INTER_CUBIC)
+        
+        cv2.imwrite(dst_dir + "/" + file_name, pad_resize_img)       
+        print("Pad and Resize:", dst_dir + "/" + file_name, "finished!!")
 ##############################################################################################################################################################
 ##############################################################################################################################################################
 
