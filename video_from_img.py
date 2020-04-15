@@ -25,8 +25,8 @@ def Video_combine_from_dir(ord_dir, file_name="combine.avi"):
     imgs = get_dir_img( ord_dir, float_return=False)
     Video_combine_from_imgs(imgs, file_name)
 
-
-ord_dir = access_path + "result" + "/" + "wei_book_tf1_db_20200408-225902_model5_rect2" + "/epoch_add_num"
-Video_combine_from_certain_dir(ord_dir, "combine.avi")
-# ord_dir = access_path + "result" + "/" + "wei_book_tf1_db_20200410-025655_model6_mrf_rect2" + "/epoch_add_num"
-# Video_combine_from_certain_dir(ord_dir, "combine.avi")
+if(__name__=="__main__"):
+    ord_dir = access_path + "result" + "/" + "wei_book_tf1_db_20200408-225902_model5_rect2" + "/epoch_add_num_into_img"
+    Video_combine_from_certain_dir(ord_dir, "combine.avi")
+    # ord_dir = access_path + "result" + "/" + "wei_book_tf1_db_20200410-025655_model6_mrf_rect2" + "/epoch_add_num"
+    # Video_combine_from_certain_dir(ord_dir, "combine.avi")
