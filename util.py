@@ -47,7 +47,7 @@ def get_dir_certain_move(ord_dir, certain_word):
     move_map_list = np.array(move_map_list, dtype=np.float32)
     return move_map_list
 
-def get_dir_img(ord_dir, float_return =True):
+def get_dir_img(ord_dir, float_return =False):
     file_names = [file_name for file_name in os.listdir(ord_dir) if check_img_file_name(file_name) ]
     img_list = []
     for file_name in file_names:

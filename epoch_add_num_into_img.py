@@ -7,7 +7,7 @@ from util import get_dir_certain_file_name
 from build_dataset_combine import Check_dir_exist_and_build
 
 
-def epoch_add_num(ord_dir, dst_dir):
+def epoch_add_num_into_img(ord_dir, dst_dir):
     Check_dir_exist_and_build(dst_dir)
     file_names = get_dir_certain_file_name(ord_dir, ".png")
     for file_name in file_names:
@@ -23,7 +23,7 @@ if(__name__ == "__main__"):
 
     ord_dir = access_dir + "/" + "wei_book_tf1_db_20200408-225902_model5_rect2"
     dst_dir = ord_dir    + "/" + "epoch_add_num"
-    epoch_add_num(ord_dir, dst_dir)
+    epoch_add_num_into_img(ord_dir, dst_dir)
 
     # ord_dir = access_dir + "/" + "wei_book_tf1_db_20200410-025655_model6_mrf_rect2"
     # dst_dir = ord_dir    + "/" + "epoch_add_num"
