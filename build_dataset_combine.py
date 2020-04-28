@@ -13,16 +13,16 @@ def Check_img_filename(file_name):
 
 
 ### 建立放結果的資料夾，如果有上次建立的結果要先刪掉
-def Check_dir_exist_and_build(dir_name):
+def Check_dir_exist_and_build(dir_name, show_msg=False):
     if(os.path.isdir( dir_name)): ### 如果有上次建立的結果要先刪掉
-        print(dir_name,"已存在，不建立新資料夾")
+        if(show_msg):print(dir_name,"已存在，不建立新資料夾")
     else:
         os.makedirs( dir_name, exist_ok=True)
 
 ### 建立放結果的資料夾，如果有上次建立的結果要先刪掉
-def Check_dir_exist_and_build_new_dir(dir_name):
+def Check_dir_exist_and_build_new_dir(dir_name, show_msg=False):
     if(os.path.isdir( dir_name)): ### 如果有上次建立的結果要先刪掉
-        print(dir_name,"已存在，刪除已存在的資料夾，並建立新的資料夾")
+        if(show_msg):print(dir_name,"已存在，刪除已存在的資料夾，並建立新的資料夾")
         shutil.rmtree( dir_name)
     os.makedirs( dir_name, exist_ok=True)
 
@@ -351,28 +351,39 @@ def Save_as_gray(ord_dir, dst_dir, gray_three_channel=True):
             gray_img = gray_img[:,:,np.newaxis]
             gray_img = np.tile(gray_img, (1,1,3))
         cv2.imwrite(dst_dir + "/" + file_name, gray_img)
-    
 
-def Save_as_bmp(ord_dir, dst_dir, gray=False, gray_three_channel=False):
+import cv2 
+import os
+def _Save_as_certain_image_type(image_type, ord_dir, dst_dir, gray=False, gray_three_channel=False, delete_ord_file=False, show_msg=False):
     ### 建立放結果的資料夾，如果有上次建立的結果要先刪掉
+    ### 以下註解都是用 bmp當例子
     Check_dir_exist_and_build(dst_dir)
 
     file_names = [file_name for file_name in os.listdir(ord_dir) if Check_img_filename(file_name)]
     for file_name in file_names:
-        file_title, file_ext = file_name.split(".") ### 把 檔名前半 後半 分開
-        if(file_ext != "bmp"):                ### 如果附檔名不是bmp，把圖讀出來，存成bmp
-            import cv2 
-            img = cv2.imread(ord_dir + "/" + file_name)       ### 把圖讀出來
+        file_title, file_ext = file_name.split(".")      ### 把 檔名前半 後半 分開
+        if(file_ext != image_type):                      ### 如果附檔名不是bmp，把圖讀出來，存成bmp
+            img = cv2.imread(ord_dir + "/" + file_name)  ### 把圖讀出來
             if  ( gray ): 
-                img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)  ### 如果要轉灰階，就轉灰階
-                if(gray_three_channel):
-                    img = img[:,:,np.newaxis]
-                    img = np.tile(img, (1,1,3))
-                
-            print(img.shape)
+                img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)  ### 如果要轉灰階，就轉灰階，轉完注意只有 h,w，沒有channel喔！
+                if(gray_three_channel):         ### (h,w)   轉成 (h,w,3)
+                    img = img[:,:,np.newaxis]   ### (h,w)   轉 (h,w,1)
+                    img = np.tile(img, (1,1,3)) ### (h,w,1) 擴增成 (h,w,3)
+            cv2.imwrite(dst_dir + "/" + file_title+"."+image_type, img) ### 存成bmp
+            if(show_msg): print("Save_as_%s"%image_type, ord_dir + "/" + file_name, "save as", dst_dir + "/" + file_title+".%s"%image_type, "finish~~")
+            # print("Save_as_%s"%image_type ,"finish~~")
 
-            cv2.imwrite(dst_dir + "/" + file_title+".bmp", img) ### 存成bmp
-            print("Save_as_bmp", ord_dir + "/" + file_name, "save as", dst_dir + "/" + file_title+".bmp", "finish~~")
+            if(delete_ord_file): os.remove(ord_dir + "/" + file_name) ### 把原檔刪掉
+    # if(delete_ord_file): 
+    #     for file_name in file_names: os.remove(ord_dir + "/" + file_name) ### 把原檔刪掉
+
+
+def Save_as_jpg(ord_dir, dst_dir, gray=False, gray_three_channel=False, delete_ord_file=False):
+    _Save_as_certain_image_type("jpg", ord_dir, dst_dir, gray=gray, gray_three_channel=gray_three_channel, delete_ord_file=delete_ord_file)
+
+def Save_as_bmp(ord_dir, dst_dir, gray=False, gray_three_channel=False, delete_ord_file=False):
+    _Save_as_certain_image_type("bmp", ord_dir, dst_dir, gray=gray, gray_three_channel=gray_three_channel, delete_ord_file=delete_ord_file)
+
 
 
 
