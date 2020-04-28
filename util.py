@@ -363,6 +363,65 @@ def Show_move_map_apply(move_map):
     plt.show()
 
 
+### imgs是個list，裡面放的圖片可能不一樣大喔
+def _get_canvas_height(imgs):
+    height_list = []
+    for img in imgs: height_list.append(img.shape[0])
+    return  (max(height_list) // 100+2.0)*0.8  ### 沒有弄得很精準，+1好了
+def _get_canvas_width(imgs):
+    width = 0
+    for img in imgs: width += img.shape[1]
+    return  (width // 100 +3)*0.8### 沒有弄得很精準，+1好了
+
+def matplot_visual_one_row_imgs(titles, imgs, text="epoch = 1005", dst_dir=".", file_name="combine.avi"):
+    title_amount = len(titles)
+    img_amount   = len(imgs)
+
+    #### 防呆 ####################################################
+    if( title_amount < img_amount):
+        for _ in range(img_amount - title_amount):
+            titles.append("")
+    elif(title_amount > img_amount):
+        print("title 太多了，沒有圖可以對應")
+        return 
+    
+    if(img_amount == 0): 
+        print("沒圖可show喔！")
+        return 
+    ###########################################################
+
+    canvas_height = _get_canvas_height(imgs)
+    canvas_width  = _get_canvas_width(imgs)
+    # print("canvas_height",canvas_height)
+    # print("canvas_width",canvas_width)
+    
+    fig, ax = plt.subplots(nrows=1, ncols=img_amount)
+    ### 這就是手動微調 text的位置囉ˊ口ˋ
+    if  (img_amount <  3):fig.text(x=0.5, y=0.95, s=text,fontsize=20, c=(0.,0.,0.,1.), horizontalalignment='center',)#, horizontalalignment='center', verticalalignment='center', transform=ax.transAxes)
+    elif(img_amount == 3):fig.text(x=0.5, y=0.93, s=text,fontsize=20, c=(0.,0.,0.,1.),  horizontalalignment='center',)#, horizontalalignment='center', verticalalignment='center', transform=ax.transAxes)
+    elif(img_amount >  3):fig.text(x=0.5, y=0.90, s=text,fontsize=20, c=(0.,0.,0.,1.),  horizontalalignment='center',)#, horizontalalignment='center', verticalalignment='center', transform=ax.transAxes)
+    fig.set_size_inches(canvas_width, canvas_height) ### 設定 畫布大小
+    
+    
+    for go_img, img in enumerate(imgs):
+        if(img_amount > 1):
+            ax[go_img].imshow(img) ### 小畫布 畫上影像
+            ax[go_img].set_title( titles[go_img], fontsize=16 ) ### 小畫布上的 title
+            
+            plt.sca(ax[go_img])  ### plt指向目前的 小畫布 這是為了設定 yticks和xticks
+            plt.yticks( (0, img.shape[0]), (0, img.shape[0]) )  ### 設定 y軸 顯示的字，前面的tuple是位置，後面的tuple是要顯示的字
+            plt.xticks( (0, img.shape[1]), ("", img.shape[1]) ) ### 設定 x軸 顯示的字，前面的tuple是位置，後面的tuple是要顯示的字
+        else:
+            ax.imshow(img) ### 小畫布 畫上影像
+            ax.set_title( titles[go_img], fontsize=16 ) ### 小畫布上的 title
+            
+            plt.yticks( (0, img.shape[0]), (0, img.shape[0]) )  ### 設定 y軸 顯示的字，前面的tuple是位置，後面的tuple是要顯示的字
+            plt.xticks( (0, img.shape[1]), ("", img.shape[1]) ) ### 設定 x軸 顯示的字，前面的tuple是位置，後面的tuple是要顯示的字
+
+    plt.savefig(dst_dir+"/"+file_name)
+    plt.close()  ### 一定要記得關喔！要不然圖開太多會當掉！
+    
+
 if(__name__=="__main__"):
     from step0_access_path import access_path
     # in_imgs = get_dir_img(access_path+"datasets/wei_book/in_imgs")
