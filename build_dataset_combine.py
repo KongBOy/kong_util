@@ -340,7 +340,20 @@ def Photo_frame_padding(ord_dir, dst_dir, left_pad=140, top_pad=50, right_pad=14
         print(dst_dir + "/" + file_name, "finished!!")
 
 
-def Save_as_bmp(ord_dir, dst_dir):
+def Save_as_gray(ord_dir, dst_dir, gray_three_channel=True):
+    ### 建立放結果的資料夾，如果有上次建立的結果要先刪掉
+    Check_dir_exist_and_build(dst_dir)
+
+    file_names = [file_name for file_name in os.listdir(ord_dir) if Check_img_filename(file_name)]
+    for file_name in file_names:
+        gray_img = cv2.imread(ord_dir + "/" + file_name, 0)
+        if(gray_three_channel):
+            gray_img = gray_img[:,:,np.newaxis]
+            gray_img = np.tile(gray_img, (1,1,3))
+        cv2.imwrite(dst_dir + "/" + file_name, gray_img)
+    
+
+def Save_as_bmp(ord_dir, dst_dir, gray=False, gray_three_channel=False):
     ### 建立放結果的資料夾，如果有上次建立的結果要先刪掉
     Check_dir_exist_and_build(dst_dir)
 
@@ -350,8 +363,17 @@ def Save_as_bmp(ord_dir, dst_dir):
         if(file_ext != "bmp"):                ### 如果附檔名不是bmp，把圖讀出來，存成bmp
             import cv2 
             img = cv2.imread(ord_dir + "/" + file_name)       ### 把圖讀出來
+            if  ( gray ): 
+                img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)  ### 如果要轉灰階，就轉灰階
+                if(gray_three_channel):
+                    img = img[:,:,np.newaxis]
+                    img = np.tile(img, (1,1,3))
+                
+            print(img.shape)
+
             cv2.imwrite(dst_dir + "/" + file_title+".bmp", img) ### 存成bmp
             print("Save_as_bmp", ord_dir + "/" + file_name, "save as", dst_dir + "/" + file_title+".bmp", "finish~~")
+
 
 
 def Pad_lrtd_and_resize_same_size(ord_dir, dst_dir,l,r,t,d):
