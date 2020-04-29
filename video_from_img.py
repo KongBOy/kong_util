@@ -13,9 +13,12 @@ def Video_combine_from_imgs(imgs, dst_dir, file_name="combine.avi"):
     
     out = cv2.VideoWriter(dst_dir + "/" + file_name, cv2.VideoWriter_fourcc(*'DIVX'), 15, size)
     
+    print("combining frames~~")
     for i, img in enumerate(imgs): 
         out.write(img)
-        print("frame %04i comibne ok"%i)
+        # print("frame %04i comibne ok"%i)
+        print(".", end="")
+        if(i+1%100==0): print()
     out.release()
 
 def Video_combine_from_certain_dir(ord_dir, dst_dir, file_name="combine.avi"):
