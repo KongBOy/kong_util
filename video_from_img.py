@@ -7,10 +7,15 @@ from util import get_dir_certain_img, get_dir_img
 import cv2
 import numpy as np 
 
-def Video_combine_from_imgs(imgs, dst_dir, file_name="combine.avi"):
+def Video_combine_from_imgs(imgs, dst_dir, file_name="combine.avi", tail_long=False):
     h, w = imgs[0].shape[:2]
     size = (w,h) ### 注意opencv size相關都是 w先再h喔！
     
+    if(tail_long):
+        second = 2
+        temp_imgs = np.tile(imgs[-1:], (15*second,1,1,1)) 
+        imgs = np.concatenate( (imgs,temp_imgs), axis=0 )
+
     out = cv2.VideoWriter(dst_dir + "/" + file_name, cv2.VideoWriter_fourcc(*'DIVX'), 15, size)
     
     print("combining frames~~")
@@ -25,9 +30,9 @@ def Video_combine_from_certain_dir(ord_dir, dst_dir, file_name="combine.avi"):
     imgs = get_dir_certain_img( ord_dir, ".png", float_return=False)
     Video_combine_from_imgs(imgs, dst_dir, file_name)
 
-def Video_combine_from_dir(ord_dir, dst_dir, file_name="combine.avi"):
+def Video_combine_from_dir(ord_dir, dst_dir, file_name="combine.avi", tail_long=True):
     imgs = get_dir_img( ord_dir, float_return=False)
-    Video_combine_from_imgs(imgs, dst_dir, file_name)
+    Video_combine_from_imgs(imgs, dst_dir, file_name, tail_long=tail_long)
 
 def Video_combine_from_2_certain_dir(ord_dir1, ord_dir2, dst_dir, file_name="combine_2_dir_imgs.avi"):
     imgs1 = get_dir_certain_img( ord_dir1, ".png", float_return=False)
