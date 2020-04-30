@@ -405,7 +405,7 @@ def matplot_visual_one_row_imgs(img_titles, imgs, fig_title="epoch = 1005", dst_
     
     for go_img, img in enumerate(imgs):
         if(img_amount > 1):
-            ax[go_img].imshow(img) ### 小畫布 畫上影像
+            ax[go_img].imshow(img[...,::-1]) ### 小畫布 畫上影像，別忘記要bgr -> rgb喔！
             ax[go_img].set_title( img_titles[go_img], fontsize=16 ) ### 小畫布上的 title
             
             plt.sca(ax[go_img])  ### plt指向目前的 小畫布 這是為了設定 yticks和xticks
