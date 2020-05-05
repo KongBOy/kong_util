@@ -64,6 +64,32 @@ def get_dir_move(ord_dir):
         move_map_list.append( np.load(ord_dir + "/" + file_name) )
     move_map_list = np.array(move_map_list, dtype=np.float32)
     return move_map_list
+    
+def get_dir_exr(ord_dir, rgb=False): ### 不要 float_return = True 之類的，因為他存的時候不一定用float32喔！rgb可以轉，已用網站生成的結果比較確認過囉～https://www.onlineconvert.com/exr-to-mat
+    file_names = get_dir_certain_file_name(ord_dir, ".exr")
+
+    imgs = []
+    for file_name in file_names:
+        img = cv2.imread(ord_dir + "/" + file_name, cv2.IMREAD_ANYDEPTH | cv2.IMREAD_UNCHANGED) ### 這行就可以了！
+        if(rgb): img = img[...,::-1]    
+        imgs.append(img)
+        
+    ### 不要轉dtype，因為不確定exr存的是啥米型態！
+    # imgs = np.array(imgs, dtype=np.uint8) 
+    # if(float_return): imgs = np.array(imgs, dtype=np.float32)
+    return np.array(imgs)
+
+def get_dir_mat(ord_dir, key):
+    from hdf5storage import loadmat
+    from util import get_dir_exr
+
+    file_names = get_dir_certain_file_name(ord_dir, ".mat")
+    imgs = []
+    for file_name in file_names:
+        mat = loadmat(ord_dir+"/"+file_name)
+        imgs.append(mat[key])
+    return np.array(imgs)
+    
 
 def get_db_amount(ord_dir):
     file_names = [file_name for file_name in os.listdir(ord_dir) if check_img_file_name(file_name) or (".npy" in file_name) ]
@@ -121,17 +147,23 @@ def get_maxmin_train_move(db_dir="datasets", db_name="1_unet_page_h=384,w=256"):
 
 #######################################################
 ### 用來給視覺化參考的顏色map
-def get_reference_map(ord_dir,color_shift=5): ### 根據你的db內 最大最小值 產生 參考流的map
-    max_move = find_db_max_move(ord_dir)
+def get_reference_map( max_move=0, max_from_move_dir=False, move_dir="", x_decrease=False, y_decrease=False, color_shift=5): ### 根據你的db內 最大最小值 產生 參考流的map
+    max_move = max_move
+    if(max_from_move_dir) : max_move = find_db_max_move(move_dir)
     visual_row = 512
     visual_col = visual_row
     x = np.linspace(-max_move,max_move,visual_col)
-    x = np.tile(x, (visual_row,1))
-    y = x.T
+    if(x_decrease): x = x[::-1]
+    x_map = np.tile(x, (visual_row,1))
 
-    map1 = method1(x, y, max_value=max_move)
-    map2 = method2(x, y, color_shift=color_shift)
-    return map1, map2, x, y
+    y = np.linspace(-max_move,max_move,visual_col)
+    if(y_decrease): y = y[::-1]
+    y_map = np.tile(y, (visual_row,1))
+    y_map = y_map.T
+
+    map1 = method1(x_map, y_map, max_value=max_move)
+    map2 = method2(x_map, y_map, color_shift=color_shift)
+    return map1, map2, x_map, y_map
 
 def find_db_max_move(ord_dir):
     move_map_list = get_dir_move(ord_dir)
@@ -205,7 +237,16 @@ def time_util(cost_time):
     return "%02i:%02i:%02i"%(hour, minute, second)
 
 #######################################################
-def Show_3d_scatter(one_channel_img, save_name):
+def _save_or_show(save, save_name, show):
+    if(save==True and show==True):
+        print("不能同時 save 又 show圖，預設用show圖囉！")
+        plt.show()
+    elif(save==True  and show==False): plt.savefig(save_name)
+    elif(save==False and show==True ): plt.show()
+    plt.close()
+
+
+def Show_3d_scatter(one_channel_img, save=False, save_name="", show=False):
     import matplotlib.pyplot as plt 
     from mpl_toolkits.mplot3d import Axes3D
     import numpy as np 
@@ -217,19 +258,22 @@ def Show_3d_scatter(one_channel_img, save_name):
     ax.set_xlabel("x"); ax.set_ylabel("y"); ax.set_zlabel("z") ### 設定 x,y,z軸顯示的字
     # ax.set_zlim(-20, 30) ### 設定 z範圍
 
-
+    ### 3D Scatter
     row, col = one_channel_img.shape[:2]
     x, y = get_xy_map(row,col)
     ax.scatter(x,y,one_channel_img, 
+    # ax.scatter(x[one_channel_img!=0],y[one_channel_img!=0],one_channel_img[ one_channel_img!=0 ],  ### 這可以 挑 z !=0 的點再plot
                s=1,                     ### 點點的 大小
             #    linewidths = 1,        ### 點點的 邊寬
             #    edgecolors = "black"   ### 點點的 邊邊顏色
               c = np.arange(row*col),   ### 彩色
               )
+    _save_or_show(save, save_name, show)
 
+    ### 2D 直接show
     fig_img, ax_img = plt.subplots(1,1)
     ax_img.imshow(one_channel_img)
-    plt.show()
+    _save_or_show(save, save_name+"-one_channel_img", show)
 
 
 

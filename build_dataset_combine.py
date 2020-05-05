@@ -3,6 +3,7 @@ import shutil
 import cv2
 import numpy as np
 import random
+from util import get_dir_certain_file_name
 
 
 def Check_img_filename(file_name):
@@ -385,6 +386,18 @@ def Save_as_bmp(ord_dir, dst_dir, gray=False, gray_three_channel=False, delete_o
     _Save_as_certain_image_type("bmp", ord_dir, dst_dir, gray=gray, gray_three_channel=gray_three_channel, delete_ord_file=delete_ord_file)
 
 
+def Save_exr_as_mat(ord_dir, dst_dir, key_name):
+    ### 建立放結果的資料夾
+    Check_dir_exist_and_build(dst_dir)
+
+    from hdf5storage import savemat
+    from util import get_dir_exr
+
+    file_names = get_dir_certain_file_name(ord_dir, ".exr")
+    imgs = get_dir_exr(ord_dir)
+
+    for i, file_name in enumerate(file_names):
+        savemat(dst_dir + "/" + file_name, {key_name: imgs[i]} )
 
 
 def Pad_lrtd_and_resize_same_size(ord_dir, dst_dir,l,r,t,d):

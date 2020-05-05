@@ -1,7 +1,7 @@
 import sys 
 sys.path.append("..")
 
-from step0_access_path import access_path
+# from step0_access_path import access_path
 from util import get_dir_certain_img, get_dir_img
 
 import cv2
