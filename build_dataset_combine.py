@@ -355,7 +355,7 @@ def Save_as_gray(ord_dir, dst_dir, gray_three_channel=True):
 
 import cv2 
 import os
-def _Save_as_certain_image_type(image_type, ord_dir, dst_dir, gray=False, gray_three_channel=False, delete_ord_file=False, show_msg=False):
+def _Save_as_certain_image_type(image_type, ord_dir, dst_dir, gray=False, gray_three_channel=False, delete_ord_file=False, show_msg=False, quality_list=None):
     ### 建立放結果的資料夾，如果有上次建立的結果要先刪掉
     ### 以下註解都是用 bmp當例子
     Check_dir_exist_and_build(dst_dir)
@@ -370,7 +370,8 @@ def _Save_as_certain_image_type(image_type, ord_dir, dst_dir, gray=False, gray_t
                 if(gray_three_channel):         ### (h,w)   轉成 (h,w,3)
                     img = img[:,:,np.newaxis]   ### (h,w)   轉 (h,w,1)
                     img = np.tile(img, (1,1,3)) ### (h,w,1) 擴增成 (h,w,3)
-            cv2.imwrite(dst_dir + "/" + file_title+"."+image_type, img) ### 存成bmp
+            if(quality_list is None):cv2.imwrite(dst_dir + "/" + file_title+"."+image_type, img) ### 存成bmp
+            else:cv2.imwrite(dst_dir + "/" + file_title+"."+image_type, img, quality_list)       ### 存成bmp，且 用指定的壓縮品質
             if(show_msg): print("Save_as_%s"%image_type, ord_dir + "/" + file_name, "save as", dst_dir + "/" + file_title+".%s"%image_type, "finish~~")
             # print("Save_as_%s"%image_type ,"finish~~")
 
@@ -379,8 +380,8 @@ def _Save_as_certain_image_type(image_type, ord_dir, dst_dir, gray=False, gray_t
     #     for file_name in file_names: os.remove(ord_dir + "/" + file_name) ### 把原檔刪掉
 
 
-def Save_as_jpg(ord_dir, dst_dir, gray=False, gray_three_channel=False, delete_ord_file=False):
-    _Save_as_certain_image_type("jpg", ord_dir, dst_dir, gray=gray, gray_three_channel=gray_three_channel, delete_ord_file=delete_ord_file)
+def Save_as_jpg(ord_dir, dst_dir, gray=False, gray_three_channel=False, delete_ord_file=False, quality_list=None): ### jpg才有失真壓縮的概念，bmp沒有喔！
+    _Save_as_certain_image_type("jpg", ord_dir, dst_dir, gray=gray, gray_three_channel=gray_three_channel, delete_ord_file=delete_ord_file, quality_list=quality_list)
 
 def Save_as_bmp(ord_dir, dst_dir, gray=False, gray_three_channel=False, delete_ord_file=False):
     _Save_as_certain_image_type("bmp", ord_dir, dst_dir, gray=gray, gray_three_channel=gray_three_channel, delete_ord_file=delete_ord_file)

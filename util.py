@@ -408,14 +408,25 @@ def Show_move_map_apply(move_map):
 
 
 ### imgs是個list，裡面放的圖片可能不一樣大喔
-def _get_canvas_height(imgs):
+def _get_one_row_canvas_height(imgs):
     height_list = []
     for img in imgs: height_list.append(img.shape[0])
     return  (max(height_list) // 100+2.0)*0.8  ### 沒有弄得很精準，+1好了
-def _get_canvas_width(imgs):
+def _get_one_row_canvas_width(imgs):
     width = 0
     for img in imgs: width += img.shape[1]
     return  (width // 100 +3)*0.8### 沒有弄得很精準，+1好了
+
+def _get_row_col_canvas_height(r_c_imgs):
+    height = 0
+    for row_imgs in r_c_imgs: height += row_imgs[0].shape[0]
+    return (height // 100 +0)*0.9
+    
+
+def _get_row_col_canvas_width(r_c_imgs):
+    width = 0
+    for col_imgs in r_c_imgs[0]: width += col_imgs.shape[1]
+    return (width //100 + 1)*0.9
 
 def matplot_visual_one_row_imgs(img_titles, imgs, fig_title="epoch = 1005", dst_dir=".", file_name="one_row_img.png"):
     title_amount = len(img_titles)
@@ -434,8 +445,8 @@ def matplot_visual_one_row_imgs(img_titles, imgs, fig_title="epoch = 1005", dst_
         return 
     ###########################################################
 
-    canvas_height = _get_canvas_height(imgs)
-    canvas_width  = _get_canvas_width(imgs)
+    canvas_height = _get_one_row_canvas_height(imgs)
+    canvas_width  = _get_one_row_canvas_width(imgs)
     # print("canvas_height",canvas_height)
     # print("canvas_width",canvas_width)
     
@@ -465,6 +476,72 @@ def matplot_visual_one_row_imgs(img_titles, imgs, fig_title="epoch = 1005", dst_
     plt.savefig(dst_dir+"/"+file_name)
     plt.close()  ### 一定要記得關喔！要不然圖開太多會當掉！
     
+
+def matplot_visual_multi_row_imgs(img_titles, rows_cols_imgs, fig_title="epoch = 1005", dst_dir=".", file_name="one_row_img.png"):
+    title_amount    = len(img_titles)
+    row_imgs_amount = len(rows_cols_imgs)
+    col_imgs_amount = len(rows_cols_imgs[0])
+
+    #### 防呆 ####################################################
+    if( title_amount < col_imgs_amount):
+        for _ in range(col_imgs_amount - title_amount):
+            img_titles.append("")
+    elif(title_amount > col_imgs_amount):
+        print("title 太多了，沒有圖可以對應")
+        return 
+    
+    if(col_imgs_amount == 0): 
+        print("沒圖可show喔！")
+        return 
+    ###########################################################
+
+    canvas_height = _get_row_col_canvas_height(rows_cols_imgs)
+    canvas_width  = _get_row_col_canvas_width (rows_cols_imgs)
+    # print("canvas_height",canvas_height)
+    # print("canvas_width",canvas_width)
+    
+    fig, ax = plt.subplots(nrows=row_imgs_amount, ncols=col_imgs_amount)
+    ### 這就是手動微調 text的位置囉ˊ口ˋ
+    if  (col_imgs_amount <  3):fig.text(x=0.5, y=0.95, s=fig_title,fontsize=20, c=(0.,0.,0.,1.),  horizontalalignment='center',)#, horizontalalignment='center', verticalalignment='center', transform=ax.transAxes)
+    elif(col_imgs_amount == 3):fig.text(x=0.5, y=0.94, s=fig_title,fontsize=20, c=(0.,0.,0.,1.),  horizontalalignment='center',)#, horizontalalignment='center', verticalalignment='center', transform=ax.transAxes)
+    elif(col_imgs_amount >  3):fig.text(x=0.5, y=0.93, s=fig_title,fontsize=20, c=(0.,0.,0.,1.),  horizontalalignment='center',)#, horizontalalignment='center', verticalalignment='center', transform=ax.transAxes)
+    fig.set_size_inches(canvas_width, canvas_height) ### 設定 畫布大小
+    
+    for go_row, row_imgs in enumerate(rows_cols_imgs): 
+        for go_col, col_img in enumerate(row_imgs):
+            if(col_imgs_amount > 1):
+                ax[go_row, go_col].imshow(col_img[...,::-1]) ### 小畫布 畫上影像，別忘記要bgr -> rgb喔！
+                if(go_row == 0): ax[go_row, go_col].set_title( img_titles[go_col], fontsize=16 ) ### 小畫布上的 title，只有第一row需要喔
+                
+                plt.sca(ax[go_row, go_col])  ### plt指向目前的 小畫布 這是為了設定 yticks和xticks
+                plt.yticks( (0, col_img.shape[0]), (0, col_img.shape[0]) )  ### 設定 y軸 顯示的字，前面的tuple是位置，後面的tuple是要顯示的字
+                plt.xticks( (0, col_img.shape[1]), ("", col_img.shape[1]) ) ### 設定 x軸 顯示的字，前面的tuple是位置，後面的tuple是要顯示的字
+            else:
+                ax[go_row].imshow(col_img) ### 小畫布 畫上影像
+                if(go_row == 0): ax[go_row].set_title( img_titles[go_col], fontsize=16 ) ### 小畫布上的 title，只有第一row需要喔
+                
+                plt.yticks( (0, col_img.shape[0]), (0, col_img.shape[0]) )  ### 設定 y軸 顯示的字，前面的tuple是位置，後面的tuple是要顯示的字
+                plt.xticks( (0, col_img.shape[1]), ("", col_img.shape[1]) ) ### 設定 x軸 顯示的字，前面的tuple是位置，後面的tuple是要顯示的字
+    # plt.show()
+    plt.savefig(dst_dir+"/"+file_name)
+    plt.close()  ### 一定要記得關喔！要不然圖開太多會當掉！
+
+
+def multi_processing_interface(core_amount, task_amount, task, task_args):
+    split_amount = int(task_amount //core_amount)
+    fract_amount = int(task_amount % core_amount)
+
+    from multiprocessing import Process
+    processes = []
+
+    for i in range(core_amount):
+        process_amount = split_amount 
+        if( i==(core_amount-1) and (fract_amount!=0) ): process_amount += fract_amount ### process分配到最後 如果 task_amount 還有剩，就加到最後一個process
+        processes.append(Process( target=task, args=(split_amount*i, process_amount, task_args) ) )
+        print("registering process %02i dealing %04i data"% (i,process_amount) )
+
+    for process in processes:
+        process.start()
 
 if(__name__=="__main__"):
     from step0_access_path import access_path
