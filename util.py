@@ -527,21 +527,36 @@ def matplot_visual_multi_row_imgs(img_titles, rows_cols_imgs, fig_title="epoch =
     plt.close()  ### 一定要記得關喔！要不然圖開太多會當掉！
 
 
-def multi_processing_interface(core_amount, task_amount, task, task_args):
-    split_amount = int(task_amount //core_amount)
-    fract_amount = int(task_amount % core_amount)
-
+def multi_processing_interface(core_amount, task_amount, task, task_args=None):
     from multiprocessing import Process
-    processes = []
+    processes = [] ### 放 Process 的 list
 
-    for i in range(core_amount):
-        process_amount = split_amount 
-        if( i==(core_amount-1) and (fract_amount!=0) ): process_amount += fract_amount ### process分配到最後 如果 task_amount 還有剩，就加到最後一個process
-        processes.append(Process( target=task, args=(split_amount*i, process_amount, task_args) ) )
-        print("registering process %02i dealing %04i data"% (i,process_amount) )
+    for go_core_i in range(core_amount):
+        ### 決定 core_start_index 和 core_task_amount：
+        ###     core_start_index：core 要處理的任務的 start_index
+        ###     core_task_amount：core 要處理的任務數量
+        if(core_amount >= task_amount): 
+            core_start_index = go_core_i ### 如果 core的數量 比 任務數量多，一個任務一個core
+            core_task_amount = 1         ### 如果 core的數量 比 任務數量多，一個任務一個core
+            if(go_core_i >= task_amount-1):break ### 任務分完了，就break囉！要不然沒任務分給core拉
+            
+        elif( core_amount < task_amount):
+            split_amount = int(task_amount //core_amount) ### split_amount 的意思是： 一個core 可以"分到"幾個任務，目前的想法是 一個core對一個process，所以下面的process_amount 一開始設定==split_amount喔！
+            fract_amount = int(task_amount % core_amount) ### fract_amount 的意思是： 任務不一定可以均分給所有core，分完後還剩下多少個任務沒分出來
+
+            core_start_index = split_amount*go_core_i  
+            core_task_amount = split_amount            ### 一個process 要處理幾個任務，目前的想法是 一個core對一個process，所以 一開始設定==split_amount喔！
+            if( go_core_i==(core_amount-1) and (fract_amount!=0) ): core_task_amount += fract_amount ### process分配到最後 如果 task_amount 還有剩，就加到最後一個process
+
+        processes.append(Process( target=task, args=(core_start_index, core_task_amount, task_args) ) ) ### 根據上面的 core_start_index 和 core_task_amount 來 創建 Process
+        print("registering process_%02i dealing %04i~%04i task"% (go_core_i, core_start_index, core_start_index+core_task_amount-1) ) ### 大概顯示這樣的資訊：registering process_00 dealing 0000~0003 task
 
     for process in processes:
         process.start()
+
+    for process in processes:
+        process.join()
+
 
 if(__name__=="__main__"):
     from step0_access_path import access_path
