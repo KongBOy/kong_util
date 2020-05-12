@@ -6,7 +6,7 @@ from util import get_dir_certain_img, get_dir_img
 
 import cv2
 import numpy as np 
-
+from tqdm import tqdm
 def Video_combine_from_imgs(imgs, dst_dir, file_name="combine.avi", tail_long=False):
     h, w = imgs[0].shape[:2]
     size = (w,h) ### 注意opencv size相關都是 w先再h喔！
@@ -19,7 +19,7 @@ def Video_combine_from_imgs(imgs, dst_dir, file_name="combine.avi", tail_long=Fa
     out = cv2.VideoWriter(dst_dir + "/" + file_name, cv2.VideoWriter_fourcc(*'DIVX'), 15, size)
     
     print("combining frames~~")
-    for i, img in enumerate(imgs): 
+    for i, img in enumerate(tqdm(imgs)): 
         out.write(img)
         # print("frame %04i comibne ok"%i)
         print(".", end="")
@@ -44,7 +44,7 @@ def Video_combine_from_2_certain_dir(ord_dir1, ord_dir2, dst_dir, file_name="com
     imgs_2_amount = len(imgs2)
     min_amount = min(imgs_1_amount, imgs_2_amount)
     combine_imgs = np.concatenate( (imgs1[:min_amount], imgs2[:min_amount]), axis=1 ) 
-    for epoch_string, combine_img in enumerate(combine_imgs):
+    for epoch_string, combine_img in enumerate(tqdm(combine_imgs)):
         cv2.putText(combine_img, "%04i"%(epoch_string), (10, int(combine_img.shape[0]/2) ), cv2.FONT_HERSHEY_SIMPLEX, 3, (0, 0, 255), 2, cv2.LINE_AA)
         print("%04i combine_img write epoch_string ok"%(epoch_string))
     # print("combine_imgs.shape",combine_imgs.shape)
@@ -53,7 +53,7 @@ def Video_combine_from_2_certain_dir(ord_dir1, ord_dir2, dst_dir, file_name="com
     Video_combine_from_imgs(combine_imgs, dst_dir, file_name)
 
 def Video_combine_from_certain_dirs(ord_dirs, dst_dir, file_name="combine_2_dir_imgs.avi"):
-    for go_ord_dir, ord_dir in enumerate(ord_dirs):
+    for go_ord_dir, ord_dir in enumerate(tqdm(ord_dirs)):
         print("doing go_ord_dir:", go_ord_dir)
         result_imgs = None
         if(go_ord_dir == 0): ### head
@@ -65,7 +65,7 @@ def Video_combine_from_certain_dirs(ord_dirs, dst_dir, file_name="combine_2_dir_
             head_imgs = np.concatenate( (head_imgs[:min_amount], body_imgs[:min_amount]), axis=1 )
             result_imgs = head_imgs
 
-    for epoch_string, result_img in enumerate(result_imgs):
+    for epoch_string, result_img in enumerate(tqdm(result_imgs)):
         cv2.putText(result_img, "%04i"%(epoch_string), (10, int(result_img.shape[0]/2) ), cv2.FONT_HERSHEY_SIMPLEX, 3, (0, 0, 255), 2, cv2.LINE_AA)
         print("%04i result_img write epoch_string ok"%(epoch_string))
 
