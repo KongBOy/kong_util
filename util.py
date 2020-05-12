@@ -477,16 +477,17 @@ def matplot_visual_one_row_imgs(img_titles, imgs, fig_title="epoch = 1005", dst_
     plt.close()  ### 一定要記得關喔！要不然圖開太多會當掉！
     
 
-def matplot_visual_multi_row_imgs(img_titles, rows_cols_imgs, fig_title="epoch = 1005", dst_dir=".", file_name="one_row_img.png"):
-    title_amount    = len(img_titles)
-    row_imgs_amount = len(rows_cols_imgs)
-    col_imgs_amount = len(rows_cols_imgs[0])
+def matplot_visual_multi_row_imgs(rows_cols_titles, rows_cols_imgs, fig_title="epoch=1005", dst_dir=".", file_name="one_row_img.png"):
+    col_titles_amount = len(rows_cols_titles[0])
+    row_imgs_amount   = len(rows_cols_imgs)
+    col_imgs_amount   = len(rows_cols_imgs[0])
 
     #### 防呆 ####################################################
-    if( title_amount < col_imgs_amount):
-        for _ in range(col_imgs_amount - title_amount):
-            img_titles.append("")
-    elif(title_amount > col_imgs_amount):
+    if( col_titles_amount < col_imgs_amount):
+        for row_titles in rows_cols_titles:
+            for _ in range(col_imgs_amount - col_titles_amount):
+                row_titles.append("")
+    elif(col_titles_amount > col_imgs_amount):
         print("title 太多了，沒有圖可以對應")
         return 
     
@@ -494,7 +495,6 @@ def matplot_visual_multi_row_imgs(img_titles, rows_cols_imgs, fig_title="epoch =
         print("沒圖可show喔！")
         return 
     ###########################################################
-
     canvas_height = _get_row_col_canvas_height(rows_cols_imgs)
     canvas_width  = _get_row_col_canvas_width (rows_cols_imgs)
     # print("canvas_height",canvas_height)
@@ -502,24 +502,25 @@ def matplot_visual_multi_row_imgs(img_titles, rows_cols_imgs, fig_title="epoch =
     
     fig, ax = plt.subplots(nrows=row_imgs_amount, ncols=col_imgs_amount)
     ### 這就是手動微調 text的位置囉ˊ口ˋ
+
     if  (col_imgs_amount <  3):fig.text(x=0.5, y=0.95, s=fig_title,fontsize=20, c=(0.,0.,0.,1.),  horizontalalignment='center',)#, horizontalalignment='center', verticalalignment='center', transform=ax.transAxes)
     elif(col_imgs_amount == 3):fig.text(x=0.5, y=0.94, s=fig_title,fontsize=20, c=(0.,0.,0.,1.),  horizontalalignment='center',)#, horizontalalignment='center', verticalalignment='center', transform=ax.transAxes)
     elif(col_imgs_amount >  3):fig.text(x=0.5, y=0.93, s=fig_title,fontsize=20, c=(0.,0.,0.,1.),  horizontalalignment='center',)#, horizontalalignment='center', verticalalignment='center', transform=ax.transAxes)
     fig.set_size_inches(canvas_width, canvas_height) ### 設定 畫布大小
-    
     for go_row, row_imgs in enumerate(rows_cols_imgs): 
         for go_col, col_img in enumerate(row_imgs):
             if(col_imgs_amount > 1):
                 ax[go_row, go_col].imshow(col_img[...,::-1]) ### 小畫布 畫上影像，別忘記要bgr -> rgb喔！
-                if(go_row == 0): ax[go_row, go_col].set_title( img_titles[go_col], fontsize=16 ) ### 小畫布上的 title，只有第一row需要喔
+                if  (len(rows_cols_titles) >1): ax[go_row, go_col].set_title( rows_cols_titles[go_row][go_col], fontsize=16 ) ### 小畫布　標上小標題
+                elif(len(rows_cols_titles)==1 and go_row==0):ax[go_row, go_col].set_title( rows_cols_titles[go_row][go_col], fontsize=16 ) ### 小畫布　標上小標題
                 
                 plt.sca(ax[go_row, go_col])  ### plt指向目前的 小畫布 這是為了設定 yticks和xticks
                 plt.yticks( (0, col_img.shape[0]), (0, col_img.shape[0]) )  ### 設定 y軸 顯示的字，前面的tuple是位置，後面的tuple是要顯示的字
                 plt.xticks( (0, col_img.shape[1]), ("", col_img.shape[1]) ) ### 設定 x軸 顯示的字，前面的tuple是位置，後面的tuple是要顯示的字
-            else:
+            else: ### 要多這if/else是因為，col_imgs_amount==1時，ax[]只會有一維！用二維的寫法會出錯！所以才獨立出來寫喔～
                 ax[go_row].imshow(col_img) ### 小畫布 畫上影像
-                if(go_row == 0): ax[go_row].set_title( img_titles[go_col], fontsize=16 ) ### 小畫布上的 title，只有第一row需要喔
-                
+                if  (len(rows_cols_titles) >1): ax[go_row].set_title( rows_cols_titles[go_row][go_col], fontsize=16 ) ### 小畫布　標上小標題
+                elif(len(rows_cols_titles)==1 and go_row==0): ax[go_row].set_title( rows_cols_titles[go_row][go_col], fontsize=16 ) ### 小畫布　標上小標題
                 plt.yticks( (0, col_img.shape[0]), (0, col_img.shape[0]) )  ### 設定 y軸 顯示的字，前面的tuple是位置，後面的tuple是要顯示的字
                 plt.xticks( (0, col_img.shape[1]), ("", col_img.shape[1]) ) ### 設定 x軸 顯示的字，前面的tuple是位置，後面的tuple是要顯示的字
     # plt.show()
@@ -538,7 +539,7 @@ def multi_processing_interface(core_amount, task_amount, task, task_args=None):
         if(core_amount >= task_amount): 
             core_start_index = go_core_i ### 如果 core的數量 比 任務數量多，一個任務一個core
             core_task_amount = 1         ### 如果 core的數量 比 任務數量多，一個任務一個core
-            if(go_core_i >= task_amount-1):break ### 任務分完了，就break囉！要不然沒任務分給core拉
+            if(go_core_i >= task_amount):break ### 任務分完了，就break囉！要不然沒任務分給core拉
             
         elif( core_amount < task_amount):
             split_amount = int(task_amount //core_amount) ### split_amount 的意思是： 一個core 可以"分到"幾個任務，目前的想法是 一個core對一個process，所以下面的process_amount 一開始設定==split_amount喔！
@@ -548,7 +549,8 @@ def multi_processing_interface(core_amount, task_amount, task, task_args=None):
             core_task_amount = split_amount            ### 一個process 要處理幾個任務，目前的想法是 一個core對一個process，所以 一開始設定==split_amount喔！
             if( go_core_i==(core_amount-1) and (fract_amount!=0) ): core_task_amount += fract_amount ### process分配到最後 如果 task_amount 還有剩，就加到最後一個process
 
-        processes.append(Process( target=task, args=(core_start_index, core_task_amount, task_args) ) ) ### 根據上面的 core_start_index 和 core_task_amount 來 創建 Process
+        if(task_args is None):processes.append(Process( target=task, args=(core_start_index, core_task_amount) ) ) ### 根據上面的 core_start_index 和 core_task_amount 來 創建 Process
+        else:                 processes.append(Process( target=task, args=(core_start_index, core_task_amount, task_args) ) ) ### 根據上面的 core_start_index 和 core_task_amount 來 創建 Process
         print("registering process_%02i dealing %04i~%04i task"% (go_core_i, core_start_index, core_start_index+core_task_amount-1) ) ### 大概顯示這樣的資訊：registering process_00 dealing 0000~0003 task
 
     for process in processes:
