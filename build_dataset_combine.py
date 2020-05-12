@@ -3,8 +3,9 @@ import shutil
 import cv2
 import numpy as np
 import random
-from util import get_dir_certain_file_name
+from util import get_dir_certain_file_name, get_dir_img_file_names
 
+from tqdm import tqdm
 
 def Check_img_filename(file_name):
     if(".jpg" in file_name.lower() or "jpeg" in file_name.lower() or ".png" in file_name.lower() or ".bmp" in file_name.lower()):
@@ -243,8 +244,8 @@ def Split_train_test(ord_dir,dst_dir,train_dir_name = "", test_dir_name = "",
 ##############################################################################################################################################################
 ##############################################################################################################################################################
 
-def fine_db_left_top_right_down(ord_dir,padding = 0):### padding是 印表機 印出來旁邊自動padding的空白，要自己去嘗試為多少喔！
-    padding = int(padding)
+def Find_db_left_top_right_down(ord_dir,padding = 0, search_amount=-1):### padding是 印表機 印出來旁邊自動padding的空白，要自己去嘗試為多少喔！
+    padding = int(padding) ### 可以把最後找到的 ltrd 往外pad，ex：left-padding, top-padding, right+padding, down+padding
 
     file_names = os.listdir(ord_dir)
     file_names = [file_name for file_name in file_names if Check_img_filename(file_name)]
@@ -252,18 +253,21 @@ def fine_db_left_top_right_down(ord_dir,padding = 0):### padding是 印表機 �
     
     ### 抓取影像長寬資訊
     ord_img = cv2.imread(ord_dir + "/"+ file_names[0])
-    height, width, channel = ord_img.shape
+    height, width = ord_img.shape[:2]
 
     lefts  = []
     tops   = []
     rights = []
     downs  = []
-    for file_name in file_names[0:]:
+    if(search_amount==-1): search_amount=len(file_names)
+    for file_name in file_names[0:search_amount]:
         ord_img = cv2.imread(ord_dir + "/" + file_name,0)
-        ret,thresh1 = cv2.threshold(ord_img,127,255,cv2.THRESH_BINARY_INV) ### 二值化影像
+        _, thresh1 = cv2.threshold(ord_img,127,255,cv2.THRESH_BINARY_INV) ### 二值化影像
         # cv2.imshow("thresh1",thresh1)
         # cv2.waitKey(0)
 
+        ### 以下使用argmax()的道理：因為 用 width_sum!=0，結果會是True/False，False代表0，True代表1，
+        ### 用argmax()時，如果最大值相同，會回傳第一個找到的最大值，所以才會取到 最左邊或上邊 而不是 最右邊或下邊 的index喔！
         width_sum = thresh1.sum(axis=0) ### shape 為 (2481,)   ### 統計 垂直 值條圖的概念，找出左右最大的range
         lefts.append( (width_sum!=0).argmax() ) ### left
         rights.append( width - (width_sum!=0)[::-1].argmax() ) ### right
@@ -274,10 +278,11 @@ def fine_db_left_top_right_down(ord_dir,padding = 0):### padding是 印表機 �
 
         #print(lefts[-1],rights[-1],tops[-1], downs[-1])
 
-    left = min(lefts) - padding
-    top  = min(tops)  - padding
-    right = max(rights) + padding
-    down = max(downs)   + padding
+    left = min(lefts) - padding   ; left  = max(0, left)      ### 注意padding完可能超出邊界，超出去要拉回來到邊界上喔！
+    top  = min(tops)  - padding   ; top   = max(0, top)       ### 注意padding完可能超出邊界，超出去要拉回來到邊界上喔！
+    right = max(rights) + padding ; right = min(width, right) ### 注意padding完可能超出邊界，超出去要拉回來到邊界上喔！
+    down = max(downs)   + padding ; down  = min(height, down) ### 注意padding完可能超出邊界，超出去要拉回來到邊界上喔！
+    
     print("left",left,"top",top,"right",right,"down",down)
 
     return left,top,right,down
@@ -400,6 +405,17 @@ def Save_exr_as_mat(ord_dir, dst_dir, key_name):
     for i, file_name in enumerate(file_names):
         savemat(dst_dir + "/" + file_name, {key_name: imgs[i]} )
 
+def Find_ltrd_and_crop(ord_dir, dst_dir, padding=50, search_amount=-1):
+    l, t, r, d = Find_db_left_top_right_down(ord_dir, padding=padding, search_amount=search_amount)
+    file_names = get_dir_img_file_names(ord_dir)
+    for file_name in tqdm(file_names):
+        ord_img = cv2.imread(ord_dir + "/" + file_name)
+        crop_img = ord_img[t:d, l:r, ...]
+        # cv2.imshow("crop_img", crop_img)
+        # cv2.waitKey()
+        cv2.imwrite(dst_dir + "/" + file_name, crop_img)
+
+        
 
 def Pad_lrtd_and_resize_same_size(ord_dir, dst_dir,l,r,t,d):
     ### 建立放結果的資料夾，如果有上次建立的結果要先刪掉
