@@ -11,11 +11,14 @@ def get_xy_map(row, col):
     y = np.tile(y,(col,1)).T
     return x, y
 
-def check_img_file_name(file_name):
+def Check_img_filename(file_name):
     file_name = file_name.lower()
     if(".bmp" in file_name or ".jpg" in file_name or ".jpeg" in file_name or ".png" in file_name ):return True
     else: return False
 
+def get_dir_img_file_names(ord_dir):
+    file_names = [file_name for file_name in os.listdir(ord_dir) if Check_img_filename(file_name)]
+    return file_names
 
 def get_dir_certain_file_name(ord_dir, certain_word):
     file_names = [file_name for file_name in os.listdir(ord_dir) if (certain_word in file_name)]
@@ -31,7 +34,7 @@ def get_dir_certain_dir_name(ord_dir, certain_word):
 
 
 def get_dir_certain_img(ord_dir, certain_word, float_return =True):
-    file_names = [file_name for file_name in os.listdir(ord_dir) if check_img_file_name(file_name) and (certain_word in file_name) ]
+    file_names = [file_name for file_name in os.listdir(ord_dir) if Check_img_filename(file_name) and (certain_word in file_name) ]
     img_list = []
     for file_name in file_names:
         img_list.append( cv2.imread(ord_dir + "/" + file_name) )
@@ -48,7 +51,7 @@ def get_dir_certain_move(ord_dir, certain_word):
     return move_map_list
 
 def get_dir_img(ord_dir, float_return =False):
-    file_names = [file_name for file_name in os.listdir(ord_dir) if check_img_file_name(file_name) ]
+    file_names = [file_name for file_name in os.listdir(ord_dir) if Check_img_filename(file_name) ]
     img_list = []
     for file_name in file_names:
         img_list.append( cv2.imread(ord_dir + "/" + file_name) )
@@ -92,7 +95,7 @@ def get_dir_mat(ord_dir, key):
     
 
 def get_db_amount(ord_dir):
-    file_names = [file_name for file_name in os.listdir(ord_dir) if check_img_file_name(file_name) or (".npy" in file_name) ]
+    file_names = [file_name for file_name in os.listdir(ord_dir) if Check_img_filename(file_name) or (".npy" in file_name) ]
     return len(file_names)
 
 ##########################################################
@@ -411,24 +414,27 @@ def Show_move_map_apply(move_map):
 def _get_one_row_canvas_height(imgs):
     height_list = []
     for img in imgs: height_list.append(img.shape[0])
-    return  (max(height_list) // 100+2.0)*0.8  ### 沒有弄得很精準，+1好了
+    # return  (max(height_list) // 100+2.0)*0.8  ### 沒有弄得很精準，+1好了
+    return  (max(height_list) // 100+1.0)*0.9 ### 慢慢試囉～
 def _get_one_row_canvas_width(imgs):
     width = 0
     for img in imgs: width += img.shape[1]
-    return  (width // 100 +3)*0.8### 沒有弄得很精準，+1好了
+    # return  (width // 100 +3)*0.8### 沒有弄得很精準，+1好了
+    return  (width // 100 +0)*0.9 ### 慢慢試囉～
 
 def _get_row_col_canvas_height(r_c_imgs):
     height = 0
     for row_imgs in r_c_imgs: height += row_imgs[0].shape[0]
-    return (height // 100 +0)*0.9
+    return (height // 100 +0)*0.9 ### 慢慢試囉～
     
 
 def _get_row_col_canvas_width(r_c_imgs):
     width = 0
     for col_imgs in r_c_imgs[0]: width += col_imgs.shape[1]
-    return (width //100 + 1)*0.9
+    return (width //100 + 1)*0.9 ### 慢慢試囉～
 
-def matplot_visual_one_row_imgs(img_titles, imgs, fig_title="epoch = 1005", dst_dir=".", file_name="one_row_img.png"):
+### single_row 的處理方式 還是跟 multi_row 有些許不同，所以不能因為時做出 multi後取代single喔！ 比如 ax[] 的維度、取長寬比之類的～
+def matplot_visual_single_row_imgs(img_titles, imgs, fig_title="epoch = 1005", dst_dir=".", file_name="one_row_img.png"):
     title_amount = len(img_titles)
     img_amount   = len(imgs)
 
@@ -453,7 +459,7 @@ def matplot_visual_one_row_imgs(img_titles, imgs, fig_title="epoch = 1005", dst_
     fig, ax = plt.subplots(nrows=1, ncols=img_amount)
     ### 這就是手動微調 text的位置囉ˊ口ˋ
     if  (img_amount <  3):fig.text(x=0.5, y=0.95, s=fig_title,fontsize=20, c=(0.,0.,0.,1.),  horizontalalignment='center',)#, horizontalalignment='center', verticalalignment='center', transform=ax.transAxes)
-    elif(img_amount == 3):fig.text(x=0.5, y=0.93, s=fig_title,fontsize=20, c=(0.,0.,0.,1.),  horizontalalignment='center',)#, horizontalalignment='center', verticalalignment='center', transform=ax.transAxes)
+    elif(img_amount == 3):fig.text(x=0.5, y=0.90, s=fig_title,fontsize=20, c=(0.,0.,0.,1.),  horizontalalignment='center',)#, horizontalalignment='center', verticalalignment='center', transform=ax.transAxes)
     elif(img_amount >  3):fig.text(x=0.5, y=0.90, s=fig_title,fontsize=20, c=(0.,0.,0.,1.),  horizontalalignment='center',)#, horizontalalignment='center', verticalalignment='center', transform=ax.transAxes)
     fig.set_size_inches(canvas_width, canvas_height) ### 設定 畫布大小
     
@@ -494,6 +500,9 @@ def matplot_visual_multi_row_imgs(rows_cols_titles, rows_cols_imgs, fig_title="e
     if(col_imgs_amount == 0): 
         print("沒圖可show喔！")
         return 
+
+    if(len(rows_cols_imgs)==1):
+        print("本function 不能處理 single_row_imgs喔！麻煩呼叫相對應處理single_row的function！")
     ###########################################################
     canvas_height = _get_row_col_canvas_height(rows_cols_imgs)
     canvas_width  = _get_row_col_canvas_width (rows_cols_imgs)
