@@ -2,6 +2,8 @@ import numpy as np
 import cv2 
 import os
 
+from tqdm import tqdm
+
 def get_xy_map(row, col):
     x = np.arange(col)
     x = np.tile(x,(row,1))
@@ -53,7 +55,7 @@ def get_dir_certain_move(ord_dir, certain_word):
 def get_dir_img(ord_dir, float_return =False):
     file_names = [file_name for file_name in os.listdir(ord_dir) if Check_img_filename(file_name) ]
     img_list = []
-    for file_name in file_names:
+    for file_name in tqdm(file_names):
         img_list.append( cv2.imread(ord_dir + "/" + file_name) )
     if(float_return): img_list = np.array(img_list, dtype=np.float32)
     else:             img_list = np.array(img_list, dtype=np.uint8)
@@ -511,10 +513,13 @@ def matplot_visual_multi_row_imgs(rows_cols_titles, rows_cols_imgs, fig_title="e
     
     fig, ax = plt.subplots(nrows=row_imgs_amount, ncols=col_imgs_amount)
     ### 這就是手動微調 text的位置囉ˊ口ˋ
-
     if  (col_imgs_amount <  3):fig.text(x=0.5, y=0.95, s=fig_title,fontsize=20, c=(0.,0.,0.,1.),  horizontalalignment='center',)#, horizontalalignment='center', verticalalignment='center', transform=ax.transAxes)
     elif(col_imgs_amount == 3):fig.text(x=0.5, y=0.94, s=fig_title,fontsize=20, c=(0.,0.,0.,1.),  horizontalalignment='center',)#, horizontalalignment='center', verticalalignment='center', transform=ax.transAxes)
-    elif(col_imgs_amount >  3):fig.text(x=0.5, y=0.93, s=fig_title,fontsize=20, c=(0.,0.,0.,1.),  horizontalalignment='center',)#, horizontalalignment='center', verticalalignment='center', transform=ax.transAxes)
+    elif(col_imgs_amount >  3):#fig.text(x=0.5, y=0.93, s=fig_title,fontsize=20, c=(0.,0.,0.,1.),  horizontalalignment='center',)#, horizontalalignment='center', verticalalignment='center', transform=ax.transAxes)
+        if  (row_imgs_amount <  3):fig.text(x=0.5, y=0.93, s=fig_title,fontsize=20, c=(0.,0.,0.,1.),  horizontalalignment='center',)#, horizontalalignment='center', verticalalignment='center', transform=ax.transAxes)
+        elif(row_imgs_amount == 3):fig.text(x=0.5, y=0.92, s=fig_title,fontsize=20, c=(0.,0.,0.,1.),  horizontalalignment='center',)#, horizontalalignment='center', verticalalignment='center', transform=ax.transAxes)
+        elif(row_imgs_amount >  3):fig.text(x=0.5, y=0.907, s=fig_title,fontsize=20, c=(0.,0.,0.,1.),  horizontalalignment='center',)#, horizontalalignment='center', verticalalignment='center', transform=ax.transAxes)
+    
     fig.set_size_inches(canvas_width, canvas_height) ### 設定 畫布大小
     for go_row, row_imgs in enumerate(rows_cols_imgs): 
         for go_col, col_img in enumerate(row_imgs):

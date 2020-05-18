@@ -40,7 +40,7 @@ def Page_num(ord_dir, dst_dir):
     file_names.sort()
     
     for i,file_name in enumerate(file_names):
-        shutil.copy( ord_dir+"/"+ file_name, dst_dir+"/"+ "%06i.jpg"%(i+1) )
+        shutil.copy( ord_dir+"/"+ file_name, dst_dir+"/"+ "%04i.jpg"%(i+1) )
         # print( ord_dir+"/"+ file_name,"copy to", ord_dir+"/"+ "%06i.jpg"%(i+1), "finished!" )
     print(dst_dir,"page_num finish")
 ##############################################################################################################################################################
@@ -130,10 +130,10 @@ def Crop_use_center(ord_dir = "",
         #cv2.imshow("test", crop)
         #cv2.waitKey(0)
 
-        left_top_file_name   = dst_dir + "/" + "1-%s-%s-center_x=%04i-center_y=%04i.jpg"%("left_top",   file_name[:-4],center_x, center_y) 
-        right_top_file_name  = dst_dir + "/" + "2-%s-%s-center_x=%04i-center_y=%04i.jpg"%("right_top",  file_name[:-4],center_x, center_y) 
-        left_down_file_name  = dst_dir + "/" + "3-%s-%s-center_x=%04i-center_y=%04i.jpg"%("left_down",  file_name[:-4],center_x, center_y) 
-        right_down_file_name = dst_dir + "/" + "4-%s-%s-center_x=%04i-center_y=%04i.jpg"%("right_down", file_name[:-4],center_x, center_y) 
+        left_top_file_name   = dst_dir + "/" + "1-%s-%s-cx=%04i-cy=%04i.jpg"%("lt", file_name[:-4],center_x, center_y) 
+        right_top_file_name  = dst_dir + "/" + "2-%s-%s-cx=%04i-cy=%04i.jpg"%("rt", file_name[:-4],center_x, center_y) 
+        left_down_file_name  = dst_dir + "/" + "3-%s-%s-cx=%04i-cy=%04i.jpg"%("ld", file_name[:-4],center_x, center_y) 
+        right_down_file_name = dst_dir + "/" + "4-%s-%s-cx=%04i-cy=%04i.jpg"%("rd", file_name[:-4],center_x, center_y) 
         cv2.imwrite(left_top_file_name  , crop_left_top)
         cv2.imwrite(right_top_file_name , crop_right_top)
         cv2.imwrite(left_down_file_name , crop_left_down)
@@ -278,8 +278,8 @@ def Find_db_left_top_right_down(ord_dir,padding = 0, search_amount=-1):### paddi
 
         #print(lefts[-1],rights[-1],tops[-1], downs[-1])
 
-    left = min(lefts) - padding   ; left  = max(0, left)      ### 注意padding完可能超出邊界，超出去要拉回來到邊界上喔！
-    top  = min(tops)  - padding   ; top   = max(0, top)       ### 注意padding完可能超出邊界，超出去要拉回來到邊界上喔！
+    left = min(lefts) - padding   ; left  = max(0, left )      ### 注意padding完可能超出邊界，超出去要拉回來到邊界上喔！
+    top  = min(tops)  - padding   ; top   = max(0, top  )       ### 注意padding完可能超出邊界，超出去要拉回來到邊界上喔！
     right = max(rights) + padding ; right = min(width, right) ### 注意padding完可能超出邊界，超出去要拉回來到邊界上喔！
     down = max(downs)   + padding ; down  = min(height, down) ### 注意padding完可能超出邊界，超出去要拉回來到邊界上喔！
     
@@ -405,12 +405,20 @@ def Save_exr_as_mat(ord_dir, dst_dir, key_name):
     for i, file_name in enumerate(file_names):
         savemat(dst_dir + "/" + file_name, {key_name: imgs[i]} )
 
-def Find_ltrd_and_crop(ord_dir, dst_dir, padding=50, search_amount=-1):
+def Find_ltrd_and_crop(ord_dir, dst_dir, padding=50, search_amount=-1, crop_according_lr_page=False, odd_x_shift=0, even_x_shift=0):
+    ### 建立放結果的資料夾
+    Check_dir_exist_and_build(dst_dir)
+    
     l, t, r, d = Find_db_left_top_right_down(ord_dir, padding=padding, search_amount=search_amount)
     file_names = get_dir_img_file_names(ord_dir)
-    for file_name in tqdm(file_names):
+    for go_file_name, file_name in enumerate(tqdm(file_names)):
         ord_img = cv2.imread(ord_dir + "/" + file_name)
-        crop_img = ord_img[t:d, l:r, ...]
+        crop_img = ord_img.copy()
+        if(crop_according_lr_page==False): crop_img = ord_img[t:d, l:r, ...] ### 正常crop
+        else: ### 如果要分 左右page不同的shift
+            if  ((go_file_name+1) %2 == 0): crop_img = ord_img[t:d, l+even_x_shift : r+even_x_shift , ...] ### 偶數頁，注意我的page_num是從1開始喔~~ 有+1才對的到
+            elif((go_file_name+1) %2 == 1): crop_img = ord_img[t:d, l+odd_x_shift  : r+odd_x_shift  , ...] ### 基數頁，注意我的page_num是從1開始喔~~ 有+1才對的到
+            
         # cv2.imshow("crop_img", crop_img)
         # cv2.waitKey()
         cv2.imwrite(dst_dir + "/" + file_name, crop_img)
