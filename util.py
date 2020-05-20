@@ -436,7 +436,7 @@ def _get_row_col_canvas_width(r_c_imgs):
     return (width //100 + 1)*0.9 ### 慢慢試囉～
 
 ### single_row 的處理方式 還是跟 multi_row 有些許不同，所以不能因為時做出 multi後取代single喔！ 比如 ax[] 的維度、取長寬比之類的～
-def matplot_visual_single_row_imgs(img_titles, imgs, fig_title="epoch = 1005", dst_dir=".", file_name="one_row_img.png"):
+def matplot_visual_single_row_imgs(img_titles, imgs, fig_title="epoch = 1005", dst_dir=".", file_name="one_row_img.png", bgr2rgb=True):
     title_amount = len(img_titles)
     img_amount   = len(imgs)
 
@@ -467,8 +467,9 @@ def matplot_visual_single_row_imgs(img_titles, imgs, fig_title="epoch = 1005", d
     
     
     for go_img, img in enumerate(imgs):
+        if(bgr2rgb):img[...,::-1] ### 如果有標示 輸入進來的 影像是 bgr，要轉rgb喔！
         if(img_amount > 1):
-            ax[go_img].imshow(img[...,::-1]) ### 小畫布 畫上影像，別忘記要bgr -> rgb喔！
+            ax[go_img].imshow(img) ### 小畫布 畫上影像，別忘記要bgr -> rgb喔！
             ax[go_img].set_title( img_titles[go_img], fontsize=16 ) ### 小畫布上的 title
             
             plt.sca(ax[go_img])  ### plt指向目前的 小畫布 這是為了設定 yticks和xticks
@@ -485,7 +486,7 @@ def matplot_visual_single_row_imgs(img_titles, imgs, fig_title="epoch = 1005", d
     plt.close()  ### 一定要記得關喔！要不然圖開太多會當掉！
     
 
-def matplot_visual_multi_row_imgs(rows_cols_titles, rows_cols_imgs, fig_title="epoch=1005", dst_dir=".", file_name="one_row_img.png"):
+def matplot_visual_multi_row_imgs(rows_cols_titles, rows_cols_imgs, fig_title="epoch=1005", dst_dir=".", file_name="one_row_img.png", bgr2rgb=True):
     col_titles_amount = len(rows_cols_titles[0])
     row_imgs_amount   = len(rows_cols_imgs)
     col_imgs_amount   = len(rows_cols_imgs[0])
@@ -523,8 +524,9 @@ def matplot_visual_multi_row_imgs(rows_cols_titles, rows_cols_imgs, fig_title="e
     fig.set_size_inches(canvas_width, canvas_height) ### 設定 畫布大小
     for go_row, row_imgs in enumerate(rows_cols_imgs): 
         for go_col, col_img in enumerate(row_imgs):
+            if(bgr2rgb):col_img[...,::-1] ### 如果有標示 輸入進來的 影像是 bgr，要轉rgb喔！
             if(col_imgs_amount > 1):
-                ax[go_row, go_col].imshow(col_img[...,::-1]) ### 小畫布 畫上影像，別忘記要bgr -> rgb喔！
+                ax[go_row, go_col].imshow(col_img) ### 小畫布 畫上影像，別忘記要bgr -> rgb喔！
                 if  (len(rows_cols_titles) >1): ax[go_row, go_col].set_title( rows_cols_titles[go_row][go_col], fontsize=16 ) ### 小畫布　標上小標題
                 elif(len(rows_cols_titles)==1 and go_row==0):ax[go_row, go_col].set_title( rows_cols_titles[go_row][go_col], fontsize=16 ) ### 小畫布　標上小標題
                 
