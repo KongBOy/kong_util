@@ -453,8 +453,8 @@ def matplot_visual_single_row_imgs(img_titles, imgs, fig_title="epoch = 1005", d
         return 
     ###########################################################
 
-    canvas_height = _get_one_row_canvas_height(imgs)
-    canvas_width  = _get_one_row_canvas_width(imgs)
+    canvas_height = _get_one_row_canvas_height(imgs)*2.0
+    canvas_width  = _get_one_row_canvas_width(imgs)*2.0
     # print("canvas_height",canvas_height)
     # print("canvas_width",canvas_width)
     

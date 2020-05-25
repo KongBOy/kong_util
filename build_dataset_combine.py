@@ -79,8 +79,7 @@ def Crop(ord_dir = "",
 
 def Crop_use_center(ord_dir = "", 
          dst_dir = "", 
-         center_x_list  = None,
-         center_y_list  = None,
+         center_xy_file = None,
          crop_window_size_w = 674 * 3,
          crop_window_size_h = 674 * 4,
          seed = 10,
@@ -97,6 +96,21 @@ def Crop_use_center(ord_dir = "",
          rd_s_x =   0, ### right_down_shift_x
          rd_a_h =   0  ### right_down_add_height):
          ):
+
+    ### 讀取外部傳進來的 有放center_xy資訊的 .txt
+    center_x_list = []
+    center_y_list = []
+    if(center_xy_file is not None):
+        with open(center_xy_file, "r") as f:
+            for line in f:
+                x, y = line.rstrip("\n").split(",")
+                center_x_list.append(int(x))
+                center_y_list.append(int(y))
+    else: ### 沒有則設None
+        center_x_list = None
+        center_y_list = None
+
+    
     ### 建立放結果的資料夾，如果有上次建立的結果要先刪掉
     Check_dir_exist_and_build(dst_dir)
 
@@ -110,6 +124,7 @@ def Crop_use_center(ord_dir = "",
 
     ### 開始crop囉
     for j,file_name in enumerate(file_names[:]):
+        # if(j != 314):continue
         ord_img = cv2.imread(ord_dir + "/"+ file_name)
         if(center_x_list is None and center_y_list is None):
             center_x = int(width/2)
@@ -120,13 +135,32 @@ def Crop_use_center(ord_dir = "",
             center_x = center_x_list[j]
             center_y = center_y_list[j]
         ### add_height 或 add_width 的部分 可以自己看結果，往左上(用-) 或 右下(用+) 補都可以，
-        crop_left_top   = ord_img[center_y-crop_window_size_h + lt_s_y - lt_a_h*1 : center_y + lt_s_y ,  center_x-crop_window_size_w + lt_s_x - int(lt_a_h*0.6847) : center_x + lt_s_x] ### 從windows的左上角 框一個 windows的影像出來
-        crop_right_top  = ord_img[center_y-crop_window_size_h + rt_s_y - rt_a_h*1 : center_y + rt_s_y ,  center_x + rt_s_x - int(rt_a_h*0.6487) : center_x+crop_window_size_w + rt_s_x] ### 從windows的左上角 框一個 windows的影像出來
-        crop_left_down  = ord_img[center_y + ld_s_y : center_y+crop_window_size_h + ld_s_y + ld_a_h*1 ,  center_x-crop_window_size_w + ld_s_x : center_x + ld_s_x + int(ld_a_h*0.6487)] ### 從windows的左上角 框一個 windows的影像出來
-        crop_right_down = ord_img[center_y + rd_s_y : center_y+crop_window_size_h + rd_s_y + rd_a_h*1 ,  center_x + rd_s_x : center_x+crop_window_size_w + rd_s_x + int(rd_a_h*0.6487)] ### 從windows的左上角 框一個 windows的影像出來
+        ltt = center_y - crop_window_size_h + lt_s_y - lt_a_h*1             ; ltt = max(ltt, 0)
+        ltd = center_y + lt_s_y                                             
+        ltl = center_x - crop_window_size_w + lt_s_x - int(lt_a_h*0.6847)   ; ltl = max(ltl, 0)
+        ltr = center_x + lt_s_x
+        rtt = center_y - crop_window_size_h + rt_s_y - rt_a_h*1             ; rtt = max(rtt, 0)
+        rtd = center_y + rt_s_y
+        rtl = center_x + rt_s_x - int(rt_a_h*0.6487)
+        rtr = center_x + crop_window_size_w + rt_s_x                        ; rtr = min(rtr, width)
+        ldt = center_y + ld_s_y
+        ldd = center_y + crop_window_size_h + ld_s_y + ld_a_h*1             ; ldd = min(ldd, height)
+        ldl = center_x - crop_window_size_w + ld_s_x                        ; ldl = max(ldl, 0)
+        ldr = center_x + ld_s_x + int(ld_a_h*0.6487)
+        rdt = center_y + rd_s_y
+        rdd = center_y + crop_window_size_h + rd_s_y + rd_a_h*1             ; rdd = min(rdd, height)
+        rdl = center_x + rd_s_x
+        rdr = center_x + crop_window_size_w + rd_s_x + int(rd_a_h*0.6487)   ; rdr = min(rdr, width)
+
+        crop_left_top   = ord_img[ ltt: ltd, ltl: ltr ] ### 從windows的左上角 框一個 windows的影像出來
+        crop_right_top  = ord_img[ rtt: rtd, rtl: rtr ] ### 從windows的左上角 框一個 windows的影像出來
+        crop_left_down  = ord_img[ ldt: ldd, ldl: ldr ] ### 從windows的左上角 框一個 windows的影像出來
+        crop_right_down = ord_img[ rdt: rdd ,rdl: rdr] ### 從windows的左上角 框一個 windows的影像出來
         # print("center_y-crop_window_size_h + lt_s_y - lt_a_h*1",center_y-crop_window_size_h + lt_s_y - lt_a_h*1) ### 小心有時會變負的
-        print("center_y-crop_window_size_h + rt_s_y ",center_y-crop_window_size_h + rt_s_y - rt_a_h*1 ) ### 小心有時會變負的
-        
+        print("doing:", j+1, end=", ")
+        print("center_y-crop_window_size_h + lt_s_y - lt_a_h*1:", center_y-crop_window_size_h + lt_s_y - lt_a_h*1, end=", ")
+        print("center_y-crop_window_size_h + rt_s_y - rt_a_h*1: ",center_y-crop_window_size_h + rt_s_y - rt_a_h*1, end=", ") ### 小心有時會變負的
+        print("")
         #cv2.imshow("test", crop)
         #cv2.waitKey(0)
 
@@ -139,6 +173,15 @@ def Crop_use_center(ord_dir = "",
         cv2.imwrite(left_down_file_name , crop_left_down)
         cv2.imwrite(right_down_file_name, crop_right_down)
         # print(left_top_file_name, "finished!!")
+
+def Pick_manually(ord_dir, dst_dir, pick_page_indexes):
+    ### 建立放結果的資料夾，如果有上次建立的結果要先刪掉
+    Check_dir_exist_and_build(dst_dir)
+
+    file_names = get_dir_img_file_names(ord_dir)
+    for page_index in pick_page_indexes:
+        index = page_index -1
+        shutil.copy(ord_dir + "/" + file_names[index], dst_dir + "/" + file_names[index])
 
 
 def Resize_hw(ord_dir, dst_dir, height, width, method="cv2"):
@@ -154,10 +197,13 @@ def Resize_hw(ord_dir, dst_dir, height, width, method="cv2"):
     for file_name in file_names:
         ord_img = cv2.imread(ord_dir + "/" + file_name)
         if(method=="cv2"):
-            resize = cv2.resize(ord_img, (width, height), interpolation=cv2.INTER_CUBIC)
+            print("use cv2", end = ", ")
+            resize = cv2.resize(ord_img, (width, height), interpolation=cv2.INTER_AREA) ### neareat, linear, area, cubic, lanczos4 都是過了，area的最好 且 跟scipy 87%像！
         else:
+            print("use scipy", end = ", ")
             import scipy.misc
             resize = scipy.misc.imresize(ord_img, [height,width])
+            
 
         #cv2.imshow("resize",resize)
         #cv2.waitKey(0)
@@ -211,6 +257,68 @@ def Crop_row_random(ord_dir = "",dst_dir = "",seed = 10,crop_num = 4,
             result_file_name =  dst_dir + "/" + "%s%s-crop_row%i-left=%04i-top=%04i.jpg"%(name,file_name[:-4], go_crop, left, top) 
             cv2.imwrite(result_file_name,crop_row)
             print(result_file_name, "finished!!")
+
+
+def Select_lt_rt_ld_rd_train_test_see(ord_dir, dst_dir, result_dir_name, test_4page_index_list, see_train_4page_index_list):
+    for test_page_index in test_4page_index_list:
+        if(test_page_index in see_train_4page_index_list):
+            print("test_page_index 不可和 see_train_index 重複喔！")
+            return 
+
+    file_names = get_dir_img_file_names(ord_dir)
+    file_amount = len(file_names)      ### 總共有多少個檔案，共分 lt, rt, ld, rd 四種
+    page_amount = int(file_amount / 4) ### 一個種類有多少個檔案
+    see_dir   = dst_dir + "/" + "see"   + "/" + result_dir_name
+    train_dir = dst_dir + "/" + "train" + "/" + result_dir_name
+    test_dir  = dst_dir + "/" + "test"  + "/" + result_dir_name
+
+    Check_dir_exist_and_build(see_dir)
+    Check_dir_exist_and_build(train_dir)
+    Check_dir_exist_and_build(test_dir)
+
+    ### 先把所有檔案 copy進train資料夾
+    for file_name in file_names:
+        shutil.copy(ord_dir + "/" + file_name, train_dir + "/" + file_name)
+
+    ### 把 test的部分 從train抽除來放進 test和see資料夾
+    for page_index in test_4page_index_list:
+        ### 定位出lt, rt, ld, rd 的index，注意page_index 要-1 才會等於 array的index喔！
+        lt_i = page_index-1 + page_amount*0
+        rt_i = page_index-1 + page_amount*1
+        ld_i = page_index-1 + page_amount*2
+        rd_i = page_index-1 + page_amount*3
+
+        ### 先把 test 的部分，從 train資料夾 copy 進 test資料夾/see資料夾
+        shutil.copy(train_dir + "/" + file_names[lt_i], test_dir + "/" + file_names[lt_i])
+        shutil.copy(train_dir + "/" + file_names[rt_i], test_dir + "/" + file_names[rt_i])
+        shutil.copy(train_dir + "/" + file_names[ld_i], test_dir + "/" + file_names[ld_i])
+        shutil.copy(train_dir + "/" + file_names[rd_i], test_dir + "/" + file_names[rd_i])
+        shutil.copy(train_dir + "/" + file_names[lt_i],  see_dir + "/" + "test_" + file_names[lt_i])
+        shutil.copy(train_dir + "/" + file_names[rt_i],  see_dir + "/" + "test_" + file_names[rt_i])
+        shutil.copy(train_dir + "/" + file_names[ld_i],  see_dir + "/" + "test_" + file_names[ld_i])
+        shutil.copy(train_dir + "/" + file_names[rd_i],  see_dir + "/" + "test_" + file_names[rd_i])
+        ### copy 完後 把 train資料夾內的 test部分刪除
+        os.remove(train_dir + "/" + file_names[lt_i])
+        os.remove(train_dir + "/" + file_names[rt_i])
+        os.remove(train_dir + "/" + file_names[ld_i])
+        os.remove(train_dir + "/" + file_names[rd_i])
+
+    ### 把 想看的train 放進去 see資料夾
+    for page_index in see_train_4page_index_list:
+        lt_i = page_index-1 + page_amount*0
+        rt_i = page_index-1 + page_amount*1
+        ld_i = page_index-1 + page_amount*2
+        rd_i = page_index-1 + page_amount*3
+        shutil.copy(train_dir + "/" + file_names[lt_i],  see_dir + "/" + "train_" + file_names[lt_i])
+        shutil.copy(train_dir + "/" + file_names[rt_i],  see_dir + "/" + "train_" + file_names[rt_i])
+        shutil.copy(train_dir + "/" + file_names[ld_i],  see_dir + "/" + "train_" + file_names[ld_i])
+        shutil.copy(train_dir + "/" + file_names[rd_i],  see_dir + "/" + "train_" + file_names[rd_i])
+    
+    print("Select_lt_rt_ld_rd_train_test_see finish~~")
+
+
+
+
 
 
 def Split_train_test(ord_dir,dst_dir,train_dir_name = "", test_dir_name = "", 
@@ -351,7 +459,7 @@ def Save_as_gray(ord_dir, dst_dir, gray_three_channel=True):
     Check_dir_exist_and_build(dst_dir)
 
     file_names = [file_name for file_name in os.listdir(ord_dir) if Check_img_filename(file_name)]
-    for file_name in file_names:
+    for file_name in tqdm(file_names):
         gray_img = cv2.imread(ord_dir + "/" + file_name, 0)
         if(gray_three_channel):
             gray_img = gray_img[:,:,np.newaxis]
