@@ -84,6 +84,9 @@ def get_dir_exr(ord_dir, rgb=False): ### 不要 float_return = True 之類的，
     # if(float_return): imgs = np.array(imgs, dtype=np.float32)
     return np.array(imgs)
 
+
+
+
 def get_dir_mat(ord_dir, key):
     from hdf5storage import loadmat
     from util import get_dir_exr
@@ -505,7 +508,7 @@ def matplot_visual_multi_row_imgs(rows_cols_titles, rows_cols_imgs, fig_title="e
         return 
 
     if(len(rows_cols_imgs)==1):
-        print("本function 不能處理 single_row_imgs喔！麻煩呼叫相對應處理single_row的function！")
+        print("本function 不能處理 single_row_imgs喔，因為matplot在row只有1時的維度跟1以上時不同！麻煩呼叫相對應處理single_row的function！")
     ###########################################################
     canvas_height = _get_row_col_canvas_height(rows_cols_imgs)
     canvas_width  = _get_row_col_canvas_width (rows_cols_imgs)
@@ -566,7 +569,7 @@ def multi_processing_interface(core_amount, task_amount, task, task_args=None):
             if( go_core_i==(core_amount-1) and (fract_amount!=0) ): core_task_amount += fract_amount ### process分配到最後 如果 task_amount 還有剩，就加到最後一個process
 
         if(task_args is None):processes.append(Process( target=task, args=(core_start_index, core_task_amount) ) ) ### 根據上面的 core_start_index 和 core_task_amount 來 創建 Process
-        else:                 processes.append(Process( target=task, args=(core_start_index, core_task_amount, task_args) ) ) ### 根據上面的 core_start_index 和 core_task_amount 來 創建 Process
+        else:                 processes.append(Process( target=task, args=(core_start_index, core_task_amount, *task_args) ) ) ### 根據上面的 core_start_index 和 core_task_amount 來 創建 Process
         print("registering process_%02i dealing %04i~%04i task"% (go_core_i, core_start_index, core_start_index+core_task_amount-1) ) ### 大概顯示這樣的資訊：registering process_00 dealing 0000~0003 task
 
     for process in processes:
