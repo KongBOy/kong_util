@@ -3,7 +3,7 @@ import shutil
 import cv2
 import numpy as np
 import random
-from util import get_dir_certain_file_name, get_dir_img_file_names
+from util import get_dir_certain_file_name, get_dir_img_file_names, get_dir_exr, get_dir_mat, method1
 
 from tqdm import tqdm
 
@@ -20,6 +20,7 @@ def Check_dir_exist_and_build(dir_name, show_msg=False):
         if(show_msg):print(dir_name,"已存在，不建立新資料夾")
     else:
         os.makedirs( dir_name, exist_ok=True)
+        print("建立 %s 資料夾 完成"%dir_name)
 
 ### 建立放結果的資料夾，如果有上次建立的結果要先刪掉
 def Check_dir_exist_and_build_new_dir(dir_name, show_msg=False):
@@ -500,7 +501,23 @@ def Save_as_bmp(ord_dir, dst_dir, gray=False, gray_three_channel=False, delete_o
     _Save_as_certain_image_type("bmp", ord_dir, dst_dir, gray=gray, gray_three_channel=gray_three_channel, delete_ord_file=delete_ord_file)
 
 
-def Save_exr_as_mat(ord_dir, dst_dir, key_name):
+##############################################################################################################################################################
+##############################################################################################################################################################
+def _matplot_visual(imgs, file_names, dst_dir, img_type=None):
+    import matplotlib.pyplot as plt
+    ### 建立放結果的資料夾
+    Check_dir_exist_and_build(dst_dir + "/" + "matplot_visual")
+
+    for i, file_name in enumerate(tqdm(file_names)):
+        name = file_name.split(".")[0]  ### 把 檔名的 名字部分取出來
+        if  (img_type is None         ): plt.imshow(imgs[i])
+        elif(img_type in ["bm", "uv"] ): plt.imshow(method1(imgs[i, ..., 0], imgs[i, ..., 1]*-1))
+
+        plt.savefig(dst_dir + "/" + "matplot_visual" + "/" + name)
+        plt.close()
+
+
+def Save_exr_as_mat(ord_dir, dst_dir, key_name, matplot_visual=False):
     ### 建立放結果的資料夾
     Check_dir_exist_and_build(dst_dir)
 
@@ -510,9 +527,41 @@ def Save_exr_as_mat(ord_dir, dst_dir, key_name):
     file_names = get_dir_certain_file_name(ord_dir, ".exr")
     imgs = get_dir_exr(ord_dir)
 
-    for i, file_name in enumerate(file_names):
-        savemat(dst_dir + "/" + file_name, {key_name: imgs[i]} )
+    for i, file_name in enumerate(tqdm(file_names)):
+        name = file_name.split(".")[0]
+        savemat(dst_dir + "/" + name, {key_name: imgs[i]} )
 
+    if(matplot_visual): _matplot_visual(imgs, file_names, dst_dir, key_name)
+
+def Save_mat_as_npy(ord_dir, dst_dir, key_name, matplot_visual=False ):
+    ### 建立放結果的資料夾
+    Check_dir_exist_and_build(dst_dir)
+
+    imgs = get_dir_mat(ord_dir, key_name)
+    file_names = get_dir_certain_file_name(ord_dir, ".mat")
+    for i, file_name in enumerate(tqdm(file_names)):
+        name = file_name.split(".")[0]
+        np.save( dst_dir + "/" + name , imgs[i])
+    
+    if(matplot_visual): _matplot_visual(imgs, file_names, dst_dir, key_name)
+
+def Save_exr_as_npy(ord_dir, dst_dir, rgb=False, matplot_visual=False): ### 不要 float_return = True 之類的，因為他存的時候不一定用float32喔！rgb可以轉，已用網站生成的結果比較確認過囉～https://www.onlineconvert.com/exr-to-mat
+    import matplotlib.pyplot as plt
+    ### 建立放結果的資料夾
+    Check_dir_exist_and_build(dst_dir)
+    if(matplot_visual):Check_dir_exist_and_build(dst_dir + "/" + "matplot_visual")
+
+    imgs = get_dir_exr(ord_dir, rgb)  ### 把exr 轉成 imgs
+    file_names = get_dir_certain_file_name(ord_dir, ".exr") ### 拿到exr的檔名
+    print("Save_exr_as_npy")
+    for i, file_name in enumerate(tqdm(file_names)):
+        name, _ = file_name.split(".")  ### 把 檔名的 名字部分取出來
+        np.save( dst_dir + "/" + name, imgs[i] ) ### 改存成 .npy
+
+    if(matplot_visual): _matplot_visual(imgs, file_names, dst_dir)
+
+##############################################################################################################################################################
+##############################################################################################################################################################
 def Find_ltrd_and_crop(ord_dir, dst_dir, padding=50, search_amount=-1, crop_according_lr_page=False, odd_x_shift=0, even_x_shift=0):
     ### 建立放結果的資料夾
     Check_dir_exist_and_build(dst_dir)
@@ -530,8 +579,6 @@ def Find_ltrd_and_crop(ord_dir, dst_dir, padding=50, search_amount=-1, crop_acco
         # cv2.imshow("crop_img", crop_img)
         # cv2.waitKey()
         cv2.imwrite(dst_dir + "/" + file_name, crop_img)
-
-        
 
 def Pad_lrtd_and_resize_same_size(ord_dir, dst_dir,l,r,t,d):
     ### 建立放結果的資料夾，如果有上次建立的結果要先刪掉
