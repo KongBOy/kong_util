@@ -20,7 +20,7 @@ def Check_dir_exist_and_build(dir_name, show_msg=False):
         if(show_msg):print(dir_name,"已存在，不建立新資料夾")
     else:
         os.makedirs( dir_name, exist_ok=True)
-        print("建立 %s 資料夾 完成"%dir_name)
+        if(show_msg):print("建立 %s 資料夾 完成"%dir_name)
 
 ### 建立放結果的資料夾，如果有上次建立的結果要先刪掉
 def Check_dir_exist_and_build_new_dir(dir_name, show_msg=False):
@@ -28,6 +28,7 @@ def Check_dir_exist_and_build_new_dir(dir_name, show_msg=False):
         if(show_msg):print(dir_name,"已存在，刪除已存在的資料夾，並建立新的資料夾")
         shutil.rmtree( dir_name)
     os.makedirs( dir_name, exist_ok=True)
+    if(show_msg):print("建立 %s 資料夾 完成"%dir_name)
 
 ### 把圖片重新命名成 流水號
 def Page_num(ord_dir, dst_dir):
@@ -475,7 +476,7 @@ def _Save_as_certain_image_type(image_type, ord_dir, dst_dir, gray=False, gray_t
     Check_dir_exist_and_build(dst_dir)
 
     file_names = [file_name for file_name in os.listdir(ord_dir) if Check_img_filename(file_name)]
-    for file_name in file_names:
+    for file_name in tqdm(file_names):
         file_title, file_ext = file_name.split(".")      ### 把 檔名前半 後半 分開
         if(file_ext != image_type):                      ### 如果附檔名不是bmp，把圖讀出來，存成bmp
             img = cv2.imread(ord_dir + "/" + file_name)  ### 把圖讀出來
