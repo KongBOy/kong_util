@@ -496,6 +496,7 @@ def _Save_as_certain_image_type(image_type, ord_dir, dst_dir, gray=False, gray_t
 
 
 def Save_as_jpg(ord_dir, dst_dir, gray=False, gray_three_channel=False, delete_ord_file=False, quality_list=None): ### jpg才有失真壓縮的概念，bmp沒有喔！
+    print("doing Save_as_jpg")
     _Save_as_certain_image_type("jpg", ord_dir, dst_dir, gray=gray, gray_three_channel=gray_three_channel, delete_ord_file=delete_ord_file, quality_list=quality_list)
 
 def Save_as_bmp(ord_dir, dst_dir, gray=False, gray_three_channel=False, delete_ord_file=False):
@@ -564,6 +565,7 @@ def Save_exr_as_npy(ord_dir, dst_dir, rgb=False, matplot_visual=False): ### 不�
 ##############################################################################################################################################################
 ##############################################################################################################################################################
 def Find_ltrd_and_crop(ord_dir, dst_dir, padding=50, search_amount=-1, crop_according_lr_page=False, odd_x_shift=0, even_x_shift=0):
+    print("doing Find_ltrd_and_crop")
     ### 建立放結果的資料夾
     Check_dir_exist_and_build(dst_dir)
     

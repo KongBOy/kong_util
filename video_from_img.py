@@ -22,8 +22,8 @@ def Video_combine_from_imgs(imgs, dst_dir, file_name="combine.avi", tail_long=Fa
     for i, img in enumerate(tqdm(imgs)): 
         out.write(img)
         # print("frame %04i comibne ok"%i)
-        print(".", end="")
-        if(i+1%100==0): print()
+        # print(".", end="")
+        # if(i+1%100==0): print()
     out.release()
 
 def Video_combine_from_certain_dir(ord_dir, dst_dir, file_name="combine.avi"):
@@ -31,6 +31,7 @@ def Video_combine_from_certain_dir(ord_dir, dst_dir, file_name="combine.avi"):
     Video_combine_from_imgs(imgs, dst_dir, file_name)
 
 def Video_combine_from_dir(ord_dir, dst_dir, file_name="combine.avi", tail_long=True):
+    print("doing Video_combine_from_dir")
     imgs = get_dir_img( ord_dir, float_return=False)
     Video_combine_from_imgs(imgs, dst_dir, file_name, tail_long=tail_long)
 
