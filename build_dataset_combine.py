@@ -261,7 +261,7 @@ def Crop_row_random(ord_dir = "",dst_dir = "",seed = 10,crop_num = 4,
             print(result_file_name, "finished!!")
 
 
-def Select_lt_rt_ld_rd_train_test_see(ord_dir, dst_dir, result_dir_name, test_4page_index_list, see_train_4page_index_list):
+def Select_lt_rt_ld_rd_train_test_see(ord_dir, dst_dir, result_dir_name,train_4page_index_list, test_4page_index_list, see_train_4page_index_list):
     for test_page_index in test_4page_index_list:
         if(test_page_index in see_train_4page_index_list):
             print("test_page_index 不可和 see_train_index 重複喔！")
@@ -274,13 +274,27 @@ def Select_lt_rt_ld_rd_train_test_see(ord_dir, dst_dir, result_dir_name, test_4p
     train_dir = dst_dir + "/" + "train" + "/" + result_dir_name
     test_dir  = dst_dir + "/" + "test"  + "/" + result_dir_name
 
-    Check_dir_exist_and_build(see_dir)
-    Check_dir_exist_and_build(train_dir)
-    Check_dir_exist_and_build(test_dir)
+    Check_dir_exist_and_build_new_dir(see_dir)
+    Check_dir_exist_and_build_new_dir(train_dir)
+    Check_dir_exist_and_build_new_dir(test_dir)
 
     ### 先把所有檔案 copy進train資料夾
-    for file_name in file_names:
-        shutil.copy(ord_dir + "/" + file_name, train_dir + "/" + file_name)
+    # for file_name in file_names:
+    #     shutil.copy(ord_dir + "/" + file_name, train_dir + "/" + file_name)
+
+    ### 先把train的檔案 copy進train資料夾
+    for page_index in train_4page_index_list:
+        ### 定位出lt, rt, ld, rd 的index，注意page_index 要-1 才會等於 array的index喔！
+        lt_i = page_index-1 + page_amount*0
+        rt_i = page_index-1 + page_amount*1
+        ld_i = page_index-1 + page_amount*2
+        rd_i = page_index-1 + page_amount*3
+
+        shutil.copy(ord_dir + "/" + file_names[lt_i], train_dir + "/" + file_names[lt_i])
+        shutil.copy(ord_dir + "/" + file_names[rt_i], train_dir + "/" + file_names[rt_i])
+        shutil.copy(ord_dir + "/" + file_names[ld_i], train_dir + "/" + file_names[ld_i])
+        shutil.copy(ord_dir + "/" + file_names[rd_i], train_dir + "/" + file_names[rd_i])
+    print(f"{result_dir_name} train finish")
 
     ### 把 test的部分 從train抽除來放進 test和see資料夾
     for page_index in test_4page_index_list:
@@ -291,19 +305,22 @@ def Select_lt_rt_ld_rd_train_test_see(ord_dir, dst_dir, result_dir_name, test_4p
         rd_i = page_index-1 + page_amount*3
 
         ### 先把 test 的部分，從 train資料夾 copy 進 test資料夾/see資料夾
-        shutil.copy(train_dir + "/" + file_names[lt_i], test_dir + "/" + file_names[lt_i])
-        shutil.copy(train_dir + "/" + file_names[rt_i], test_dir + "/" + file_names[rt_i])
-        shutil.copy(train_dir + "/" + file_names[ld_i], test_dir + "/" + file_names[ld_i])
-        shutil.copy(train_dir + "/" + file_names[rd_i], test_dir + "/" + file_names[rd_i])
-        shutil.copy(train_dir + "/" + file_names[lt_i],  see_dir + "/" + "test_" + file_names[lt_i])
-        shutil.copy(train_dir + "/" + file_names[rt_i],  see_dir + "/" + "test_" + file_names[rt_i])
-        shutil.copy(train_dir + "/" + file_names[ld_i],  see_dir + "/" + "test_" + file_names[ld_i])
-        shutil.copy(train_dir + "/" + file_names[rd_i],  see_dir + "/" + "test_" + file_names[rd_i])
+        shutil.copy(ord_dir + "/" + file_names[lt_i], test_dir + "/" + file_names[lt_i])
+        shutil.copy(ord_dir + "/" + file_names[rt_i], test_dir + "/" + file_names[rt_i])
+        shutil.copy(ord_dir + "/" + file_names[ld_i], test_dir + "/" + file_names[ld_i])
+        shutil.copy(ord_dir + "/" + file_names[rd_i], test_dir + "/" + file_names[rd_i])
+        shutil.copy(ord_dir + "/" + file_names[lt_i],  see_dir + "/" + "test_" + file_names[lt_i])
+        shutil.copy(ord_dir + "/" + file_names[rt_i],  see_dir + "/" + "test_" + file_names[rt_i])
+        shutil.copy(ord_dir + "/" + file_names[ld_i],  see_dir + "/" + "test_" + file_names[ld_i])
+        shutil.copy(ord_dir + "/" + file_names[rd_i],  see_dir + "/" + "test_" + file_names[rd_i])
+
         ### copy 完後 把 train資料夾內的 test部分刪除
-        os.remove(train_dir + "/" + file_names[lt_i])
-        os.remove(train_dir + "/" + file_names[rt_i])
-        os.remove(train_dir + "/" + file_names[ld_i])
-        os.remove(train_dir + "/" + file_names[rd_i])
+        if(page_index in train_4page_index_list):
+            os.remove(train_dir + "/" + file_names[lt_i])
+            os.remove(train_dir + "/" + file_names[rt_i])
+            os.remove(train_dir + "/" + file_names[ld_i])
+            os.remove(train_dir + "/" + file_names[rd_i])
+    print(f"{result_dir_name} test and test_see finish")
 
     ### 把 想看的train 放進去 see資料夾
     for page_index in see_train_4page_index_list:
@@ -315,7 +332,8 @@ def Select_lt_rt_ld_rd_train_test_see(ord_dir, dst_dir, result_dir_name, test_4p
         shutil.copy(train_dir + "/" + file_names[rt_i],  see_dir + "/" + "train_" + file_names[rt_i])
         shutil.copy(train_dir + "/" + file_names[ld_i],  see_dir + "/" + "train_" + file_names[ld_i])
         shutil.copy(train_dir + "/" + file_names[rd_i],  see_dir + "/" + "train_" + file_names[rd_i])
-    
+    print(f"{result_dir_name} train_see finish")
+
     print("Select_lt_rt_ld_rd_train_test_see finish~~")
 
 
@@ -561,7 +579,23 @@ def Save_exr_as_npy(ord_dir, dst_dir, rgb=False, matplot_visual=False): ### 不�
         np.save( dst_dir + "/" + name, imgs[i] ) ### 改存成 .npy
 
     if(matplot_visual): _matplot_visual(imgs, file_names, dst_dir)
+##############################################################################################################################################################
+### knpy 是 kong_numpy的意思喔ˊ口ˋ，存的內容是把 numpy 的開頭資訊拿掉，讓tensorflow 可以直接decode！
+def Save_npy_as_knpy(ord_dir, dst_dir): 
+    ### 建立放結果的資料夾
+    Check_dir_exist_and_build(dst_dir)
 
+    npy_file_names = get_dir_certain_file_name(ord_dir, "npy")   ### 把想轉換的 .npy 的檔案名讀出來
+    for npy_file_name in tqdm(npy_file_names):
+        file_name = npy_file_name.split(".")[0]                 ### 把 "檔案名". "npy" 分開，只抓檔案名等等才好存 ".knpy"
+        with open(ord_dir + "/" + npy_file_name, "rb") as fr:   ### 把 .npy 用 open 且 read byte 的形式打開
+            byte_strs =[]                                       ### fr不能直接用，要用iter的方式才能讀內容
+            for byte_str in fr:                                 ### 所以丟進去 for 把所有 byte_str抓出來囉！
+                byte_strs.append(byte_str)
+
+            with open(dst_dir + "/" + file_name + ".knpy", "wb") as fw: ### 經過觀察，只要去掉第一個byte_str就可以去掉numpy的標頭檔資訊拉
+                for byte_str in byte_strs[1:]:                          ### 所以從 byte_strs的第二個元素開始把 byte_str寫進新檔案，且命名為 ".knpy"，kong_numpy的概念ˊ口ˋ
+                    fw.write(byte_str)
 ##############################################################################################################################################################
 ##############################################################################################################################################################
 def Find_ltrd_and_crop(ord_dir, dst_dir, padding=50, search_amount=-1, crop_according_lr_page=False, odd_x_shift=0, even_x_shift=0):
