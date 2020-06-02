@@ -3,6 +3,7 @@ import cv2
 import os
 
 from tqdm import tqdm
+LOSS_YLIM = 2.0
 
 def get_xy_map(row, col):
     x = np.arange(col)
@@ -433,7 +434,7 @@ def get_cmap(color_amount, cmap_name='hsv'):
 ############################################################################################################
 class Matplot_ax_util():
     @staticmethod
-    def Draw_ax_loss_during_train( ax, logs_dir, cur_epoch, epochs , ylim=1.3 ): ### logs_dir 不能改丟 result_obj喔！因為See裡面沒有Result喔！
+    def Draw_ax_loss_during_train( ax, logs_dir, cur_epoch, epochs , ylim=LOSS_YLIM ): ### logs_dir 不能改丟 result_obj喔！因為See裡面沒有Result喔！
         x_epoch = np.arange(cur_epoch+1) ### x座標畫多少，畫到目前訓練的 cur_epoch，+1是為了index轉數量喔
         
         logs_file_names = get_dir_certain_file_name(logs_dir, "npy") ### 去logs_dir 抓 當時訓練時存的 loss.npy
@@ -446,7 +447,7 @@ class Matplot_ax_util():
     @staticmethod
     ### 注意這會給 see, result, c_results 用喔！ 所以多 result的情況也要考慮，所以才要傳 min_epochs，
     ### 且因為有給see用，logs_dir 不能改丟 result_obj喔！因為See裡面沒有Result喔！
-    def Draw_ax_loss_after_train( ax, logs_dir, cur_epoch, min_epochs , ylim=1.3 ): 
+    def Draw_ax_loss_after_train( ax, logs_dir, cur_epoch, min_epochs , ylim=LOSS_YLIM ): 
         x_epoch = np.arange(min_epochs) ### x座標畫多少
         
         logs_file_names = get_dir_certain_file_name(logs_dir, "npy") ### 去logs_dir 抓 當時訓練時存的 loss.npy
@@ -463,7 +464,7 @@ class Matplot_ax_util():
             Matplot_ax_util._Draw_ax_loss(ax, cur_epoch, loss_name, loss_i, x_array=x_epoch, y_array=y_loss_array_used, xlim=min_epochs, ylim=ylim)
     
     @staticmethod
-    def _Draw_ax_loss(ax, cur_epoch, loss_name, loss_i, x_array, y_array, xlim, ylim=1.3, x_label="epoch loss avg", y_label="epoch_num"):
+    def _Draw_ax_loss(ax, cur_epoch, loss_name, loss_i, x_array, y_array, xlim, ylim=LOSS_YLIM, x_label="epoch loss avg", y_label="epoch_num"):
         cmap = get_cmap(8)  ### 隨便一個比6多的數字，嘗試後8的顏色分布不錯！
         plt.sca(ax)  ### plt指向目前的 小畫布 這是為了設定 xylim 和 xylabel
         plt.ylim(0, ylim) ;plt.ylabel( x_label )
@@ -754,8 +755,8 @@ class Matplot_multi_row_imgs(Matplot_util):
         if(self.add_loss):   ### 多一些空間來畫loss
             self.canvas_height += 3.0  ### 慢慢試囉～
             self.canvas_width  -= 0.55*self.col_imgs_amount  ### 慢慢試囉～
-            self.canvas_height *= 1.2  ### 慢慢試囉～ 
-            self.canvas_width  *= 1.2  ### 慢慢試囉～
+            self.canvas_height *= 1.1 #1.2最好，但有點佔記憶體  ### 慢慢試囉～ 
+            self.canvas_width  *= 1.1 #1.2最好，但有點佔記憶體  ### 慢慢試囉～
             self.row_imgs_amount += 1 ### 多一row來畫loss
         # print("canvas_height",canvas_height)
         # print("canvas_width",canvas_width)
@@ -884,7 +885,7 @@ def draw_loss_util(fig, ax, logs_dir, epoch, epochs ):
     y_loss_array = np.load( logs_dir + "/" + logs_file_names[0])
     
     plt.sca(ax)  ### plt指向目前的 小畫布 這是為了設定 xylim 和 xylabel
-    plt.ylim(0,1.3)     ;plt.ylabel(logs_file_names[0])
+    plt.ylim(0,LOSS_YLIM)     ;plt.ylabel(logs_file_names[0])
     plt.xlim(0, epochs) ;plt.xlabel("epoch_num") 
     ax.plot(x_epoch, y_loss_array)
     ax.scatter(epoch, y_loss_array[epoch], c="red")
