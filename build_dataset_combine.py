@@ -339,6 +339,47 @@ def Select_lt_rt_ld_rd_train_test_see(ord_dir, dst_dir, result_dir_name,train_4p
 
 
 
+def Smooth_curl_fold_page_select_see(ord_dir, train_indexes, test_indexes):
+    train_in_dir = ord_dir + "/train/dis_imgs/"
+    train_gt_dir = ord_dir + "/train/move_maps/"
+    test_in_dir = ord_dir + "/test/dis_imgs/"
+    test_gt_dir = ord_dir + "/test/move_maps/"
+
+    see_in_dir = ord_dir + "/see/dis_imgs/"
+    see_gt_dir = ord_dir + "/see/move_maps/"
+    Check_dir_exist_and_build_new_dir(see_in_dir)
+    Check_dir_exist_and_build_new_dir(see_gt_dir)
+    
+    ### 000000-3a1-I1-patch.bmp
+    ### 000000_train.npy
+    for i, train_index in enumerate(train_indexes):
+        describe = ""
+        if  (i==0):describe = "000-train_curl_str"
+        elif(i==1):describe = "001-train_curl_img"
+        elif(i==2):describe = "002-train_curl_lin"
+        elif(i==3):describe = "003-train_fold_str"
+        elif(i==4):describe = "004-train_fold_img"
+        elif(i==5):describe = "005-train_fold_lin"
+        elif(i==6):describe = "006-train_page_str"
+        elif(i==7):describe = "007-train_page_img"
+        elif(i==8):describe = "008-train_page_lin"
+        shutil.copy(train_in_dir+"%06i-3a1-I1-patch.bmp"%train_index, see_in_dir+  describe+"-%06i-3a1-I1-patch.bmp"%train_index)
+        shutil.copy(train_gt_dir+"%06i_train.npy"%train_index,        see_gt_dir+  describe+"-%06i_train.npy"%train_index)
+        
+    for i, test_index in enumerate(test_indexes):
+        describe = ""
+        if  (i==0):describe = "009-test_curl_str"
+        elif(i==1):describe = "010-test_curl_img"
+        elif(i==2):describe = "011-test_curl_lin"
+        elif(i==3):describe = "012-test_fold_str"
+        elif(i==4):describe = "013-test_fold_img"
+        elif(i==5):describe = "014-test_fold_lin"
+        elif(i==6):describe = "015-test_page_str"
+        elif(i==7):describe = "016-test_page_img"
+        elif(i==8):describe = "017-test_page_lin"
+        shutil.copy(test_in_dir+"%06i-3a1-I1-patch.bmp"%test_index, see_in_dir+  describe+"-%06i-3a1-I1-patch.bmp"%test_index)
+        shutil.copy(test_gt_dir+"%06i_test.npy"%test_index,         see_gt_dir+  describe+"-%06i_test.npy"%test_index)
+    
 
 
 def Split_train_test(ord_dir,dst_dir,train_dir_name = "", test_dir_name = "", 
