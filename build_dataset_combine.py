@@ -639,14 +639,9 @@ def Save_npy_as_knpy(ord_dir, dst_dir):
                     fw.write(byte_str)
 ##############################################################################################################################################################
 ##############################################################################################################################################################
-def Find_ltrd_and_crop(ord_dir, dst_dir, padding=50, search_amount=-1, crop_according_lr_page=False, odd_x_shift=0, even_x_shift=0):
-    print("doing Find_ltrd_and_crop")
-    ### 建立放結果的資料夾
-    Check_dir_exist_and_build(dst_dir)
-    
-    l, t, r, d = Find_db_left_top_right_down(ord_dir, padding=padding, search_amount=search_amount)
-    file_names = get_dir_img_file_names(ord_dir)
-    for go_file_name, file_name in enumerate(tqdm(file_names)):
+
+def _use_ltrd_crop(start_index, amount, ord_dir, dst_dir, file_names, l, t, r, d, crop_according_lr_page, odd_x_shift, even_x_shift):
+    for go_file_name, file_name in enumerate(tqdm(file_names[start_index:start_index+amount])):
         ord_img = cv2.imread(ord_dir + "/" + file_name)
         crop_img = ord_img.copy()
         if(crop_according_lr_page==False): crop_img = ord_img[t:d, l:r, ...] ### 正常crop
@@ -657,6 +652,25 @@ def Find_ltrd_and_crop(ord_dir, dst_dir, padding=50, search_amount=-1, crop_acco
         # cv2.imshow("crop_img", crop_img)
         # cv2.waitKey()
         cv2.imwrite(dst_dir + "/" + file_name, crop_img)
+
+def _use_ltrd_crop_multiprocess(ord_dir, dst_dir, file_names, l, t, r, d, crop_according_lr_page, odd_x_shift, even_x_shift, core_amount=8, task_amount=100):
+    from util import multi_processing_interface
+    multi_processing_interface(core_amount=core_amount ,task_amount=task_amount, task=_use_ltrd_crop, task_args= [ord_dir, dst_dir, file_names, l, t, r, d, crop_according_lr_page, odd_x_shift, even_x_shift] )
+
+
+def Find_ltrd_and_crop(ord_dir, dst_dir, padding=50, search_amount=-1, crop_according_lr_page=False, odd_x_shift=0, even_x_shift=0, multiprocess=True, core_amount=8):
+    print("doing Find_ltrd_and_crop")
+    ### 建立放結果的資料夾
+    Check_dir_exist_and_build(dst_dir)
+    
+    l, t, r, d = Find_db_left_top_right_down(ord_dir, padding=padding, search_amount=search_amount)
+    file_names = get_dir_img_file_names(ord_dir)
+    _use_ltrd_crop_multiprocess(ord_dir, dst_dir, file_names, l, t, r, d, crop_according_lr_page, odd_x_shift, even_x_shift, core_amount=8, task_amount=len(file_names))
+
+
+
+
+
 
 def Pad_lrtd_and_resize_same_size(ord_dir, dst_dir,l,r,t,d):
     ### 建立放結果的資料夾，如果有上次建立的結果要先刪掉
