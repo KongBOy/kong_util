@@ -529,13 +529,9 @@ def Save_as_gray(ord_dir, dst_dir, gray_three_channel=True):
 
 import cv2 
 import os
-def _Save_as_certain_image_type(image_type, ord_dir, dst_dir, gray=False, gray_three_channel=False, delete_ord_file=False, show_msg=False, quality_list=None):
-    ### 建立放結果的資料夾，如果有上次建立的結果要先刪掉
-    ### 以下註解都是用 bmp當例子
-    Check_dir_exist_and_build(dst_dir)
 
-    file_names = [file_name for file_name in os.listdir(ord_dir) if Check_img_filename(file_name)]
-    for file_name in tqdm(file_names):
+def _save_img(start_index, amount, image_type, ord_dir, dst_dir, file_names, gray, gray_three_channel, delete_ord_file, show_msg, quality_list):
+    for file_name in tqdm(file_names[start_index:start_index+amount]):
         file_title, file_ext = file_name.split(".")      ### 把 檔名前半 後半 分開
         if(file_ext != image_type):                      ### 如果附檔名不是bmp，把圖讀出來，存成bmp
             img = cv2.imread(ord_dir + "/" + file_name)  ### 把圖讀出來
@@ -549,10 +545,20 @@ def _Save_as_certain_image_type(image_type, ord_dir, dst_dir, gray=False, gray_t
             if(show_msg): print("Save_as_%s"%image_type, ord_dir + "/" + file_name, "save as", dst_dir + "/" + file_title+".%s"%image_type, "finish~~")
             # print("Save_as_%s"%image_type ,"finish~~")
 
-            if(delete_ord_file): os.remove(ord_dir + "/" + file_name) ### 把原檔刪掉
-    # if(delete_ord_file): 
-    #     for file_name in file_names: os.remove(ord_dir + "/" + file_name) ### 把原檔刪掉
+            if(delete_ord_file): os.remove(ord_dir + "/" + file_name) ### 把原檔刪掉，做一張刪一張比較不占空間且時間跟 全部做完再刪印象中是差不多的~~
 
+
+def _Save_as_certain_image_type(image_type, ord_dir, dst_dir, gray=False, gray_three_channel=False, delete_ord_file=False, show_msg=False, quality_list=None, multiprocess=True, core_amount=8):
+    ### 建立放結果的資料夾，如果有上次建立的結果要先刪掉
+    ### 以下註解都是用 bmp當例子
+    Check_dir_exist_and_build(dst_dir)
+
+    file_names = [file_name for file_name in os.listdir(ord_dir) if Check_img_filename(file_name)]
+    if(multiprocess):  ### 有用multiprocess
+        from util import multi_processing_interface
+        multi_processing_interface(core_amount=core_amount ,task_amount=len(file_names), task=_save_img, task_args= [image_type, ord_dir, dst_dir, file_names, gray, gray_three_channel, delete_ord_file, show_msg, quality_list] )
+    else:  ### 沒有用multiprocess
+        _save_img(0, len(file_names), image_type, ord_dir, dst_dir, file_names, gray, gray_three_channel, delete_ord_file, show_msg, quality_list)
 
 def Save_as_jpg(ord_dir, dst_dir, gray=False, gray_three_channel=False, delete_ord_file=False, quality_list=None): ### jpg才有失真壓縮的概念，bmp沒有喔！
     print("doing Save_as_jpg")
