@@ -294,7 +294,7 @@ def Select_lt_rt_ld_rd_train_test_see(ord_dir, dst_dir, result_dir_name,train_4p
         shutil.copy(ord_dir + "/" + file_names[rt_i], train_dir + "/" + file_names[rt_i])
         shutil.copy(ord_dir + "/" + file_names[ld_i], train_dir + "/" + file_names[ld_i])
         shutil.copy(ord_dir + "/" + file_names[rd_i], train_dir + "/" + file_names[rd_i])
-    print(f"{result_dir_name} train finish")
+    print("%s train finish"%result_dir_name)
 
     ### 把 test的部分 從train抽除來放進 test和see資料夾
     for page_index in test_4page_index_list:
@@ -320,7 +320,7 @@ def Select_lt_rt_ld_rd_train_test_see(ord_dir, dst_dir, result_dir_name,train_4p
             os.remove(train_dir + "/" + file_names[rt_i])
             os.remove(train_dir + "/" + file_names[ld_i])
             os.remove(train_dir + "/" + file_names[rd_i])
-    print(f"{result_dir_name} test and test_see finish")
+    print("%s test and test_see finish"%result_dir_name)
 
     ### 把 想看的train 放進去 see資料夾
     for page_index in see_train_4page_index_list:
@@ -332,7 +332,7 @@ def Select_lt_rt_ld_rd_train_test_see(ord_dir, dst_dir, result_dir_name,train_4p
         shutil.copy(train_dir + "/" + file_names[rt_i],  see_dir + "/" + "train_" + file_names[rt_i])
         shutil.copy(train_dir + "/" + file_names[ld_i],  see_dir + "/" + "train_" + file_names[ld_i])
         shutil.copy(train_dir + "/" + file_names[rd_i],  see_dir + "/" + "train_" + file_names[rd_i])
-    print(f"{result_dir_name} train_see finish")
+    print("%s train_see finish"%result_dir_name)
 
     print("Select_lt_rt_ld_rd_train_test_see finish~~")
 

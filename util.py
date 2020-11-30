@@ -5,6 +5,21 @@ import os
 from tqdm import tqdm
 LOSS_YLIM = 2.0
 
+def rename_by_order(ord_dir, start_one=True):
+    import math
+    file_names = os.listdir(ord_dir)
+    file_amount = len(file_names)
+    digit_amount = int(math.log(file_amount, 10))+1
+    name_digit = "%0"+ str( digit_amount ) + "i" ### 比如，100多個檔案就是 %03i
+    for i, file_name in enumerate(file_names):
+        if(start_one): i += 1
+        ord_name = ord_dir + "/" + file_name
+        dst_name = ord_dir + "/" + name_digit%i + "-" + file_name
+        shutil.move(ord_name, dst_name)
+        print(ord_name, "rename to ")
+        print(dst_name, "ok")
+        
+#####################################################################################################################################
 def get_xy_map(row, col):
     x = np.arange(col)
     x = np.tile(x,(row,1))
