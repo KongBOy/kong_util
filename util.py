@@ -5,7 +5,7 @@ import os
 from tqdm import tqdm
 LOSS_YLIM = 2.0
 
-def rename_by_order(ord_dir, start_one=True):
+def rename_by_order(ord_dir, split_symbol="-", start_one=True): ### 使用的時候要非常小心喔！
     import math
     file_names = os.listdir(ord_dir)
     file_amount = len(file_names)
@@ -14,11 +14,20 @@ def rename_by_order(ord_dir, start_one=True):
     for i, file_name in enumerate(file_names):
         if(start_one): i += 1
         ord_name = ord_dir + "/" + file_name
-        dst_name = ord_dir + "/" + name_digit%i + "-" + file_name
+        dst_name = ord_dir + "/" + name_digit%i + split_symbol + file_name
         shutil.move(ord_name, dst_name)
         print(ord_name, "rename to ")
         print(dst_name, "ok")
-        
+
+def rename_by_remove_order(ord_dir, split_symbol="-"): ### 使用的時候要非常小心喔！加入 rename_by_remove_order，寫的強一點了(可以處理多次使用rename_by_order了)，但還是要小心使用(如果處理沒用過rename_by_order還是會錯)
+    file_names = os.listdir(ord_dir)
+    for file_name in file_names:
+        ord_name = ord_dir + "/" +file_name
+        dst_name = ord_dir + "/" + file_name[file_name.find(split_symbol)+1:]
+        shutil.move(ord_name, dst_name)
+        print(ord_name, "rename to ")
+        print(dst_name, "ok")
+
 #####################################################################################################################################
 def get_xy_map(row, col):
     x = np.arange(col)
