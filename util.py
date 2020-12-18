@@ -180,9 +180,10 @@ def get_maxmin_train_move(db_dir="datasets", db_name="1_unet_page_h=384,w=256"):
 
 #######################################################
 ### 用來給視覺化參考的顏色map
-def get_reference_map( max_move=0, max_from_move_dir=False, move_dir="", x_decrease=False, y_decrease=False, color_shift=5): ### 根據你的db內 最大最小值 產生 參考流的map
+def get_reference_map( max_move, max_from_move_dir=False, move_dir="", x_decrease=False, y_decrease=False, color_shift=1): ### 根據你的db內 最大最小值 產生 參考流的map
     max_move = max_move
     if(max_from_move_dir) : max_move = find_db_max_move(move_dir)
+
     visual_row = 512
     visual_col = visual_row
     x = np.linspace(-max_move,max_move,visual_col)
@@ -206,19 +207,21 @@ def find_db_max_move(ord_dir):
 
 ####################################################### 
 ### 視覺化方法1：感覺可以！但缺點是沒辦法用cv2，而一定要搭配matplot的imshow來自動填色
-def method1(x, y, max_value=-10000): ### 這個 max_value的值 意義上來說要是整個db內位移最大值喔！這樣子出來的圖的顏色強度才會準確
+def method1(x, y, max_value=-10000): ### 這個 max_value的值 意義上來說要是整個db內位移最大值喔！這樣子出來的圖的顏色強度才會準確，後來覺得可刪
     h, w = x.shape[:2]
     z = np.ones(shape=(h, w))
-    visual_map = np.dstack( (x,y) )                  ### step1.
-    if(max_value==-10000):                           ### step2.確定max_value值，沒有指定 max_value的話，就用資料自己本身的
-        max_value = visual_map.max()
-    visual_map = ((visual_map/max_value)+1)/2        ### step3.先把值弄到 0~1
+    visual_map = np.dstack( (x,y) )     ### step1.把x,y拚再一起同時處理
+    max_value = visual_map.max()        ### step2.先把值弄到 0~1
+    min_value = visual_map.min()
+    visual_map = (visual_map - min_value)/(max_value - min_value+0.000000001) 
+    # print("visual_map.max()", visual_map.max())
+    # print("visual_map.min()", visual_map.min())
     visual_map = np.dstack( (visual_map, z))         ### step4.再concat channel3，來給imshow自動決定顏色
 #    plt.imshow(visual_map)
     return visual_map
 
 ### 視覺化方法2：用hsv，感覺可以！
-def method2(x, y, color_shift=1):       ### 最大位移量不可以超過 255，要不然顏色強度會不準，不過實際用了map來顯示發現通常值都不大，所以還加個color_shift喔~
+def method2(x, y, color_shift=1, white_bg=True):       ### 最大位移量不可以超過 255，要不然顏色強度會不準，不過實際用了map來顯示發現通常值都不大，所以還加個color_shift喔~
     h, w = x.shape[:2]                  ### 影像寬高
     fx, fy = x, y                       ### u是x方向怎麼移動，v是y方向怎麼移動
     ang = np.arctan2(fy, fx) + np.pi    ### 得到運動的角度
@@ -226,9 +229,13 @@ def method2(x, y, color_shift=1):       ### 最大位移量不可以超過 255�
     hsv = np.zeros((h, w, 3), np.uint8) ### 初始化一個canvas
     hsv[...,0] = ang*(180/np.pi/2)      ### B channel為 角度訊息的顏色
     hsv[...,1] = 255                    ### G channel為 255飽和度
+    print("ang", ang)
+    print("val", val)
     hsv[...,2] = np.minimum(val*color_shift, 255)   ### R channel為 位移 和 255中較小值来表示亮度，因為值最大為255，val的除4拿掉就ok了！
+    print("hsv[...,2]", hsv[...,2])
+    print("")
     bgr = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR) ### 把得到的HSV模型轉換為BGR顯示
-    if(True):
+    if(white_bg):
         white_back = np.ones((h, w, 3),np.uint8)*255
         white_back[...,0] -= hsv[...,2]
         white_back[...,1] -= hsv[...,2]
