@@ -1,2 +1,4 @@
-python-opencv
+opencv-python
 tqdm
+scipy
+hdf5storage
