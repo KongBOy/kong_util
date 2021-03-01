@@ -43,23 +43,41 @@ def Check_img_filename(file_name):
     if(".bmp" in file_name or ".jpg" in file_name or ".jpeg" in file_name or ".png" in file_name ):return True
     else: return False
 
+def Check_dir_exist_decorator(get_dir_fun):  ### 加在 get_dir 那種function上
+    def wrapper(*args, **kwargs):            ### 應該是最 general 的寫法了
+        if os.path.isdir(args[0]):           ### 主要是要拿到 ord_dir，所以目前的寫法限定 get_dir_fun 需要用 位置參數，不能用關鍵字參數囉！
+            result = get_dir_fun(args[0])    ### 如果資料夾存在，做事情
+        else:                                ### 如果資料夾不存在，回傳[]
+            print(args[0] + " 資料夾不存在，回傳[]")
+            result = []
+        return result
+    return wrapper
+
+@Check_dir_exist_decorator
 def get_dir_img_file_names(ord_dir):
     file_names = [file_name for file_name in os.listdir(ord_dir) if Check_img_filename(file_name)]
     return file_names
 
+@Check_dir_exist_decorator
 def get_dir_certain_file_name(ord_dir, certain_word):
     file_names = [file_name for file_name in os.listdir(ord_dir) if (certain_word in file_name)]
     return file_names
+# def get_dir_certain_file_name(ord_dir, certain_word):
+#     if os.path.isdir(ord_dir): file_names = [file_name for file_name in os.listdir(ord_dir) if (certain_word in file_name)]
+#     else: file_names = []
+#     return file_names
 
+@Check_dir_exist_decorator
 def get_dir_dir_name(ord_dir):
-    file_names = [file_name for file_name in os.listdir(ord_dir) if os.path.isdir(ord_dir+"/"+file_name) ]
+    file_names = [file_name for file_name in os.listdir(ord_dir) if os.path.isdir(ord_dir + "/" + file_name) ]
     return file_names
 
+@Check_dir_exist_decorator
 def get_dir_certain_dir_name(ord_dir, certain_word):
     file_names = [file_name for file_name in os.listdir(ord_dir) if ((certain_word in file_name) and os.path.isdir(ord_dir+"/"+file_name)) ]
     return file_names
 
-
+@Check_dir_exist_decorator
 def get_dir_certain_img(ord_dir, certain_word, float_return =True):
     file_names = [file_name for file_name in os.listdir(ord_dir) if Check_img_filename(file_name) and (certain_word in file_name) ]
     img_list = []
@@ -69,6 +87,7 @@ def get_dir_certain_img(ord_dir, certain_word, float_return =True):
     else:             img_list = np.array(img_list, dtype=np.uint8)
     return img_list
 
+@Check_dir_exist_decorator
 def get_dir_certain_move(ord_dir, certain_word):
     file_names = [file_name for file_name in os.listdir(ord_dir) if (".npy" in file_name) and (certain_word in file_name)]
     move_map_list = []
@@ -77,6 +96,7 @@ def get_dir_certain_move(ord_dir, certain_word):
     move_map_list = np.array(move_map_list, dtype=np.float32)
     return move_map_list
 
+@Check_dir_exist_decorator
 def get_dir_img(ord_dir, float_return =False):
     file_names = [file_name for file_name in os.listdir(ord_dir) if Check_img_filename(file_name) ]
     img_list = []
@@ -87,6 +107,7 @@ def get_dir_img(ord_dir, float_return =False):
     return img_list
 
 
+@Check_dir_exist_decorator
 def get_dir_move(ord_dir):
     file_names = [file_name for file_name in os.listdir(ord_dir) if ".npy" in file_name]
     move_map_list = []
@@ -94,7 +115,8 @@ def get_dir_move(ord_dir):
         move_map_list.append( np.load(ord_dir + "/" + file_name) )
     move_map_list = np.array(move_map_list, dtype=np.float32)
     return move_map_list
-    
+
+@Check_dir_exist_decorator
 def get_dir_exr(ord_dir, rgb=False): ### 不要 float_return = True 之類的，因為他存的時候不一定用float32喔！rgb可以轉，已用網站生成的結果比較確認過囉～https://www.onlineconvert.com/exr-to-mat
     file_names = get_dir_certain_file_name(ord_dir, ".exr")
 
@@ -103,7 +125,7 @@ def get_dir_exr(ord_dir, rgb=False): ### 不要 float_return = True 之類的，
         img = cv2.imread(ord_dir + "/" + file_name, cv2.IMREAD_ANYDEPTH | cv2.IMREAD_UNCHANGED) ### 這行就可以了！
         if(rgb): img = img[...,::-1]    
         imgs.append(img)
-        
+
     ### 不要轉dtype，因為不確定exr存的是啥米型態！
     # imgs = np.array(imgs, dtype=np.uint8) 
     # if(float_return): imgs = np.array(imgs, dtype=np.float32)
@@ -111,18 +133,20 @@ def get_dir_exr(ord_dir, rgb=False): ### 不要 float_return = True 之類的，
 
 
 
-
+@Check_dir_exist_decorator
 def get_dir_mat(ord_dir, key):
     from hdf5storage import loadmat
+    # import scipy.io as scio ### 好像這個也可以，也在這邊紀錄一下囉
     from util import get_dir_exr
 
     file_names = get_dir_certain_file_name(ord_dir, ".mat")
     imgs = []
     for file_name in file_names:
         mat = loadmat(ord_dir+"/"+file_name)
+        # mat = scio.loadmat(mat_name) ### 好像這個也可以，也在這邊紀錄一下囉，下面用法一樣的樣子
         imgs.append(mat[key])
     return np.array(imgs)
-    
+
 
 def get_db_amount(ord_dir):
     file_names = [file_name for file_name in os.listdir(ord_dir) if Check_img_filename(file_name) or (".npy" in file_name) ]
@@ -229,11 +253,11 @@ def method2(x, y, color_shift=1, white_bg=True):       ### 最大位移量不可
     hsv = np.zeros((h, w, 3), np.uint8) ### 初始化一個canvas
     hsv[...,0] = ang*(180/np.pi/2)      ### B channel為 角度訊息的顏色
     hsv[...,1] = 255                    ### G channel為 255飽和度
-    print("ang", ang)
-    print("val", val)
+    # print("ang", ang)
+    # print("val", val)
     hsv[...,2] = np.minimum(val*color_shift, 255)   ### R channel為 位移 和 255中較小值来表示亮度，因為值最大為255，val的除4拿掉就ok了！
-    print("hsv[...,2]", hsv[...,2])
-    print("")
+    # print("hsv[...,2]", hsv[...,2])
+    # print("")
     bgr = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR) ### 把得到的HSV模型轉換為BGR顯示
     if(white_bg):
         white_back = np.ones((h, w, 3),np.uint8)*255
@@ -506,7 +530,7 @@ class Matplot_ax_util():
         ### 畫點
         ax.scatter(cur_epoch, y_array[cur_epoch], color=cmap(loss_i))
         ### 點旁邊註記值
-        ax.annotate( s="%.3f" % y_array[cur_epoch],      ### 顯示的文字
+        ax.annotate( text="%.3f" % y_array[cur_epoch],      ### 顯示的文字
                      xy=(cur_epoch, y_array[cur_epoch]), ### 要標註的目標點
                      xytext=( 0 , 10*loss_i),         ### 顯示的文字放哪裡
                      textcoords='offset points',         ### 目前東西放哪裡的坐標系用什麼
@@ -600,7 +624,7 @@ class Matplot_single_row_imgs(Matplot_fig_util):
         self.fig.text(x=0.5, y=0.945, s=self.fig_title, fontsize=20, c=(0.,0.,0.,1.),  horizontalalignment='center',)
         
         for go_img, img in enumerate(self.imgs):
-            if(self.bgr2rgb):img[...,::-1] ### 如果有標示 輸入進來的 影像是 bgr，要轉rgb喔！
+            if(self.bgr2rgb): img = img[...,::-1] ### 如果有標示 輸入進來的 影像是 bgr，要轉rgb喔！
             if(self.col_imgs_amount > 1):
                 used_ax[go_img].imshow(img) ### 小畫布 畫上影像，別忘記要bgr -> rgb喔！
                 used_ax[go_img].set_title( self.img_titles[go_img], fontsize=16 ) ### 小畫布上的 title
