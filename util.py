@@ -43,11 +43,11 @@ def Check_img_filename(file_name):
     if(".bmp" in file_name or ".jpg" in file_name or ".jpeg" in file_name or ".png" in file_name ):return True
     else: return False
 
-def Check_dir_exist_decorator(get_dir_fun):  ### 加在 get_dir 那種function上
-    def wrapper(*args, **kwargs):            ### 應該是最 general 的寫法了
-        if os.path.isdir(args[0]):           ### 主要是要拿到 ord_dir，所以目前的寫法限定 get_dir_fun 需要用 位置參數，不能用關鍵字參數囉！
-            result = get_dir_fun(args[0])    ### 如果資料夾存在，做事情
-        else:                                ### 如果資料夾不存在，回傳[]
+def Check_dir_exist_decorator(get_dir_fun):         ### 加在 get_dir 那種function上
+    def wrapper(*args, **kwargs):                   ### 應該是最 general 的寫法了
+        if os.path.isdir(args[0]):                  ### 主要是要拿到 ord_dir，所以目前的寫法限定 get_dir_fun 需要用 位置參數，不能用關鍵字參數囉！
+            result = get_dir_fun(*args, **kwargs)   ### 如果資料夾存在，做事情
+        else:                                       ### 如果資料夾不存在，回傳[]
             print(args[0] + " 資料夾不存在，回傳[]")
             result = []
         return result
@@ -607,9 +607,9 @@ class Matplot_single_row_imgs(Matplot_fig_util):
         self.canvas_height = self._get_one_row_canvas_height()
         self.canvas_width  = self._get_one_row_canvas_width()
         if(self.add_loss):   ### 多一些空間來畫loss
+            self.row_imgs_amount += 1 ### 多一row來畫loss
             self.canvas_height += 3   ### 慢慢試囉～ 
             self.canvas_width  -= 1.5*self.col_imgs_amount  ### 慢慢試囉～ 
-            self.row_imgs_amount += 1 ### 多一row來畫loss
         # print("canvas_height",canvas_height)
         # print("canvas_width",canvas_width)
         # print("row_imgs_amount", row_imgs_amount)
@@ -729,9 +729,9 @@ def matplot_visual_single_row_imgs(img_titles, imgs, fig_title="epoch = 1005", b
     canvas_height = _get_one_row_canvas_height(imgs)
     canvas_width  = _get_one_row_canvas_width(imgs)
     if(add_loss):   ### 多一些空間來畫loss
+        row_imgs_amount += 1 ### 多一row來畫loss
         canvas_height += 3   ### 慢慢試囉～ 
         canvas_width  -= 1.5*col_imgs_amount  ### 慢慢試囉～ 
-        row_imgs_amount += 1 ### 多一row來畫loss
     # print("canvas_height",canvas_height)
     # print("canvas_width",canvas_width)
     # print("row_imgs_amount", row_imgs_amount)
@@ -808,11 +808,11 @@ class Matplot_multi_row_imgs(Matplot_util):
         self.canvas_height = _get_row_col_canvas_height(self.r_c_imgs)
         self.canvas_width  = _get_row_col_canvas_width (self.r_c_imgs)
         if(self.add_loss):   ### 多一些空間來畫loss
+            self.row_imgs_amount += 1 ### 多一row來畫loss
             self.canvas_height += 3.0  ### 慢慢試囉～
             self.canvas_width  -= 0.55*self.col_imgs_amount  ### 慢慢試囉～
             self.canvas_height *= 1.1 #1.2最好，但有點佔記憶體  ### 慢慢試囉～ 
             self.canvas_width  *= 1.1 #1.2最好，但有點佔記憶體  ### 慢慢試囉～
-            self.row_imgs_amount += 1 ### 多一row來畫loss
         # print("canvas_height",canvas_height)
         # print("canvas_width",canvas_width)
         # print("row_imgs_amount", row_imgs_amount)
@@ -906,11 +906,11 @@ def matplot_visual_multi_row_imgs(rows_cols_titles, rows_cols_imgs, fig_title="e
     canvas_height = _get_row_col_canvas_height(rows_cols_imgs)
     canvas_width  = _get_row_col_canvas_width (rows_cols_imgs)
     if(add_loss):   ### 多一些空間來畫loss
+        row_imgs_amount += 1 ### 多一row來畫loss
         canvas_height += 3.0  ### 慢慢試囉～
         canvas_width  -= 0.55*col_imgs_amount  ### 慢慢試囉～
         canvas_height *= 1.2  ### 慢慢試囉～ 
         canvas_width  *= 1.2  ### 慢慢試囉～
-        row_imgs_amount += 1 ### 多一row來畫loss
     # print("canvas_height",canvas_height)
     # print("canvas_width",canvas_width)
     # print("row_imgs_amount", row_imgs_amount)
