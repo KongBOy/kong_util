@@ -554,15 +554,15 @@ def _Save_as_certain_image_type(image_type, ord_dir, dst_dir, gray=False, gray_t
     Check_dir_exist_and_build(dst_dir)
 
     file_names = [file_name for file_name in os.listdir(ord_dir) if Check_img_filename(file_name)]
-    if(multiprocess):  ### 有用multiprocess
+    if(multiprocess and core_amount > 1):  ### 有用multiprocess
         from util import multi_processing_interface
         multi_processing_interface(core_amount=core_amount ,task_amount=len(file_names), task=_save_img, task_args= [image_type, ord_dir, dst_dir, file_names, gray, gray_three_channel, delete_ord_file, show_msg, quality_list] )
     else:  ### 沒有用multiprocess
         _save_img(0, len(file_names), image_type, ord_dir, dst_dir, file_names, gray, gray_three_channel, delete_ord_file, show_msg, quality_list)
 
-def Save_as_jpg(ord_dir, dst_dir, gray=False, gray_three_channel=False, delete_ord_file=False, quality_list=None): ### jpg才有失真壓縮的概念，bmp沒有喔！
+def Save_as_jpg(ord_dir, dst_dir, gray=False, gray_three_channel=False, delete_ord_file=False, quality_list=None, multiprocess=True, core_amount=8): ### jpg才有失真壓縮的概念，bmp沒有喔！
     print("doing Save_as_jpg")
-    _Save_as_certain_image_type("jpg", ord_dir, dst_dir, gray=gray, gray_three_channel=gray_three_channel, delete_ord_file=delete_ord_file, quality_list=quality_list)
+    _Save_as_certain_image_type("jpg", ord_dir, dst_dir, gray=gray, gray_three_channel=gray_three_channel, delete_ord_file=delete_ord_file, quality_list=quality_list, multiprocess=multiprocess, core_amount=core_amount)
 
 def Save_as_bmp(ord_dir, dst_dir, gray=False, gray_three_channel=False, delete_ord_file=False):
     _Save_as_certain_image_type("bmp", ord_dir, dst_dir, gray=gray, gray_three_channel=gray_three_channel, delete_ord_file=delete_ord_file)
