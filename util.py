@@ -142,7 +142,7 @@ def get_dir_mat(ord_dir, key):
     file_names = get_dir_certain_file_name(ord_dir, ".mat")
     imgs = []
     for file_name in file_names:
-        mat = loadmat(ord_dir+"/"+file_name)
+        mat = loadmat(ord_dir + "/" + file_name)
         # mat = scio.loadmat(mat_name) ### 好像這個也可以，也在這邊紀錄一下囉，下面用法一樣的樣子
         imgs.append(mat[key])
     return np.array(imgs)
@@ -154,17 +154,17 @@ def get_db_amount(ord_dir):
 
 ##########################################################
 def apply_move_map_boundary_mask(move_maps):
-    boundary_width = 20 
+    boundary_width = 20
     _, row, col = move_maps.shape[:3]
-    move_maps[:, boundary_width:row-boundary_width,boundary_width:col-boundary_width,:] = 0
+    move_maps[:, boundary_width:row - boundary_width, boundary_width:col - boundary_width, :] = 0
     return move_maps
 
-def get_max_db_move_xy_from_numpy(move_maps): ### 注意這裡的 max/min 是找位移最大，不管正負號！ 跟 normalize 用的max/min 不一樣喔！ 
+def get_max_db_move_xy_from_numpy(move_maps):  ### 注意這裡的 max/min 是找位移最大，不管正負號！ 跟 normalize 用的max/min 不一樣喔！
     move_maps = abs(move_maps)
-    print("move_maps.shape",move_maps.shape)
+    print("move_maps.shape", move_maps.shape)
     # move_maps = apply_move_map_boundary_mask(move_maps) ### 目前的dataset還是沒有只看邊邊，有空再用它來產生db，雖然實驗過有沒有用差不多(因為1019位移邊邊很大)
-    max_move_x = move_maps[:,:,:,0].max()
-    max_move_y = move_maps[:,:,:,1].max()
+    max_move_x = move_maps[:, :, :, 0].max()
+    max_move_y = move_maps[:, :, :, 1].max()
     return max_move_x, max_move_y
 
 def get_max_db_move_xy_from_dir(ord_dir):
@@ -177,46 +177,46 @@ def get_max_db_move_xy_from_certain_move(ord_dir, certain_word):
 
 
 def get_max_db_move_xy(db_dir="datasets", db_name="1_unet_page_h=384,w=256"):
-    move_map_train_path = db_dir + "/" + db_name + "/" + "train/move_maps" 
-    move_map_test_path  = db_dir + "/" + db_name + "/" + "test/move_maps" 
-    train_move_maps = get_dir_move(move_map_train_path) # (1800, 384, 256, 2)
-    test_move_maps  = get_dir_move(move_map_test_path)  # (200, 384, 256, 2)
-    db_move_maps = np.concatenate((train_move_maps, test_move_maps), axis=0) # (2000, 384, 256, 2)
+    move_map_train_path = db_dir + "/" + db_name + "/" + "train/move_maps"
+    move_map_test_path  = db_dir + "/" + db_name + "/" + "test/move_maps"
+    train_move_maps = get_dir_move(move_map_train_path)  # (1800, 384, 256, 2)
+    test_move_maps  = get_dir_move(move_map_test_path)   # (200, 384, 256, 2)
+    db_move_maps = np.concatenate((train_move_maps, test_move_maps), axis=0)  # (2000, 384, 256, 2)
 
-    max_move_x = db_move_maps[:,:,:,0].max()
-    max_move_y = db_move_maps[:,:,:,1].max()
+    max_move_x = db_move_maps[:, :, :, 0].max()
+    max_move_y = db_move_maps[:, :, :, 1].max()
     return max_move_x, max_move_y
 
 #######################################################
-### 複刻 step6_data_pipline.py 寫的 get_train_test_move_map_db 
+### 複刻 step6_data_pipline.py 寫的 get_train_test_move_map_db
 def get_maxmin_train_move_from_path(move_map_train_path):
     train_move_maps = get_dir_move(move_map_train_path)
-    max_train_move = train_move_maps.max() ###  236.52951204508076
-    min_train_move = train_move_maps.min() ### -227.09562801056995
+    max_train_move = train_move_maps.max()  ###  236.52951204508076
+    min_train_move = train_move_maps.min()  ### -227.09562801056995
     return max_train_move, min_train_move
 
 def get_maxmin_train_move(db_dir="datasets", db_name="1_unet_page_h=384,w=256"):
-    move_map_train_path = db_dir + "/" + db_name + "/" + "train/move_maps" 
+    move_map_train_path = db_dir + "/" + db_name + "/" + "train/move_maps"
     train_move_maps = get_dir_move(move_map_train_path)
-    max_train_move = train_move_maps.max() ###  236.52951204508076
-    min_train_move = train_move_maps.min() ### -227.09562801056995
+    max_train_move = train_move_maps.max()  ###  236.52951204508076
+    min_train_move = train_move_maps.min()  ### -227.09562801056995
     return max_train_move, min_train_move
 
 #######################################################
 ### 用來給視覺化參考的顏色map
-def get_reference_map( max_move, max_from_move_dir=False, move_dir="", x_decrease=False, y_decrease=False, color_shift=1): ### 根據你的db內 最大最小值 產生 參考流的map
+def get_reference_map( max_move, max_from_move_dir=False, move_dir="", x_decrease=False, y_decrease=False, color_shift=1):  ### 根據你的db內 最大最小值 產生 參考流的map
     max_move = max_move
     if(max_from_move_dir) : max_move = find_db_max_move(move_dir)
 
     visual_row = 512
     visual_col = visual_row
-    x = np.linspace(-max_move,max_move,visual_col)
+    x = np.linspace(-max_move, max_move, visual_col)
     if(x_decrease): x = x[::-1]
-    x_map = np.tile(x, (visual_row,1))
+    x_map = np.tile(x, (visual_row, 1))
 
-    y = np.linspace(-max_move,max_move,visual_col)
+    y = np.linspace(-max_move, max_move, visual_col)
     if(y_decrease): y = y[::-1]
-    y_map = np.tile(y, (visual_row,1))
+    y_map = np.tile(y, (visual_row, 1))
     y_map = y_map.T
 
     map1 = method1(x_map, y_map, max_value=max_move)
@@ -229,15 +229,15 @@ def find_db_max_move(ord_dir):
     print("max_move:",max_move)
     return max_move
 
-####################################################### 
+#######################################################
 ### 視覺化方法1：感覺可以！但缺點是沒辦法用cv2，而一定要搭配matplot的imshow來自動填色
-def method1(x, y, max_value=-10000): ### 這個 max_value的值 意義上來說要是整個db內位移最大值喔！這樣子出來的圖的顏色強度才會準確，後來覺得可刪
+def method1(x, y, max_value=-10000):  ### 這個 max_value的值 意義上來說要是整個db內位移最大值喔！這樣子出來的圖的顏色強度才會準確，後來覺得可刪
     h, w = x.shape[:2]
     z = np.ones(shape=(h, w))
-    visual_map = np.dstack( (x,y) )     ### step1.把x,y拚再一起同時處理
+    visual_map = np.dstack((x, y))     ### step1.把x,y拚再一起同時處理
     max_value = visual_map.max()        ### step2.先把值弄到 0~1
     min_value = visual_map.min()
-    visual_map = (visual_map - min_value)/(max_value - min_value+0.000000001) 
+    visual_map = (visual_map - min_value) / (max_value - min_value + 0.000000001) 
     # print("visual_map.max()", visual_map.max())
     # print("visual_map.min()", visual_map.min())
     visual_map = np.dstack( (visual_map, z))         ### step4.再concat channel3，來給imshow自動決定顏色
@@ -245,25 +245,25 @@ def method1(x, y, max_value=-10000): ### 這個 max_value的值 意義上來說�
     return visual_map
 
 ### 視覺化方法2：用hsv，感覺可以！
-def method2(x, y, color_shift=1, white_bg=True):       ### 最大位移量不可以超過 255，要不然顏色強度會不準，不過實際用了map來顯示發現通常值都不大，所以還加個color_shift喔~
-    h, w = x.shape[:2]                  ### 影像寬高
-    fx, fy = x, y                       ### u是x方向怎麼移動，v是y方向怎麼移動
-    ang = np.arctan2(fy, fx) + np.pi    ### 得到運動的角度
-    val = np.sqrt(fx*fx+fy*fy)          ### 得到運動的位移長度
-    hsv = np.zeros((h, w, 3), np.uint8) ### 初始化一個canvas
-    hsv[...,0] = ang*(180/np.pi/2)      ### B channel為 角度訊息的顏色
-    hsv[...,1] = 255                    ### G channel為 255飽和度
+def method2(x, y, color_shift=1, white_bg=True):  ### 最大位移量不可以超過 255，要不然顏色強度會不準，不過實際用了map來顯示發現通常值都不大，所以還加個color_shift喔~
+    h, w = x.shape[:2]                     ### 影像寬高
+    fx, fy = x, y                          ### u是x方向怎麼移動，v是y方向怎麼移動
+    ang = np.arctan2(fy, fx) + np.pi       ### 得到運動的角度
+    val = np.sqrt(fx * fx + fy * fy)       ### 得到運動的位移長度
+    hsv = np.zeros((h, w, 3), np.uint8)    ### 初始化一個canvas
+    hsv[..., 0] = ang * (180 / np.pi / 2)  ### B channel為 角度訊息的顏色
+    hsv[..., 1] = 255                      ### G channel為 255飽和度
     # print("ang", ang)
     # print("val", val)
-    hsv[...,2] = np.minimum(val*color_shift, 255)   ### R channel為 位移 和 255中較小值来表示亮度，因為值最大為255，val的除4拿掉就ok了！
+    hsv[..., 2] = np.minimum(val * color_shift, 255)   ### R channel為 位移 和 255中較小值来表示亮度，因為值最大為255，val的除4拿掉就ok了！
     # print("hsv[...,2]", hsv[...,2])
     # print("")
-    bgr = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR) ### 把得到的HSV模型轉換為BGR顯示
+    bgr = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)  ### 把得到的HSV模型轉換為BGR顯示
     if(white_bg):
-        white_back = np.ones((h, w, 3),np.uint8)*255
-        white_back[...,0] -= hsv[...,2]
-        white_back[...,1] -= hsv[...,2]
-        white_back[...,2] -= hsv[...,2]
+        white_back = np.ones((h, w, 3), np.uint8) * 255
+        white_back[..., 0] -= hsv[..., 2]
+        white_back[..., 1] -= hsv[..., 2]
+        white_back[..., 2] -= hsv[..., 2]
     #        cv2.imshow("white_back",white_back)
         bgr += white_back
     return bgr
@@ -271,99 +271,98 @@ def method2(x, y, color_shift=1, white_bg=True):       ### 最大位移量不可
 #######################################################
 def predict_unet_move_maps_back(predict_move_maps):
     from step0_access_path import access_path
-    train_move_maps = get_dir_move(access_path+"datasets/pad2000-512to256/train/move_maps")
+    train_move_maps = get_dir_move(access_path + "datasets/pad2000-512to256/train/move_maps")
     max_train_move = train_move_maps.max()
     min_train_move = train_move_maps.min()
     predict_back_list = []
     for predict_move_map in predict_move_maps:
-        predict_back = (predict_move_map[0]+1)/2 * (max_train_move-min_train_move) + min_train_move ### 把 -1~1 轉回原始的值域
+        predict_back = (predict_move_map[0] + 1) / 2 * (max_train_move - min_train_move) + min_train_move  ### 把 -1~1 轉回原始的值域
         predict_back_list.append(predict_back)
     return np.array(predict_back_list, dtype=np.float32)
 
 
 
 #######################################################
-
 import matplotlib.pyplot as plt
-import matplotlib as mpl 
+import matplotlib as mpl
 mpl.rcParams["figure.max_open_warning"] = 0
 
 def use_plt_show_move(move, color_shift=1):
-    move_bgr = method2(move[:,:,0], move[:,:,1], color_shift=color_shift)
-    move_rgb = move_bgr[:,:,::-1]
+    move_bgr = method2(move[:, :, 0], move[:, :, 1], color_shift=color_shift)
+    move_rgb = move_bgr[:, :, ::-1]
     fig, ax = plt.subplots(nrows=1, ncols=1)
-    ax.imshow(move_rgb) ### 這裡不會秀出來喔！只是把圖畫進ax裡面而已
+    ax.imshow(move_rgb)  ### 這裡不會秀出來喔！只是把圖畫進ax裡面而已
     return fig, ax
 
 
 
 def time_util(cost_time):
-    hour = cost_time//3600 
-    minute = cost_time%3600//60 
-    second = cost_time%3600%60
-    return "%02i:%02i:%02i"%(hour, minute, second)
+    hour = cost_time // 3600
+    minute = cost_time % 3600 // 60
+    second = cost_time % 3600 % 60
+    return "%02i:%02i:%02i" % (hour, minute, second)
 
 #######################################################
 def _save_or_show(save, save_name, show):
-    if(save==True and show==True):
+    if(save is True and show is True):
         print("不能同時 save 又 show圖，預設用show圖囉！")
         plt.show()
-    elif(save==True  and show==False): plt.savefig(save_name)
-    elif(save==False and show==True ): plt.show()
+    elif(save is True  and show is False): plt.savefig(save_name)
+    elif(save is False and show is True ): plt.show()
     plt.close()
 
 
 def Show_3d_scatter(one_channel_img, save=False, save_name="", show=False):
     import matplotlib.pyplot as plt 
     from mpl_toolkits.mplot3d import Axes3D
-    import numpy as np 
-    import cv2 
+    import numpy as np
+    import cv2
 
-    fig, ax = plt.subplots(1,1)
-    fig.set_size_inches(10,10)
+    fig, ax = plt.subplots(1, 1)
+    fig.set_size_inches(10, 10)
     ax = Axes3D(fig)
-    ax.set_xlabel("x"); ax.set_ylabel("y"); ax.set_zlabel("z") ### 設定 x,y,z軸顯示的字
+    ax.set_xlabel("x"); ax.set_ylabel("y"); ax.set_zlabel("z")  ### 設定 x,y,z軸顯示的字
     # ax.set_zlim(-20, 30) ### 設定 z範圍
 
     ### 3D Scatter
     row, col = one_channel_img.shape[:2]
-    x, y = get_xy_map(row,col)
-    ax.scatter(x,y,one_channel_img, 
+    x, y = get_xy_map(row, col)
+    ax.scatter(x, y, one_channel_img,
     # ax.scatter(x[one_channel_img!=0],y[one_channel_img!=0],one_channel_img[ one_channel_img!=0 ],  ### 這可以 挑 z !=0 的點再plot
                s=1,                     ### 點點的 大小
             #    linewidths = 1,        ### 點點的 邊寬
             #    edgecolors = "black"   ### 點點的 邊邊顏色
-              c = np.arange(row*col),   ### 彩色
+              c = np.arange(row * col),   ### 彩色
               )
     _save_or_show(save, save_name, show)
 
     ### 2D 直接show
-    fig_img, ax_img = plt.subplots(1,1)
+    fig_img, ax_img = plt.subplots(1, 1)
     ax_img.imshow(one_channel_img)
-    _save_or_show(save, save_name+"-one_channel_img", show)
+    _save_or_show(save, save_name + "-one_channel_img", show)
 
 
 
 def Show_3d_scatter_along_xy(one_channel_img, along, save_name):
-    import matplotlib.pyplot as plt 
+    import matplotlib.pyplot as plt
     from mpl_toolkits.mplot3d import Axes3D
-    import numpy as np 
-    import cv2 
+    import numpy as np
+    import cv2
     import time
 
     ### 第一張圖：one_channel_img的長相
-    fig_img, ax_img = plt.subplots(1,1) ### 建立新畫布
-    ax_img.imshow(one_channel_img)      ### 畫上原影像
+    fig_img, ax_img = plt.subplots(1, 1)  ### 建立新畫布
+    ax_img.imshow(one_channel_img)        ### 畫上原影像
 
     ### 第二張圖：沿著x走一個個col顯示結果 或 沿著y走一個個row顯示結果
-    row, col = one_channel_img.shape[:2]  ### 取得row, col
-    x, y = get_xy_map(row,col)            ### 取得 x=[[0,1,2,...,col],[0,1,2,...,col],...,[0,1,2,...,col]] 和 y=[[0,0,...,0],[1,1,...,1],...,[row,row,...,row]]
+    row, col = one_channel_img.shape[:2]   ### 取得row, col
+    x, y = get_xy_map(row, col)            ### 取得 x=[[0,1,2,...,col],[0,1,2,...,col],...,[0,1,2,...,col]] 和 y=[[0,0,...,0],[1,1,...,1],...,[row,row,...,row]]
 
-    fig, ax = plt.subplots(1,1) ### 建立新畫布
-    fig.set_size_inches(10,10)  ### 設定畫布大小
-    ax = Axes3D(fig)            ### 轉成3D畫布
-    ax.set_xlabel("x") ; ax.set_ylabel("y") ; ax.set_zlabel("z")    ### 設定 x,y,z軸顯示的字
-    ax.set_xlim(0, col); ax.set_ylim(0, row); ax.set_zlim(-30,  30) ### 設定 x,y,z顯示的範圍
+    fig, ax = plt.subplots(1, 1)  ### 建立新畫布
+    fig.set_size_inches(10, 10)    ### 設定畫布大小
+    ax = Axes3D(fig)              ### 轉成3D畫布
+    ax.set_xlabel("x") ; ax.set_ylabel("y") ; ax.set_zlabel("z")     ### 設定 x,y,z軸顯示的字
+    ax.set_xlim(0, col); ax.set_ylim(0, row); ax.set_zlim(-30,  30)  ### 設定 x,y,z顯示的範圍
 
     plt.ion()
     plt.show()
@@ -375,28 +374,28 @@ def Show_3d_scatter_along_xy(one_channel_img, along, save_name):
             plt.pause(1)
     ### 沿著y走一個個row顯示結果
     elif(along=="y"): 
-        for go_y in range(row): 
-            print("go_y=",go_y)
-            ax.scatter(x[go_y], np.ones(col)*go_y ,one_channel_img[go_y], s=1,c = np.arange(col),)
+        for go_y in range(row):
+            print("go_y=", go_y)
+            ax.scatter(x[go_y], np.ones(col) * go_y, one_channel_img[go_y], s=1, c = np.arange(col),)
             plt.pause(1)
-    
+
     plt.show()
 
 def Show_2d_scatter_along_x(one_channel_img, save_name):
-    import matplotlib.pyplot as plt 
+    import matplotlib.pyplot as plt
     from mpl_toolkits.mplot3d import Axes3D
-    import numpy as np 
-    import cv2 
+    import numpy as np
+    import cv2
 
-    fig, ax = plt.subplots(1,1)
-    fig.set_size_inches(10,10)
-    ax.set_xlabel("y"); ax.set_ylabel("z") ### 設定 x,y軸顯示的字
+    fig, ax = plt.subplots(1, 1)
+    fig.set_size_inches(10, 10)
+    ax.set_xlabel("y"); ax.set_ylabel("z")  ### 設定 x,y軸顯示的字
     # ax.set_zlim(-20, 30) ### 設定 z範圍
 
 
     row, col = one_channel_img.shape[:2]
-    x, y = get_xy_map(row,col)
-    ax.scatter(y[:,0],one_channel_img[:,0], 
+    x, y = get_xy_map(row, col)
+    ax.scatter(y[:, 0], one_channel_img[:, 0],
                s=1,                     ### 點點的 大小
             #    linewidths = 1,        ### 點點的 邊寬
             #    edgecolors = "black"   ### 點點的 邊邊顏色
@@ -427,8 +426,8 @@ def Show_3d_bar(one_channel_img, save_name):
     h = 360
     w = 270
     sub = 5
-    one_channel_img = cv2.resize(one_channel_img, (int(w/sub), int(h/sub))) 
-    print("one_channel_img.shape",one_channel_img.shape)
+    one_channel_img = cv2.resize(one_channel_img, (int(w / sub), int(h / sub)))
+    print("one_channel_img.shape", one_channel_img.shape)
     height, width = one_channel_img.shape[:2]
     draw_x = np.zeros(one_channel_img.shape[:2]) + np.arange(width ).reshape(1,-1) 
     ### draw_x 長得像：
