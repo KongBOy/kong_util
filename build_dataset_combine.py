@@ -667,8 +667,10 @@ def Find_ltrd_and_crop(ord_dir, dst_dir, padding=50, search_amount=-1, crop_acco
 
     l, t, r, d = Find_db_left_top_right_down(ord_dir, padding=padding, search_amount=search_amount)
     file_names = get_dir_img_file_names(ord_dir)
-    _use_ltrd_crop_multiprocess(ord_dir, dst_dir, file_names, l, t, r, d, crop_according_lr_page, odd_x_shift, even_x_shift, core_amount=8, task_amount=len(file_names))
-
+    if(multiprocess):
+        _use_ltrd_crop_multiprocess(ord_dir, dst_dir, file_names, l, t, r, d, crop_according_lr_page, odd_x_shift, even_x_shift, core_amount=8, task_amount=len(file_names))
+    else:
+        _use_ltrd_crop(0, len(file_names), ord_dir, dst_dir, file_names, l, t, r, d, crop_according_lr_page, odd_x_shift, even_x_shift)
 
 
 
