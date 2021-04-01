@@ -7,6 +7,8 @@ from util import get_dir_certain_file_name, get_dir_img_file_names, get_dir_exr,
 
 from tqdm import tqdm
 
+import time
+
 def Check_img_filename(file_name):
     if(".jpg" in file_name.lower() or "jpeg" in file_name.lower() or ".png" in file_name.lower() or ".bmp" in file_name.lower()):
         return True
@@ -559,7 +561,9 @@ def _Save_as_certain_image_type(image_type, ord_dir, dst_dir, gray=False, gray_t
 
 def Save_as_jpg(ord_dir, dst_dir, gray=False, gray_three_channel=False, delete_ord_file=False, quality_list=None, multiprocess=True, core_amount=8):  ### jpg才有失真壓縮的概念，bmp沒有喔！
     print("doing Save_as_jpg")
+    start_time = time.time()
     _Save_as_certain_image_type("jpg", ord_dir, dst_dir, gray=gray, gray_three_channel=gray_three_channel, delete_ord_file=delete_ord_file, quality_list=quality_list, multiprocess=multiprocess, core_amount=core_amount)
+    print("Save_as_jpg cost time:", time.time() - start_time)
 
 def Save_as_bmp(ord_dir, dst_dir, gray=False, gray_three_channel=False, delete_ord_file=False):
     _Save_as_certain_image_type("bmp", ord_dir, dst_dir, gray=gray, gray_three_channel=gray_three_channel, delete_ord_file=delete_ord_file)
@@ -662,16 +666,17 @@ def _use_ltrd_crop_multiprocess(ord_dir, dst_dir, file_names, l, t, r, d, crop_a
 
 def Find_ltrd_and_crop(ord_dir, dst_dir, padding=50, search_amount=-1, crop_according_lr_page=False, odd_x_shift=0, even_x_shift=0, multiprocess=True, core_amount=8):
     print("doing Find_ltrd_and_crop")
+    start_time = time.time()
     ### 建立放結果的資料夾
     Check_dir_exist_and_build(dst_dir)
 
     l, t, r, d = Find_db_left_top_right_down(ord_dir, padding=padding, search_amount=search_amount)
     file_names = get_dir_img_file_names(ord_dir)
-    if(multiprocess):
-        _use_ltrd_crop_multiprocess(ord_dir, dst_dir, file_names, l, t, r, d, crop_according_lr_page, odd_x_shift, even_x_shift, core_amount=8, task_amount=len(file_names))
+    if(multiprocess and core_amount > 1):
+        _use_ltrd_crop_multiprocess(ord_dir, dst_dir, file_names, l, t, r, d, crop_according_lr_page, odd_x_shift, even_x_shift, core_amount=core_amount, task_amount=len(file_names))
     else:
         _use_ltrd_crop(0, len(file_names), ord_dir, dst_dir, file_names, l, t, r, d, crop_according_lr_page, odd_x_shift, even_x_shift)
-
+    print("Find_ltrd_and_crop cost time:", time.time() - start_time)
 
 
 
