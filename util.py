@@ -1021,14 +1021,28 @@ def multi_processing_interface(core_amount, task_amount, task, task_args=None, p
         else:                 processes.append(Process( target=task, args=(core_start_index, core_task_amount, *task_args) ) ) ### 根據上面的 core_start_index 和 core_task_amount 來 創建 Process
         if(print_msg): print("registering process_%02i dealing %04i~%04i task"% (go_core_i, core_start_index, core_start_index+core_task_amount-1) ) ### 大概顯示這樣的資訊：registering process_00 dealing 0000~0003 task
 
-    for go_p, process in enumerate(processes):
-        print("go_p", go_p)
-        process.start()
-        if( (go_p + 1) % 8 == 0): 
-            for go_stop_p in range(go_p+1):
-                if(processes[go_stop_p].is_alive()): 
-                    processes[go_stop_p].join()
-            # time.sleep(10)
+
+    ### 方法2，看某個worker做完，馬上分process給他做
+    worker_amount = 6
+    workers = [Process()] * worker_amount
+    go_p = 0  ### current process index
+    process_amount = len(processes)
+    while(go_p < process_amount):
+        for worker_id, worker in enumerate(workers):
+            if(worker.is_alive() is False):   ### 如果 worker 做完了， .is_alive() 會變False
+                ### 指定新 Process 給 做完事情的 worker
+                workers[worker_id] = processes[go_p]
+                workers[worker_id].start()
+                if(print_msg): print(" workers[%i] doing %i/%i process is starting" % (worker_id, go_p, process_amount))
+                go_p += 1
+            
+    ### 方法1，但還是要等前面的process做完 才分配 下一個 process
+    # for go_p, process in enumerate(processes):
+        # if( (go_p + 1) % 8 == 0): 
+        #     for go_stop_p in range(go_p+1):
+        #         if(processes[go_stop_p].is_alive()): 
+        #             processes[go_stop_p].join()
+        #     time.sleep(10)
 
     for process in processes:
         process.join()
