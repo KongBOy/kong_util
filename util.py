@@ -965,6 +965,8 @@ def get_triangle_list(num):
 
 def multi_processing_interface(core_amount, task_amount, task, task_args=None, print_msg=False):
     from multiprocessing import Process
+    import time
+    from tqdm import tqdm
     processes = [] ### 放 Process 的 list
     split_amount = int(task_amount //core_amount) ### split_amount 的意思是： 一個core 可以"分到"幾個任務，目前的想法是 一個core對一個process，所以下面的process_amount 一開始設定==split_amount喔！
     fract_amount = int(task_amount % core_amount) ### fract_amount 的意思是： 任務不一定可以均分給所有core，分完後還剩下多少個任務沒分出來
@@ -1019,8 +1021,14 @@ def multi_processing_interface(core_amount, task_amount, task, task_args=None, p
         else:                 processes.append(Process( target=task, args=(core_start_index, core_task_amount, *task_args) ) ) ### 根據上面的 core_start_index 和 core_task_amount 來 創建 Process
         if(print_msg): print("registering process_%02i dealing %04i~%04i task"% (go_core_i, core_start_index, core_start_index+core_task_amount-1) ) ### 大概顯示這樣的資訊：registering process_00 dealing 0000~0003 task
 
-    for process in processes:
+    for go_p, process in enumerate(processes):
+        print("go_p", go_p)
         process.start()
+        if( (go_p + 1) % 8 == 0): 
+            for go_stop_p in range(go_p+1):
+                if(processes[go_stop_p].is_alive()): 
+                    processes[go_stop_p].join()
+            # time.sleep(10)
 
     for process in processes:
         process.join()
