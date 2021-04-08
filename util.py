@@ -967,6 +967,10 @@ def get_triangle_list(num):
         num -= acc_num
 
 def multi_processing_interface(core_amount, task_amount, task, task_args=None, print_msg=False):
+    '''
+    理論上 core 就是 worker，但實際上我寫的想法是 core 可以無限切，但是實際的 worker 就要看cpu 是有限的囉！
+    '''
+    import multiprocessing
     from multiprocessing import Process
     import time
     from tqdm import tqdm
@@ -1024,15 +1028,17 @@ def multi_processing_interface(core_amount, task_amount, task, task_args=None, p
         else:                 processes.append(Process( target=task, args=(core_start_index, core_task_amount, *task_args) ) ) ### 根據上面的 core_start_index 和 core_task_amount 來 創建 Process
         if(print_msg): print("registering process_%02i dealing %04i~%04i task"% (go_core_i, core_start_index, core_start_index+core_task_amount-1) ) ### 大概顯示這樣的資訊：registering process_00 dealing 0000~0003 task
 
-
+    ##############################################################################################################################
     ### 方法2，看某個worker做完，馬上分process給他做
-    worker_amount = 6
+    max_worker = multiprocessing.cpu_count() * 2 + 2  ### 應該吧~~ 通常都 1_core 2_thread，但實際嘗試後發現 通常 比 core*thread 大也沒問題 且 較容易 cpu 100 % 運轉
+    worker_amount = core_amount if core_amount < max_worker else max_worker  ### 一定要這行，要不然 worker_amount > core_amount 下面跑 worker迴圈 會出問題，不過現在加防呆就沒問題了！而且這行很合理，原因如一開始註解說的，core_amount 可以無限切，但實際的worker數是有限的！
     workers = [Process()] * worker_amount
     go_p = 0  ### current process index
     process_amount = len(processes)
     while(go_p < process_amount):
         for worker_id, worker in enumerate(workers):
-            if(worker.is_alive() is False):   ### 如果 worker 做完了， .is_alive() 會變False
+            if(worker.is_alive() is False):  ### 如果 worker 做完了， .is_alive() 會變False
+                if(worker_id > go_p): break  ### 防呆，如果 worker_amount > core_amount，這裡就會break囉！
                 ### 指定新 Process 給 做完事情的 worker
                 workers[worker_id] = processes[go_p]
                 workers[worker_id].start()
