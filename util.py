@@ -232,6 +232,9 @@ def find_db_max_move(ord_dir):
 #######################################################
 ### 視覺化方法1：感覺可以！但缺點是沒辦法用cv2，而一定要搭配matplot的imshow來自動填色
 def method1(x, y, max_value=-10000):  ### 這個 max_value的值 意義上來說要是整個db內位移最大值喔！這樣子出來的圖的顏色強度才會準確，後來覺得可刪
+    '''
+    回傳的 visual_map 的值域 為 0~1
+    '''
     h, w = x.shape[:2]
     z = np.ones(shape=(h, w))
     visual_map = np.dstack((x, y))     ### step1.把x,y拚再一起同時處理
