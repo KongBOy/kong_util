@@ -1032,17 +1032,29 @@ def multi_processing_interface(core_amount, task_amount, task, task_args=None, p
     ##############################################################################################################################
     ### 方法2，看某個worker做完，馬上分process給他做
     max_worker = multiprocessing.cpu_count() * 2 + 2  ### 應該吧~~ 通常都 1_core 2_thread，但實際嘗試後發現 通常 比 core*thread 大也沒問題 且 較容易 cpu 100 % 運轉
+    print("max_worker:", max_worker)
+    print("core_amount:", core_amount)
     worker_amount = core_amount if core_amount < max_worker else max_worker  ### 一定要這行，要不然 worker_amount > core_amount 下面跑 worker迴圈 會出問題，不過現在加防呆就沒問題了！而且這行很合理，原因如一開始註解說的，core_amount 可以無限切，但實際的worker數是有限的！
-    workers = [Process()] * worker_amount
+    print("worker_amount:", worker_amount)
+
+
     go_p = 0  ### current process index
     process_amount = len(processes)
+    print("process_amount:", process_amount)
+    worker_amount = process_amount if process_amount < worker_amount else worker_amount  ### 一定要這行，要不然 worker_amount > process_amount 下面跑 worker迴圈 會出問題，不過現在加防呆就沒問題了！而且這行很合理，原因如一開始註解說的，core_amount 可以無限切，但實際的worker數是有限的！
+    print("worker_amount:", worker_amount)
+
+
+    workers = [Process()] * worker_amount  ### 模擬一開始沒事做的 worker
     while(go_p < process_amount):
+        # for worker_id in range(worker_amount):
+        #     worker = workers[worker_id]
         for worker_id, worker in enumerate(workers):
-            if(worker.is_alive() is False):  ### 如果 worker 做完了， .is_alive() 會變False
-                if(worker_id > go_p): break  ### 防呆，如果 worker_amount > core_amount，這裡就會break囉！
-                ### 指定新 Process 給 做完事情的 worker
-                workers[worker_id] = processes[go_p]
-                workers[worker_id].start()
+            if(worker.is_alive() is False):  ### 一開始 worker 沒做事 .is_alive() 為 False 或 後來做完事情了， .is_alive() 會變False
+                if(worker_id > go_p): break  ### 防呆，正常來說要等於，如果 worker_amount > core_amount，就可能會有 大於的狀況發生 會出錯，這裡就會break囉！
+                ### 指定新 Process 給 沒事做 或 做完事情的 worker
+                workers[worker_id] = processes[go_p]   
+                workers[worker_id].start()  ### .is_alive() 會變True
                 if(print_msg): print(" workers[%i] doing %i/%i process is starting" % (worker_id, go_p, process_amount))
                 go_p += 1
             
