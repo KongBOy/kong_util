@@ -969,6 +969,7 @@ def get_triangle_list(num):
 def multi_processing_interface(core_amount, task_amount, task, task_args=None, print_msg=False):
     '''
     理論上 core 就是 worker，但實際上我寫的想法是 core 可以無限切，但是實際的 worker 就要看cpu 是有限的囉！
+    core切多的狀況 用在：當一個core要做的事情 需要的記憶體太大時，比如：wc 100000(十萬) 張，切 500 個 core之類的 一個core 只需要處理 200 張wc的記憶體 這樣子，但實際worker 就是固定的這樣子 (我設定下面 core_count*2+2)
     '''
     import multiprocessing
     from multiprocessing import Process
