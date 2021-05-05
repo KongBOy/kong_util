@@ -530,7 +530,7 @@ def Save_as_gray(ord_dir, dst_dir, gray_three_channel=True):
         cv2.imwrite(dst_dir + "/" + file_name, gray_img)
 
 def _save_img(start_index, amount, image_type, ord_dir, dst_dir, file_names, gray, gray_three_channel, delete_ord_file, show_msg, quality_list):
-    for file_name in tqdm(file_names[start_index:start_index + amount]):
+    for file_name in tqdm(file_names[start_index:start_index + amount]):  ### 以下是拿 bmp 當例子，可以自行套其他格式喔！
         file_title, file_ext = file_name.split(".")      ### 把 檔名前半 後半 分開
         if(file_ext != image_type):                      ### 如果附檔名不是bmp，把圖讀出來，存成bmp
             img = cv2.imread(ord_dir + "/" + file_name)  ### 把圖讀出來
