@@ -1,29 +1,30 @@
-import numpy as np  
-import cv2 
+import numpy as np
+import cv2
 import os
+import shutil
 
 from tqdm import tqdm
 LOSS_YLIM = 2.0
 
-def rename_by_order(ord_dir, split_symbol="-", start_one=True): ### 使用的時候要非常小心喔！
+def rename_by_order(ord_dir, split_symbol="-", start_one=True):  ### 使用的時候要非常小心喔！
     import math
     file_names = os.listdir(ord_dir)
     file_amount = len(file_names)
-    digit_amount = int(math.log(file_amount, 10))+1
-    name_digit = "%0"+ str( digit_amount ) + "i" ### 比如，100多個檔案就是 %03i
+    digit_amount = int(math.log(file_amount, 10)) + 1
+    name_digit = "%0" + str( digit_amount ) + "i"  ### 比如，100多個檔案就是 %03i
     for i, file_name in enumerate(file_names):
         if(start_one): i += 1
         ord_name = ord_dir + "/" + file_name
-        dst_name = ord_dir + "/" + name_digit%i + split_symbol + file_name
+        dst_name = ord_dir + "/" + name_digit % i + split_symbol + file_name
         shutil.move(ord_name, dst_name)
         print(ord_name, "rename to ")
         print(dst_name, "ok")
 
-def rename_by_remove_order(ord_dir, split_symbol="-"): ### 使用的時候要非常小心喔！加入 rename_by_remove_order，寫的強一點了(可以處理多次使用rename_by_order了)，但還是要小心使用(如果處理沒用過rename_by_order還是會錯)
+def rename_by_remove_order(ord_dir, split_symbol="-"):  ### 使用的時候要非常小心喔！加入 rename_by_remove_order，寫的強一點了(可以處理多次使用rename_by_order了)，但還是要小心使用(如果處理沒用過rename_by_order還是會錯)
     file_names = os.listdir(ord_dir)
     for file_name in file_names:
-        ord_name = ord_dir + "/" +file_name
-        dst_name = ord_dir + "/" + file_name[file_name.find(split_symbol)+1:]
+        ord_name = ord_dir + "/" + file_name
+        dst_name = ord_dir + "/" + file_name[file_name.find(split_symbol) + 1:]
         shutil.move(ord_name, dst_name)
         print(ord_name, "rename to ")
         print(dst_name, "ok")
@@ -31,16 +32,16 @@ def rename_by_remove_order(ord_dir, split_symbol="-"): ### 使用的時候要非
 #####################################################################################################################################
 def get_xy_map(row, col):
     x = np.arange(col)
-    x = np.tile(x,(row,1))
-    
+    x = np.tile(x, (row, 1))
+
 #    y = np.arange(row-1, -1, -1) ### 就是這裡要改一下拉！不要抄網路的，網路的是用scatter的方式來看(左下角(0,0)，x往右增加，y往上增加)
-    y = np.arange(row) ### 改成這樣子 就是用image的方式來處理囉！(左上角(0,0)，x往右增加，y往上增加)
-    y = np.tile(y,(col,1)).T
+    y = np.arange(row)  ### 改成這樣子 就是用image的方式來處理囉！(左上角(0,0)，x往右增加，y往上增加)
+    y = np.tile(y, (col, 1)).T
     return x, y
 
 def Check_img_filename(file_name):
     file_name = file_name.lower()
-    if(".bmp" in file_name or ".jpg" in file_name or ".jpeg" in file_name or ".png" in file_name ):return True
+    if(".bmp" in file_name or ".jpg" in file_name or ".jpeg" in file_name or ".png" in file_name ): return True
     else: return False
 
 def Check_dir_exist_decorator(get_dir_fun):         ### 加在 get_dir 那種function上
@@ -74,7 +75,7 @@ def get_dir_dir_name(ord_dir):
 
 @Check_dir_exist_decorator
 def get_dir_certain_dir_name(ord_dir, certain_word):
-    file_names = [file_name for file_name in os.listdir(ord_dir) if ((certain_word in file_name) and os.path.isdir(ord_dir+"/"+file_name)) ]
+    file_names = [file_name for file_name in os.listdir(ord_dir) if ((certain_word in file_name) and os.path.isdir(ord_dir + "/" + file_name)) ]
     return file_names
 
 @Check_dir_exist_decorator
@@ -117,17 +118,17 @@ def get_dir_move(ord_dir):
     return move_map_list
 
 @Check_dir_exist_decorator
-def get_dir_exr(ord_dir, rgb=False): ### 不要 float_return = True 之類的，因為他存的時候不一定用float32喔！rgb可以轉，已用網站生成的結果比較確認過囉～https://www.onlineconvert.com/exr-to-mat
+def get_dir_exr(ord_dir, rgb=False):  ### 不要 float_return = True 之類的，因為他存的時候不一定用float32喔！rgb可以轉，已用網站生成的結果比較確認過囉～https://www.onlineconvert.com/exr-to-mat
     file_names = get_dir_certain_file_name(ord_dir, ".exr")
 
     imgs = []
     for file_name in file_names:
-        img = cv2.imread(ord_dir + "/" + file_name, cv2.IMREAD_ANYDEPTH | cv2.IMREAD_UNCHANGED) ### 這行就可以了！
-        if(rgb): img = img[...,::-1]    
+        img = cv2.imread(ord_dir + "/" + file_name, cv2.IMREAD_ANYDEPTH | cv2.IMREAD_UNCHANGED)  ### 這行就可以了！
+        if(rgb): img = img[..., ::-1]
         imgs.append(img)
 
     ### 不要轉dtype，因為不確定exr存的是啥米型態！
-    # imgs = np.array(imgs, dtype=np.uint8) 
+    # imgs = np.array(imgs, dtype=np.uint8)
     # if(float_return): imgs = np.array(imgs, dtype=np.float32)
     return np.array(imgs)
 
@@ -137,7 +138,6 @@ def get_dir_exr(ord_dir, rgb=False): ### 不要 float_return = True 之類的，
 def get_dir_mat(ord_dir, key):
     from hdf5storage import loadmat
     # import scipy.io as scio ### 好像這個也可以，也在這邊紀錄一下囉
-    from util import get_dir_exr
 
     file_names = get_dir_certain_file_name(ord_dir, ".mat")
     imgs = []
@@ -226,7 +226,7 @@ def get_reference_map( max_move, max_from_move_dir=False, move_dir="", x_decreas
 def find_db_max_move(ord_dir):
     move_map_list = get_dir_move(ord_dir)
     max_move = np.absolute(move_map_list).max()
-    print("max_move:",max_move)
+    print("max_move:", max_move)
     return max_move
 
 #######################################################
@@ -240,7 +240,7 @@ def method1(x, y, max_value=-10000):  ### 這個 max_value的值 意義上來說
     visual_map = np.dstack((x, y))     ### step1.把x,y拚再一起同時處理
     max_value = visual_map.max()        ### step2.先把值弄到 0~1
     min_value = visual_map.min()
-    visual_map = (visual_map - min_value) / (max_value - min_value + 0.000000001) 
+    visual_map = (visual_map - min_value) / (max_value - min_value + 0.000000001)
     # print("visual_map.max()", visual_map.max())
     # print("visual_map.min()", visual_map.min())
     visual_map = np.dstack( (visual_map, z))         ### step4.再concat channel3，來給imshow自動決定顏色
@@ -284,7 +284,6 @@ def predict_unet_move_maps_back(predict_move_maps):
     return np.array(predict_back_list, dtype=np.float32)
 
 
-
 #######################################################
 import matplotlib.pyplot as plt
 import matplotlib as mpl
@@ -316,10 +315,9 @@ def _save_or_show(save, save_name, show):
 
 
 def Show_3d_scatter(one_channel_img, save=False, save_name="", show=False):
-    import matplotlib.pyplot as plt 
+    import matplotlib.pyplot as plt
     from mpl_toolkits.mplot3d import Axes3D
     import numpy as np
-    import cv2
 
     fig, ax = plt.subplots(1, 1)
     fig.set_size_inches(10, 10)
@@ -350,8 +348,6 @@ def Show_3d_scatter_along_xy(one_channel_img, along, save_name):
     import matplotlib.pyplot as plt
     from mpl_toolkits.mplot3d import Axes3D
     import numpy as np
-    import cv2
-    import time
 
     ### 第一張圖：one_channel_img的長相
     fig_img, ax_img = plt.subplots(1, 1)  ### 建立新畫布
@@ -370,13 +366,13 @@ def Show_3d_scatter_along_xy(one_channel_img, along, save_name):
     plt.ion()
     plt.show()
     ### 沿著x走一個個col顯示結果
-    if  (along=="x"): 
-        for go_x in range(col): 
-            print("go_x=",go_x)
-            ax.scatter(np.ones(row)*go_x, y[:, go_x] ,one_channel_img[:, go_x], s=1,c = np.arange(row),)
+    if  (along == "x"):
+        for go_x in range(col):
+            print("go_x=", go_x)
+            ax.scatter(np.ones(row) * go_x, y[:, go_x], one_channel_img[:, go_x], s=1, c = np.arange(row),)
             plt.pause(1)
     ### 沿著y走一個個row顯示結果
-    elif(along=="y"): 
+    elif(along == "y"):
         for go_y in range(row):
             print("go_y=", go_y)
             ax.scatter(x[go_y], np.ones(col) * go_y, one_channel_img[go_y], s=1, c = np.arange(col),)
@@ -386,9 +382,7 @@ def Show_3d_scatter_along_xy(one_channel_img, along, save_name):
 
 def Show_2d_scatter_along_x(one_channel_img, save_name):
     import matplotlib.pyplot as plt
-    from mpl_toolkits.mplot3d import Axes3D
     import numpy as np
-    import cv2
 
     fig, ax = plt.subplots(1, 1)
     fig.set_size_inches(10, 10)
@@ -406,17 +400,17 @@ def Show_2d_scatter_along_x(one_channel_img, save_name):
               )
 
     for go_x in range(col):
-        ax.set_offsets(one_channel_img[:,go_x]) 
+        ax.set_offsets(one_channel_img[:, go_x])
 
-    fig_img, ax_img = plt.subplots(1,1)
+    fig_img, ax_img = plt.subplots(1, 1)
     ax_img.imshow(one_channel_img)
     plt.show()
 
 
 def Show_3d_bar(one_channel_img, save_name):
-    import matplotlib.pyplot as plt 
+    import matplotlib.pyplot as plt
     from mpl_toolkits.mplot3d import Axes3D
-    import numpy as np 
+    import numpy as np
     import cv2
 
 
@@ -432,7 +426,7 @@ def Show_3d_bar(one_channel_img, save_name):
     one_channel_img = cv2.resize(one_channel_img, (int(w / sub), int(h / sub)))
     print("one_channel_img.shape", one_channel_img.shape)
     height, width = one_channel_img.shape[:2]
-    draw_x = np.zeros(one_channel_img.shape[:2]) + np.arange(width ).reshape(1,-1) 
+    draw_x = np.zeros(one_channel_img.shape[:2]) + np.arange(width ).reshape(1, -1)
     ### draw_x 長得像：
     # [[ 0.  1.  2. ... 37. 38. 39.]
     # [ 0.  1.  2. ... 37. 38. 39.]
@@ -441,7 +435,7 @@ def Show_3d_bar(one_channel_img, save_name):
     # [ 0.  1.  2. ... 37. 38. 39.]
     # [ 0.  1.  2. ... 37. 38. 39.]
     # [ 0.  1.  2. ... 37. 38. 39.]]
-    draw_y = np.zeros(one_channel_img.shape[:2]) + np.arange(height).reshape(-1,1)
+    draw_y = np.zeros(one_channel_img.shape[:2]) + np.arange(height).reshape(-1, 1)
     ### draw_y 長得像：
     # [[ 0.  0.  0. ...  0.  0.  0.]
     # [ 1.  1.  1. ...  1.  1.  1.]
@@ -452,28 +446,29 @@ def Show_3d_bar(one_channel_img, save_name):
     # [39. 39. 39. ... 39. 39. 39.]]
 
     ### ravel是拉平的意思，相當於flatten的概念
-    ax.bar3d( draw_x.ravel(), draw_y.ravel(), np.zeros(height*width), 1, 1, one_channel_img.ravel())#s = 1,edgecolors = "black")
+    ax.bar3d( draw_x.ravel(), draw_y.ravel(), np.zeros(height * width), 1, 1, one_channel_img.ravel())  #s = 1,edgecolors = "black")
 
-    cv2.imshow("one_channel_img",one_channel_img)
+    cv2.imshow("one_channel_img", one_channel_img)
     # plt.savefig( save_name+".png" )
     plt.show()
 
 
 def Show_move_map_apply(move_map):
     import matplotlib.pyplot as plt
-    row, col = move_map.shape[:2] ### 取得 row, col
-    x, y = get_xy_map(row, col)   ### 取得 x, y 起始座標
-    xy = np.dstack((x, y))        ### concat起來
-    xy_move = xy + move_map       ### apply move
+    row, col = move_map.shape[:2]  ### 取得 row, col
+    x, y = get_xy_map(row, col)    ### 取得 x, y 起始座標
+    xy = np.dstack((x, y))         ### concat起來
+    xy_move = xy + move_map        ### apply move
 
 
-    fig, ax = plt.subplots(1,1)  ### 建立新圖
-    ax.set_title("move_map_apply") ### 設定圖的title
+    fig, ax = plt.subplots(1, 1)    ### 建立新圖
+    ax.set_title("move_map_apply")  ### 設定圖的title
     # ax_img = ax.scatter(xy_move[...,0],xy_move[...,1]) ### 單色
-    ax_img = ax.scatter(xy_move[...,0],xy_move[...,1], c = np.arange(row*col).reshape(row,col), cmap="brg") ### 彩色
-    ax = ax.invert_yaxis() ### 整張圖上下顛倒，為了符合影像是左上角(0,0)
-    fig.colorbar(ax_img,ax=ax)
+    ax_img = ax.scatter(xy_move[..., 0], xy_move[..., 1], c = np.arange(row * col).reshape(row, col), cmap="brg")  ### 彩色
+    ax = ax.invert_yaxis()  ### 整張圖上下顛倒，為了符合影像是左上角(0,0)
+    fig.colorbar(ax_img, ax=ax)
     plt.show()
+
 
 import matplotlib.cm as cmx
 import matplotlib.colors as colors
@@ -481,8 +476,9 @@ def get_cmap(color_amount, cmap_name='hsv'):
     '''Returns a function that maps each index in 0, 1,.. . N-1 to a distinct
     RGB color.
     '''
-    color_norm = colors.Normalize(vmin=0, vmax=color_amount-1)
+    color_norm = colors.Normalize(vmin=0, vmax=color_amount - 1)
     scalar_map = cmx.ScalarMappable(norm=color_norm, cmap=cmap_name)
+
     def map_index_to_rgb_color(index):
         return scalar_map.to_rgba(index)
     return map_index_to_rgb_color
@@ -491,70 +487,68 @@ def get_cmap(color_amount, cmap_name='hsv'):
 ############################################################################################################
 class Matplot_ax_util():
     @staticmethod
-    def Draw_ax_loss_during_train( ax, logs_dir, cur_epoch, epochs , ylim=LOSS_YLIM ): ### logs_dir 不能改丟 result_obj喔！因為See裡面沒有Result喔！
-        x_epoch = np.arange(cur_epoch+1) ### x座標畫多少，畫到目前訓練的 cur_epoch，+1是為了index轉數量喔
-        
-        logs_file_names = get_dir_certain_file_name(logs_dir, "npy") ### 去logs_dir 抓 當時訓練時存的 loss.npy
+    def Draw_ax_loss_during_train( ax, logs_dir, cur_epoch, epochs , ylim=LOSS_YLIM ):  ### logs_dir 不能改丟 result_obj喔！因為See裡面沒有Result喔！
+        x_epoch = np.arange(cur_epoch + 1)  ### x座標畫多少，畫到目前訓練的 cur_epoch，+1是為了index轉數量喔
+
+        logs_file_names = get_dir_certain_file_name(logs_dir, "npy")  ### 去logs_dir 抓 當時訓練時存的 loss.npy
         for loss_i, logs_file_name in enumerate(logs_file_names):
-            y_loss_array = np.load( logs_dir + "/" + logs_file_name) ### 去logs_dir 抓 當時訓練時存的 loss.npy
+            y_loss_array = np.load( logs_dir + "/" + logs_file_name)  ### 去logs_dir 抓 當時訓練時存的 loss.npy
             loss_name = logs_file_name.split(".")[0]
             Matplot_ax_util._Draw_ax_loss(ax, cur_epoch, loss_name, loss_i, x_array=x_epoch, y_array=y_loss_array, xlim=epochs, ylim=ylim)
-    
-    
+
+
     @staticmethod
     ### 注意這會給 see, result, c_results 用喔！ 所以多 result的情況也要考慮，所以才要傳 min_epochs，
     ### 且因為有給see用，logs_dir 不能改丟 result_obj喔！因為See裡面沒有Result喔！
-    def Draw_ax_loss_after_train( ax, logs_dir, cur_epoch, min_epochs , ylim=LOSS_YLIM ): 
-        x_epoch = np.arange(min_epochs) ### x座標畫多少
-        
-        logs_file_names = get_dir_certain_file_name(logs_dir, "npy") ### 去logs_dir 抓 當時訓練時存的 loss.npy
+    def Draw_ax_loss_after_train( ax, logs_dir, cur_epoch, min_epochs , ylim=LOSS_YLIM ):
+        x_epoch = np.arange(min_epochs)  ### x座標畫多少
+
+        logs_file_names = get_dir_certain_file_name(logs_dir, "npy")  ### 去logs_dir 抓 當時訓練時存的 loss.npy
         for loss_i, logs_file_name in enumerate(logs_file_names):
             y_loss_array = np.load( logs_dir + "/" + logs_file_name)  ### 把loss讀出來
-            loss_amount = len(y_loss_array)     ### 訓練的當下存了多少個loss
-            if( (min_epochs-1) == loss_amount): ### 如果現在result剛好是訓練最少次的result，要注意有可能訓練時中斷在存loss前，造成 epochs數 比 loss數 多一個喔！這樣畫圖會出錯！
-                y_loss_array = np.append(y_loss_array, y_loss_array[-1]) ### 把loss array 最後補一個自己的尾巴
-            y_loss_array_used = y_loss_array[:min_epochs] ### 補完後，別忘了考慮多result的情況，result裡挑最少量的的loss數量 來show
+            loss_amount = len(y_loss_array)                           ### 訓練的當下存了多少個loss
+            if( (min_epochs - 1) == loss_amount):                     ### 如果現在result剛好是訓練最少次的result，要注意有可能訓練時中斷在存loss前，造成 epochs數 比 loss數 多一個喔！這樣畫圖會出錯！
+                y_loss_array = np.append(y_loss_array, y_loss_array[-1])  ### 把loss array 最後補一個自己的尾巴
+            y_loss_array_used = y_loss_array[:min_epochs]             ### 補完後，別忘了考慮多result的情況，result裡挑最少量的的loss數量 來show
             loss_name = logs_file_name.split(".")[0]
 
             # print("len(x_epoch)", len(x_epoch))
             # print("len(y_loss_array_used)", len(y_loss_array_used))
             Matplot_ax_util._Draw_ax_loss(ax, cur_epoch, loss_name, loss_i, x_array=x_epoch, y_array=y_loss_array_used, xlim=min_epochs, ylim=ylim)
-    
+
     @staticmethod
     def _Draw_ax_loss(ax, cur_epoch, loss_name, loss_i, x_array, y_array, xlim, ylim=LOSS_YLIM, x_label="epoch loss avg", y_label="epoch_num"):
         cmap = get_cmap(8)  ### 隨便一個比6多的數字，嘗試後8的顏色分布不錯！
         plt.sca(ax)  ### plt指向目前的 小畫布 這是為了設定 xylim 和 xylabel
-        plt.ylim(0, ylim) ;plt.ylabel( x_label )
-        plt.xlim(0, xlim) ;plt.xlabel( y_label ) 
+        plt.ylim(0, ylim); plt.ylabel( x_label )
+        plt.xlim(0, xlim); plt.xlabel( y_label )
 
         ### 畫線
-        ax.plot(x_array, y_array, c=cmap(loss_i), label=loss_name) 
+        ax.plot(x_array, y_array, c=cmap(loss_i), label=loss_name)
         ### 畫點
         ax.scatter(cur_epoch, y_array[cur_epoch], color=cmap(loss_i))
         ### 點旁邊註記值
-        ax.annotate( text="%.3f" % y_array[cur_epoch],      ### 顯示的文字
-                     xy=(cur_epoch, y_array[cur_epoch]), ### 要標註的目標點
-                     xytext=( 0 , 10*loss_i),         ### 顯示的文字放哪裡
+        ax.annotate( text="%.3f" % y_array[cur_epoch],    ### 顯示的文字
+                     xy=(cur_epoch, y_array[cur_epoch]),  ### 要標註的目標點
+                     xytext=( 0 , 10 * loss_i),         ### 顯示的文字放哪裡
                      textcoords='offset points',         ### 目前東西放哪裡的坐標系用什麼
                      arrowprops=dict(arrowstyle="->",    ### 畫箭頭的資訊
                                     connectionstyle= "arc3",
-                                    color = cmap(loss_i),
-                                    ))
-        ### 
+                                    color = cmap(loss_i),))
         ax.legend(loc='best')
-            
+
 
 class Matplot_fig_util(Matplot_ax_util):
     @staticmethod
-    def Save_fig(dst_dir, epoch):
-        plt.savefig(dst_dir+"/"+"epoch=%04i"%epoch )
+    def Save_fig(dst_dir, epoch, epoch_name="epoch"):
+        plt.savefig(dst_dir + "/" + "%s=%04i" % (epoch_name, epoch) )
         plt.close()  ### 一定要記得關喔！要不然圖開太多會當掉！
 
 class Matplot_util(Matplot_fig_util): pass
 
 
 class Matplot_single_row_imgs(Matplot_fig_util):
-    def __init__(self, imgs, img_titles, fig_title, bgr2rgb=False, add_loss=False): 
+    def __init__(self, imgs, img_titles, fig_title, bgr2rgb=False, add_loss=False):
         self.imgs       = imgs  ### imgs是個list，裡面放的圖片可能不一樣大喔
         self.img_titles = img_titles
         self.fig_title  = fig_title
@@ -569,7 +563,7 @@ class Matplot_single_row_imgs(Matplot_fig_util):
 
         self.canvas_height     = None
         self.canvas_width      = None
-        self.fig = None 
+        self.fig = None
         self.ax  = None
         self._step2_set_canvas_hw_and_build()
 
@@ -581,37 +575,37 @@ class Matplot_single_row_imgs(Matplot_fig_util):
 
         elif(self.col_titles_amount > self.col_imgs_amount):
             print("title 太多了，沒有圖可以對應")
-            return 
+            return
 
-        if(self.col_imgs_amount == 0): 
+        if(self.col_imgs_amount == 0):
             print("沒圖可show喔！")
-            return 
+            return
         ###########################################################
 
     def _get_one_row_canvas_height(self):
         height_list = []    ### imgs是個list，裡面放的圖片可能不一樣大喔
         for img in self.imgs: height_list.append(img.shape[0])
-        return  (max(height_list) // 100+1.0)*1.0 +1.5 ### 慢慢試囉～ +1.5是要給title 和 matplot邊界margin喔
+        return  (max(height_list) // 100 + 1.0) * 1.0 + 1.5  ### 慢慢試囉～ +1.5是要給title 和 matplot邊界margin喔
 
     def _get_one_row_canvas_width(self):
         width = 0
         for img in self.imgs: width += img.shape[1]
 
-        if  (self.col_imgs_amount==3): return  (width // 100 +0)*1.0 +5.7 ### 慢慢試囉～ col=3時
-        elif(self.col_imgs_amount==4): return  (width // 100 +0)*1.0 +6.8 ### 慢慢試囉～ col=4時
-        elif(self.col_imgs_amount==5): return  (width // 100 +0)*1.0 +8.5 ### 慢慢試囉～ col=5時
-        elif(self.col_imgs_amount==6): return  (width // 100 +0)*1.0 +10.5 ### 慢慢試囉～ col=6時
-        elif(self.col_imgs_amount==7): return  (width // 100 +0)*1.0 +11.5 ### 慢慢試囉～ col=7時
-        elif(self.col_imgs_amount >7): return  (width // 100 +0)*1.0 +11.5 ### 慢慢試囉～ col=7時，沒有試過用猜的，因為覺得用不到ˊ口ˋ用到再來試
+        if  (self.col_imgs_amount == 3): return  (width // 100 + 0) * 1.0 + 5.7   ### 慢慢試囉～ col=3時
+        elif(self.col_imgs_amount == 4): return  (width // 100 + 0) * 1.0 + 6.8   ### 慢慢試囉～ col=4時
+        elif(self.col_imgs_amount == 5): return  (width // 100 + 0) * 1.0 + 8.5   ### 慢慢試囉～ col=5時
+        elif(self.col_imgs_amount == 6): return  (width // 100 + 0) * 1.0 + 10.5  ### 慢慢試囉～ col=6時
+        elif(self.col_imgs_amount == 7): return  (width // 100 + 0) * 1.0 + 11.5  ### 慢慢試囉～ col=7時
+        elif(self.col_imgs_amount > 7): return  (width // 100 + 0) * 1.0 + 11.5   ### 慢慢試囉～ col=7時，沒有試過用猜的，因為覺得用不到ˊ口ˋ用到再來試
 
     def _step2_set_canvas_hw_and_build(self):
         ### 設定canvas的大小
         self.canvas_height = self._get_one_row_canvas_height()
         self.canvas_width  = self._get_one_row_canvas_width()
         if(self.add_loss):   ### 多一些空間來畫loss
-            self.row_imgs_amount += 1 ### 多一row來畫loss
-            self.canvas_height += 3   ### 慢慢試囉～ 
-            self.canvas_width  -= 1.5*self.col_imgs_amount  ### 慢慢試囉～ 
+            self.row_imgs_amount += 1  ### 多一row來畫loss
+            self.canvas_height += 3    ### 慢慢試囉～
+            self.canvas_width  -= 1.5 * self.col_imgs_amount  ### 慢慢試囉～
         # print("canvas_height",canvas_height)
         # print("canvas_width",canvas_width)
         # print("row_imgs_amount", row_imgs_amount)
@@ -619,27 +613,28 @@ class Matplot_single_row_imgs(Matplot_fig_util):
 
         ### 建立canvas出來
         self.fig, self.ax = plt.subplots(nrows=self.row_imgs_amount, ncols=self.col_imgs_amount)
-        self.fig.set_size_inches(self.canvas_width, self.canvas_height) ### 設定 畫布大小
-        
+        self.fig.set_size_inches(self.canvas_width, self.canvas_height)  ### 設定 畫布大小
+
+
     def _step3_draw(self, used_ax):
         ### 這就是手動微調 text的位置囉ˊ口ˋ
-        self.fig.text(x=0.5, y=0.945, s=self.fig_title, fontsize=20, c=(0.,0.,0.,1.),  horizontalalignment='center',)
-        
+        self.fig.text(x=0.5, y=0.945, s=self.fig_title, fontsize=20, c=(0., 0., 0., 1.),  horizontalalignment='center',)
+
         for go_img, img in enumerate(self.imgs):
-            if(self.bgr2rgb): img = img[...,::-1] ### 如果有標示 輸入進來的 影像是 bgr，要轉rgb喔！
+            if(self.bgr2rgb): img = img[..., ::-1]  ### 如果有標示 輸入進來的 影像是 bgr，要轉rgb喔！
             if(self.col_imgs_amount > 1):
-                used_ax[go_img].imshow(img) ### 小畫布 畫上影像，別忘記要bgr -> rgb喔！
-                used_ax[go_img].set_title( self.img_titles[go_img], fontsize=16 ) ### 小畫布上的 title
-                
+                used_ax[go_img].imshow(img)  ### 小畫布 畫上影像，別忘記要bgr -> rgb喔！
+                used_ax[go_img].set_title( self.img_titles[go_img], fontsize=16 )  ### 小畫布上的 title
+
                 plt.sca(used_ax[go_img])  ### plt指向目前的 小畫布 這是為了設定 yticks和xticks
-                plt.yticks( (0, img.shape[0]), (0, img.shape[0]) )  ### 設定 y軸 顯示的字，前面的tuple是位置，後面的tuple是要顯示的字
-                plt.xticks( (0, img.shape[1]), ("", img.shape[1]) ) ### 設定 x軸 顯示的字，前面的tuple是位置，後面的tuple是要顯示的字
+                plt.yticks( (0, img.shape[0]), (0, img.shape[0]) )   ### 設定 y軸 顯示的字，前面的tuple是位置，後面的tuple是要顯示的字
+                plt.xticks( (0, img.shape[1]), ("", img.shape[1]) )  ### 設定 x軸 顯示的字，前面的tuple是位置，後面的tuple是要顯示的字
             else:
-                used_ax.imshow(img) ### 小畫布 畫上影像
-                used_ax.set_title( self.img_titles[go_img], fontsize=16 ) ### 小畫布上的 title
-                
-                plt.yticks( (0, img.shape[0]), (0, img.shape[0]) )  ### 設定 y軸 顯示的字，前面的tuple是位置，後面的tuple是要顯示的字
-                plt.xticks( (0, img.shape[1]), ("", img.shape[1]) ) ### 設定 x軸 顯示的字，前面的tuple是位置，後面的tuple是要顯示的字
+                used_ax.imshow(img)  ### 小畫布 畫上影像
+                used_ax.set_title( self.img_titles[go_img], fontsize=16 )  ### 小畫布上的 title
+
+                plt.yticks( (0, img.shape[0]), (0, img.shape[0]) )   ### 設定 y軸 顯示的字，前面的tuple是位置，後面的tuple是要顯示的字
+                plt.xticks( (0, img.shape[1]), ("", img.shape[1]) )  ### 設定 x軸 顯示的字，前面的tuple是位置，後面的tuple是要顯示的字
 
     def Draw_img(self):
         ###############################################################
@@ -649,8 +644,8 @@ class Matplot_single_row_imgs(Matplot_fig_util):
         self._step3_draw(used_ax)
         ###############################################################
         ### 想畫得更漂亮一點，兩種還是有些一咪咪差距喔~
-        if(not self.add_loss): self.fig.tight_layout(rect=[0,0,1,0.93])
-        else:                  self.fig.tight_layout(rect=[0,0.006,1,0.95])
+        if(not self.add_loss): self.fig.tight_layout(rect=[0, 0, 1, 0.93])
+        else:                  self.fig.tight_layout(rect=[0, 0.006, 1, 0.95])
         ###############################################################
         ### Draw_img完，不一定要馬上Draw_loss喔！像是train的時候 就是分開的 1.see(Draw_img), 2.train, 3.loss(Draw_loss)
 
@@ -663,51 +658,51 @@ class Matplot_single_row_imgs(Matplot_fig_util):
 def _get_one_row_canvas_height(imgs):
     height_list = []
     for img in imgs: height_list.append(img.shape[0])
-    # return  (max(height_list) // 100+2.0)*0.8  ### 沒有弄得很精準，+1好了
-    return  (max(height_list) // 100+1.0)*1.0 +1.5 ### 慢慢試囉～ +1.5是要給title 和 matplot邊界margin喔
+    # return  (max(height_list) // 100+2.0) * 0.8  ### 沒有弄得很精準，+1好了
+    return  (max(height_list) // 100 + 1.0) * 1.0 + 1.5  ### 慢慢試囉～ +1.5是要給title 和 matplot邊界margin喔
 
 def _get_one_row_canvas_width(imgs):
     width = 0
     for img in imgs: width += img.shape[1]
 
-    if  (len(imgs)==3): return  (width // 100 +0)*1.0 +5.7 ### 慢慢試囉～ col=3時
-    elif(len(imgs)==4): return  (width // 100 +0)*1.0 +6.8 ### 慢慢試囉～ col=4時
-    elif(len(imgs)==5): return  (width // 100 +0)*1.0 +8.5 ### 慢慢試囉～ col=5時
-    elif(len(imgs)==6): return  (width // 100 +0)*1.0 +10.5 ### 慢慢試囉～ col=6時
-    elif(len(imgs)==7): return  (width // 100 +0)*1.0 +11.5 ### 慢慢試囉～ col=7時
-    elif(len(imgs) >7): return  (width // 100 +0)*1.0 +11.5 ### 慢慢試囉～ col=7時，沒有試過用猜的，因為覺得用不到ˊ口ˋ用到再來試
+    if  (len(imgs) == 3): return  (width // 100 + 0) * 1.0 + 5.7   ### 慢慢試囉～ col=3時
+    elif(len(imgs) == 4): return  (width // 100 + 0) * 1.0 + 6.8   ### 慢慢試囉～ col=4時
+    elif(len(imgs) == 5): return  (width // 100 + 0) * 1.0 + 8.5   ### 慢慢試囉～ col=5時
+    elif(len(imgs) == 6): return  (width // 100 + 0) * 1.0 + 10.5  ### 慢慢試囉～ col=6時
+    elif(len(imgs) == 7): return  (width // 100 + 0) * 1.0 + 11.5  ### 慢慢試囉～ col=7時
+    elif(len(imgs) > 7): return  (width // 100 + 0) * 1.0 + 11.5   ### 慢慢試囉～ col=7時，沒有試過用猜的，因為覺得用不到ˊ口ˋ用到再來試
 
 
 def _get_row_col_canvas_height(r_c_imgs):
     height = 0
     for row_imgs in r_c_imgs: height += row_imgs[0].shape[0]
-    return (height // 100 +0)*1.2  ### 慢慢試囉～ +1.5是要給title 和 matplot邊界margin喔
+    return (height // 100 + 0) * 1.2  ### 慢慢試囉～ +1.5是要給title 和 matplot邊界margin喔
 
 def _get_row_col_canvas_width(r_c_imgs):
     width = 0
     for col_imgs in r_c_imgs[0]: width += col_imgs.shape[1]
-    return (width //100 + 1)*1.2 ### 慢慢試囉～
+    return (width // 100 + 1) * 1.2  ### 慢慢試囉～
 
 ### single_row 的處理方式 還是跟 multi_row 有些許不同，所以不能因為時做出 multi後取代single喔！ 比如 ax[] 的維度、取長寬比之類的～
 def _draw_single_row_imgs(fig, ax, col_imgs_amount, canvas_height, canvas_width, img_titles, imgs, fig_title="epoch = 1005", bgr2rgb=True):
     ### 這就是手動微調 text的位置囉ˊ口ˋ
-    fig.text(x=0.5, y=0.945, s=fig_title,fontsize=20, c=(0.,0.,0.,1.),  horizontalalignment='center',)
-    
+    fig.text(x=0.5, y=0.945, s=fig_title, fontsize=20, c=(0., 0., 0., 1.),  horizontalalignment='center',)
+
     for go_img, img in enumerate(imgs):
-        if(bgr2rgb):img[...,::-1] ### 如果有標示 輸入進來的 影像是 bgr，要轉rgb喔！
+        if(bgr2rgb): img[..., ::-1]  ### 如果有標示 輸入進來的 影像是 bgr，要轉rgb喔！
         if(col_imgs_amount > 1):
-            ax[go_img].imshow(img) ### 小畫布 畫上影像，別忘記要bgr -> rgb喔！
-            ax[go_img].set_title( img_titles[go_img], fontsize=16 ) ### 小畫布上的 title
-            
+            ax[go_img].imshow(img)  ### 小畫布 畫上影像，別忘記要bgr -> rgb喔！
+            ax[go_img].set_title( img_titles[go_img], fontsize=16 )  ### 小畫布上的 title
+
             plt.sca(ax[go_img])  ### plt指向目前的 小畫布 這是為了設定 yticks和xticks
-            plt.yticks( (0, img.shape[0]), (0, img.shape[0]) )  ### 設定 y軸 顯示的字，前面的tuple是位置，後面的tuple是要顯示的字
-            plt.xticks( (0, img.shape[1]), ("", img.shape[1]) ) ### 設定 x軸 顯示的字，前面的tuple是位置，後面的tuple是要顯示的字
+            plt.yticks( (0, img.shape[0]), (0, img.shape[0]) )   ### 設定 y軸 顯示的字，前面的tuple是位置，後面的tuple是要顯示的字
+            plt.xticks( (0, img.shape[1]), ("", img.shape[1]) )  ### 設定 x軸 顯示的字，前面的tuple是位置，後面的tuple是要顯示的字
         else:
-            ax.imshow(img) ### 小畫布 畫上影像
-            ax.set_title( img_titles[go_img], fontsize=16 ) ### 小畫布上的 title
-            
-            plt.yticks( (0, img.shape[0]), (0, img.shape[0]) )  ### 設定 y軸 顯示的字，前面的tuple是位置，後面的tuple是要顯示的字
-            plt.xticks( (0, img.shape[1]), ("", img.shape[1]) ) ### 設定 x軸 顯示的字，前面的tuple是位置，後面的tuple是要顯示的字
+            ax.imshow(img)  ### 小畫布 畫上影像
+            ax.set_title( img_titles[go_img], fontsize=16 )  ### 小畫布上的 title
+
+            plt.yticks( (0, img.shape[0]), (0, img.shape[0]) )   ### 設定 y軸 顯示的字，前面的tuple是位置，後面的tuple是要顯示的字
+            plt.xticks( (0, img.shape[1]), ("", img.shape[1]) )  ### 設定 x軸 顯示的字，前面的tuple是位置，後面的tuple是要顯示的字
 
 
 def matplot_visual_single_row_imgs(img_titles, imgs, fig_title="epoch = 1005", bgr2rgb=True, add_loss=False):
@@ -721,19 +716,19 @@ def matplot_visual_single_row_imgs(img_titles, imgs, fig_title="epoch = 1005", b
             img_titles.append("")
     elif(col_titles_amount > col_imgs_amount):
         print("title 太多了，沒有圖可以對應")
-        return 
+        return
 
-    if(col_imgs_amount == 0): 
+    if(col_imgs_amount == 0):
         print("沒圖可show喔！")
-        return 
+        return
     ###########################################################
     ### 設定canvas的大小
     canvas_height = _get_one_row_canvas_height(imgs)
     canvas_width  = _get_one_row_canvas_width(imgs)
     if(add_loss):   ### 多一些空間來畫loss
-        row_imgs_amount += 1 ### 多一row來畫loss
-        canvas_height += 3   ### 慢慢試囉～ 
-        canvas_width  -= 1.5*col_imgs_amount  ### 慢慢試囉～ 
+        row_imgs_amount += 1  ### 多一row來畫loss
+        canvas_height += 3    ### 慢慢試囉～
+        canvas_width  -= 1.5 * col_imgs_amount  ### 慢慢試囉～
     # print("canvas_height",canvas_height)
     # print("canvas_width",canvas_width)
     # print("row_imgs_amount", row_imgs_amount)
@@ -741,7 +736,7 @@ def matplot_visual_single_row_imgs(img_titles, imgs, fig_title="epoch = 1005", b
 
     ### 建立canvas出來
     fig, ax = plt.subplots(nrows=row_imgs_amount, ncols=col_imgs_amount)
-    fig.set_size_inches(canvas_width, canvas_height) ### 設定 畫布大小
+    fig.set_size_inches(canvas_width, canvas_height)  ### 設定 畫布大小
     ###############################################################
     ### 注意 _draw_single_row_imgs 的 ax 只能丟 一row，所以才寫這if/else
     if(not add_loss): used_ax = ax
@@ -749,8 +744,8 @@ def matplot_visual_single_row_imgs(img_titles, imgs, fig_title="epoch = 1005", b
     _draw_single_row_imgs(fig, used_ax, col_imgs_amount, canvas_height, canvas_width, img_titles, imgs, fig_title, bgr2rgb)
     ###############################################################
     ### 想畫得更漂亮一點，兩種還是有些一咪咪差距喔~
-    if(not add_loss): fig.tight_layout(rect=[0,0,1,0.93])
-    else:             fig.tight_layout(rect=[0,0.006,1,0.95])
+    if(not add_loss): fig.tight_layout(rect=[0, 0, 1, 0.93])
+    else:             fig.tight_layout(rect=[0, 0.006, 1, 0.95])
     ###############################################################
     ### 統一不存，因為可能還要給別人後續處理，這裡只負責畫圖喔！
     # plt.savefig(dst_dir+"/"+file_name)
@@ -764,7 +759,7 @@ class Matplot_multi_row_imgs(Matplot_util):
         self.r_c_titles = rows_cols_titles
         self.fig_title = fig_title
         self.bgr2rgb = bgr2rgb
-        self.add_loss = add_loss 
+        self.add_loss = add_loss
 
         self.row_imgs_amount   = len(self.r_c_imgs)
         self.col_imgs_amount   = len(self.r_c_imgs[0])
@@ -773,7 +768,7 @@ class Matplot_multi_row_imgs(Matplot_util):
 
         self.canvas_height     = None
         self.canvas_width      = None
-        self.fig = None 
+        self.fig = None
         self.ax  = None
         self._step2_set_canvas_hw_and_build()
 
@@ -785,24 +780,24 @@ class Matplot_multi_row_imgs(Matplot_util):
                     row_titles.append("")
         elif(self.col_titles_amount > self.col_imgs_amount):
             print("title 太多了，沒有圖可以對應")
-            return 
-        
-        if(self.col_imgs_amount == 0): 
-            print("沒圖可show喔！")
-            return 
+            return
 
-        if(len(self.r_c_imgs)==1):
+        if(self.col_imgs_amount == 0):
+            print("沒圖可show喔！")
+            return
+
+        if(len(self.r_c_imgs) == 1):
             print("本function 不能處理 single_row_imgs喔，因為matplot在row只有1時的維度跟1以上時不同！麻煩呼叫相對應處理single_row的function！")
 
     def _get_row_col_canvas_height():
         height = 0
         for row_imgs in self.r_c_imgs: height += row_imgs[0].shape[0]
-        return (height // 100 +0)*1.2  ### 慢慢試囉～ +1.5是要給title 和 matplot邊界margin喔
+        return (height // 100 + 0) * 1.2  ### 慢慢試囉～ +1.5是要給title 和 matplot邊界margin喔
 
     def _get_row_col_canvas_width(r_c_imgs):
         width = 0
         for col_imgs in self.r_c_imgs[0]: width += col_imgs.shape[1]
-        return (width //100 + 1)*1.2 ### 慢慢試囉～
+        return (width // 100 + 1) * 1.2  ### 慢慢試囉～
 
     def _step2_set_canvas_hw_and_build(self):
         ###########################################################
@@ -810,45 +805,45 @@ class Matplot_multi_row_imgs(Matplot_util):
         self.canvas_height = _get_row_col_canvas_height(self.r_c_imgs)
         self.canvas_width  = _get_row_col_canvas_width (self.r_c_imgs)
         if(self.add_loss):   ### 多一些空間來畫loss
-            self.row_imgs_amount += 1 ### 多一row來畫loss
+            self.row_imgs_amount += 1  ### 多一row來畫loss
             self.canvas_height += 3.0  ### 慢慢試囉～
-            self.canvas_width  -= 0.55*self.col_imgs_amount  ### 慢慢試囉～
-            self.canvas_height *= 1.1 #1.2最好，但有點佔記憶體  ### 慢慢試囉～ 
-            self.canvas_width  *= 1.1 #1.2最好，但有點佔記憶體  ### 慢慢試囉～
+            self.canvas_width  -= 0.55 * self.col_imgs_amount  ### 慢慢試囉～
+            self.canvas_height *= 1.1  #1.2最好，但有點佔記憶體  ### 慢慢試囉～
+            self.canvas_width  *= 1.1  #1.2最好，但有點佔記憶體  ### 慢慢試囉～
         # print("canvas_height",canvas_height)
         # print("canvas_width",canvas_width)
         # print("row_imgs_amount", row_imgs_amount)
 
         ### 建立canvas出來
         self.fig, self.ax = plt.subplots(nrows=self.row_imgs_amount, ncols=self.col_imgs_amount)
-        self.fig.set_size_inches(self.canvas_width, self.canvas_height) ### 設定 畫布大小
+        self.fig.set_size_inches(self.canvas_width, self.canvas_height)  ### 設定 畫布大小
 
     def _step3_draw(self):
         ### 這就是手動微調 text的位置囉ˊ口ˋ
-        self.fig.text(x=0.5, y=0.95, s=self.fig_title,fontsize=20, c=(0.,0.,0.,1.),  horizontalalignment='center',)
+        self.fig.text(x=0.5, y=0.95, s=self.fig_title, fontsize=20, c=(0., 0., 0., 1.),  horizontalalignment='center',)
 
-        for go_row, row_imgs in enumerate(self.r_c_imgs): 
+        for go_row, row_imgs in enumerate(self.r_c_imgs):
             for go_col, col_img in enumerate(row_imgs):
-                if(self.bgr2rgb):col_img[...,::-1] ### 如果有標示 輸入進來的 影像是 bgr，要轉rgb喔！
+                if(self.bgr2rgb): col_img[..., ::-1]  ### 如果有標示 輸入進來的 影像是 bgr，要轉rgb喔！
                 if(self.col_imgs_amount > 1):
-                    self.ax[go_row, go_col].imshow(col_img) ### 小畫布 畫上影像，別忘記要bgr -> rgb喔！
-                    if  (len(self.r_c_titles) >1): self.ax[go_row, go_col].set_title( self.r_c_titles[go_row][go_col], fontsize=16 ) ### 小畫布　標上小標題
-                    elif(len(self.r_c_titles)==1 and go_row==0):self.ax[go_row, go_col].set_title( self.r_c_titles[go_row][go_col], fontsize=16 ) ### 小畫布　標上小標題
-                    
+                    self.ax[go_row, go_col].imshow(col_img)  ### 小畫布 畫上影像，別忘記要bgr -> rgb喔！
+                    if  (len(self.r_c_titles) > 1): self.ax[go_row, go_col].set_title( self.r_c_titles[go_row][go_col], fontsize=16 )  ### 小畫布　標上小標題
+                    elif(len(self.r_c_titles) == 1 and go_row == 0): self.ax[go_row, go_col].set_title( self.r_c_titles[go_row][go_col], fontsize=16 )  ### 小畫布　標上小標題
+
                     plt.sca(self.ax[go_row, go_col])  ### plt指向目前的 小畫布 這是為了設定 yticks和xticks
-                    plt.yticks( (0, col_img.shape[0]), (0, col_img.shape[0]) )  ### 設定 y軸 顯示的字，前面的tuple是位置，後面的tuple是要顯示的字
-                    plt.xticks( (0, col_img.shape[1]), ("", col_img.shape[1]) ) ### 設定 x軸 顯示的字，前面的tuple是位置，後面的tuple是要顯示的字
-                else: ### 要多這if/else是因為，col_imgs_amount==1時，ax[]只會有一維！用二維的寫法會出錯！所以才獨立出來寫喔～
-                    self.ax[go_row].imshow(col_img) ### 小畫布 畫上影像
-                    if  (len(self.r_c_titles) >1): self.ax[go_row].set_title( self.r_c_titles[go_row][go_col], fontsize=16 ) ### 小畫布　標上小標題
-                    elif(len(self.r_c_titles)==1 and go_row==0): self.ax[go_row].set_title( self.r_c_titles[go_row][go_col], fontsize=16 ) ### 小畫布　標上小標題
-                    plt.yticks( (0, col_img.shape[0]), (0, col_img.shape[0]) )  ### 設定 y軸 顯示的字，前面的tuple是位置，後面的tuple是要顯示的字
-                    plt.xticks( (0, col_img.shape[1]), ("", col_img.shape[1]) ) ### 設定 x軸 顯示的字，前面的tuple是位置，後面的tuple是要顯示的字
+                    plt.yticks( (0, col_img.shape[0]), (0, col_img.shape[0]) )   ### 設定 y軸 顯示的字，前面的tuple是位置，後面的tuple是要顯示的字
+                    plt.xticks( (0, col_img.shape[1]), ("", col_img.shape[1]) )  ### 設定 x軸 顯示的字，前面的tuple是位置，後面的tuple是要顯示的字
+                else:  ### 要多這if/else是因為，col_imgs_amount == 1時，ax[]只會有一維！用二維的寫法會出錯！所以才獨立出來寫喔～
+                    self.ax[go_row].imshow(col_img)  ### 小畫布 畫上影像
+                    if  (len(self.r_c_titles) > 1 ): self.ax[go_row].set_title( self.r_c_titles[go_row][go_col], fontsize=16 )  ### 小畫布　標上小標題
+                    elif(len(self.r_c_titles) == 1 and go_row == 0): self.ax[go_row].set_title( self.r_c_titles[go_row][go_col], fontsize=16 )  ### 小畫布　標上小標題
+                    plt.yticks( (0, col_img.shape[0]), (0, col_img.shape[0]) )   ### 設定 y軸 顯示的字，前面的tuple是位置，後面的tuple是要顯示的字
+                    plt.xticks( (0, col_img.shape[1]), ("", col_img.shape[1]) )  ### 設定 x軸 顯示的字，前面的tuple是位置，後面的tuple是要顯示的字
 
     def Draw_img(self):
         self._step3_draw()
-        if(not self.add_loss): self.fig.tight_layout(rect=[0,0,1,0.95]) ### 待嘗試喔！
-        else:                  self.fig.tight_layout(rect=[0,0.0035,1,0.95]) ### 待嘗試喔！
+        if(not self.add_loss): self.fig.tight_layout(rect=[0, 0, 1, 0.95])  ### 待嘗試喔！
+        else:                  self.fig.tight_layout(rect=[0, 0.0035, 1, 0.95])  ### 待嘗試喔！
         ###############################################################
         ### Draw_img完，不一定要馬上Draw_loss喔！但 multi的好像可以馬上Draw_loss~ 不過想想還是general一點分開做好了~~
 
@@ -856,32 +851,32 @@ class Matplot_multi_row_imgs(Matplot_util):
 
 
 def _draw_multi_row_imgs(fig, ax, row_imgs_amount, col_imgs_amount, canvas_height, canvas_width, rows_cols_titles, rows_cols_imgs, fig_title="epoch = 1005", bgr2rgb=True):
-### 這就是手動微調 text的位置囉ˊ口ˋ
-    fig.text(x=0.5, y=0.95, s=fig_title,fontsize=20, c=(0.,0.,0.,1.),  horizontalalignment='center',)
+    ### 這就是手動微調 text的位置囉ˊ口ˋ
+    fig.text(x=0.5, y=0.95, s=fig_title, fontsize=20, c=(0., 0., 0., 1.),  horizontalalignment='center',)
     # if  (col_imgs_amount <  3):fig.text(x=0.5, y=0.92, s=fig_title,fontsize=20, c=(0.,0.,0.,1.),  horizontalalignment='center',)
     # elif(col_imgs_amount == 3):fig.text(x=0.5, y=0.91, s=fig_title,fontsize=20, c=(0.,0.,0.,1.),  horizontalalignment='center',)
     # elif(col_imgs_amount >  3):
     #     if  (row_imgs_amount <  3):fig.text(x=0.5, y=0.915, s=fig_title,fontsize=20, c=(0.,0.,0.,1.),  horizontalalignment='center',)
     #     elif(row_imgs_amount == 3):fig.text(x=0.5, y=0.90 , s=fig_title,fontsize=20, c=(0.,0.,0.,1.),  horizontalalignment='center',)
     #     elif(row_imgs_amount >  3):fig.text(x=0.5, y=0.897, s=fig_title,fontsize=20, c=(0.,0.,0.,1.),  horizontalalignment='center',) ### 再往下覺得用不到就沒有試囉ˊ口ˋ有用到再來微調八~~
-    
-    for go_row, row_imgs in enumerate(rows_cols_imgs): 
+
+    for go_row, row_imgs in enumerate(rows_cols_imgs):
         for go_col, col_img in enumerate(row_imgs):
-            if(bgr2rgb):col_img[...,::-1] ### 如果有標示 輸入進來的 影像是 bgr，要轉rgb喔！
+            if(bgr2rgb): col_img[..., ::-1]  ### 如果有標示 輸入進來的 影像是 bgr，要轉rgb喔！
             if(col_imgs_amount > 1):
-                ax[go_row, go_col].imshow(col_img) ### 小畫布 畫上影像，別忘記要bgr -> rgb喔！
-                if  (len(rows_cols_titles) >1): ax[go_row, go_col].set_title( rows_cols_titles[go_row][go_col], fontsize=16 ) ### 小畫布　標上小標題
-                elif(len(rows_cols_titles)==1 and go_row==0):ax[go_row, go_col].set_title( rows_cols_titles[go_row][go_col], fontsize=16 ) ### 小畫布　標上小標題
-                
+                ax[go_row, go_col].imshow(col_img)  ### 小畫布 畫上影像，別忘記要bgr -> rgb喔！
+                if  (len(rows_cols_titles) > 1): ax[go_row, go_col].set_title( rows_cols_titles[go_row][go_col], fontsize=16 )  ### 小畫布　標上小標題
+                elif(len(rows_cols_titles) == 1 and go_row == 0): ax[go_row, go_col].set_title( rows_cols_titles[go_row][go_col], fontsize=16 )  ### 小畫布　標上小標題
+
                 plt.sca(ax[go_row, go_col])  ### plt指向目前的 小畫布 這是為了設定 yticks和xticks
-                plt.yticks( (0, col_img.shape[0]), (0, col_img.shape[0]) )  ### 設定 y軸 顯示的字，前面的tuple是位置，後面的tuple是要顯示的字
-                plt.xticks( (0, col_img.shape[1]), ("", col_img.shape[1]) ) ### 設定 x軸 顯示的字，前面的tuple是位置，後面的tuple是要顯示的字
-            else: ### 要多這if/else是因為，col_imgs_amount==1時，ax[]只會有一維！用二維的寫法會出錯！所以才獨立出來寫喔～
-                ax[go_row].imshow(col_img) ### 小畫布 畫上影像
-                if  (len(rows_cols_titles) >1): ax[go_row].set_title( rows_cols_titles[go_row][go_col], fontsize=16 ) ### 小畫布　標上小標題
-                elif(len(rows_cols_titles)==1 and go_row==0): ax[go_row].set_title( rows_cols_titles[go_row][go_col], fontsize=16 ) ### 小畫布　標上小標題
-                plt.yticks( (0, col_img.shape[0]), (0, col_img.shape[0]) )  ### 設定 y軸 顯示的字，前面的tuple是位置，後面的tuple是要顯示的字
-                plt.xticks( (0, col_img.shape[1]), ("", col_img.shape[1]) ) ### 設定 x軸 顯示的字，前面的tuple是位置，後面的tuple是要顯示的字
+                plt.yticks( (0, col_img.shape[0]), (0, col_img.shape[0]) )   ### 設定 y軸 顯示的字，前面的tuple是位置，後面的tuple是要顯示的字
+                plt.xticks( (0, col_img.shape[1]), ("", col_img.shape[1]) )  ### 設定 x軸 顯示的字，前面的tuple是位置，後面的tuple是要顯示的字
+            else:  ### 要多這if/else是因為，col_imgs_amount == 1時，ax[]只會有一維！用二維的寫法會出錯！所以才獨立出來寫喔～
+                ax[go_row].imshow(col_img)  ### 小畫布 畫上影像
+                if  (len(rows_cols_titles) > 1): ax[go_row].set_title( rows_cols_titles[go_row][go_col], fontsize=16 )  ### 小畫布　標上小標題
+                elif(len(rows_cols_titles) == 1 and go_row == 0): ax[go_row].set_title( rows_cols_titles[go_row][go_col], fontsize=16 )  ### 小畫布　標上小標題
+                plt.yticks( (0, col_img.shape[0]), (0, col_img.shape[0]) )   ### 設定 y軸 顯示的字，前面的tuple是位置，後面的tuple是要顯示的字
+                plt.xticks( (0, col_img.shape[1]), ("", col_img.shape[1]) )  ### 設定 x軸 顯示的字，前面的tuple是位置，後面的tuple是要顯示的字
 
 def matplot_visual_multi_row_imgs(rows_cols_titles, rows_cols_imgs, fig_title="epoch=1005", bgr2rgb=True, add_loss=False):
     col_titles_amount = len(rows_cols_titles[0])
@@ -895,23 +890,23 @@ def matplot_visual_multi_row_imgs(rows_cols_titles, rows_cols_imgs, fig_title="e
                 row_titles.append("")
     elif(col_titles_amount > col_imgs_amount):
         print("title 太多了，沒有圖可以對應")
-        return 
-    
-    if(col_imgs_amount == 0): 
-        print("沒圖可show喔！")
-        return 
+        return
 
-    if(len(rows_cols_imgs)==1):
+    if(col_imgs_amount == 0):
+        print("沒圖可show喔！")
+        return
+
+    if(len(rows_cols_imgs) == 1):
         print("本function 不能處理 single_row_imgs喔，因為matplot在row只有1時的維度跟1以上時不同！麻煩呼叫相對應處理single_row的function！")
     ###########################################################
     ### 設定canvas的大小
     canvas_height = _get_row_col_canvas_height(rows_cols_imgs)
     canvas_width  = _get_row_col_canvas_width (rows_cols_imgs)
     if(add_loss):   ### 多一些空間來畫loss
-        row_imgs_amount += 1 ### 多一row來畫loss
+        row_imgs_amount += 1  ### 多一row來畫loss
         canvas_height += 3.0  ### 慢慢試囉～
-        canvas_width  -= 0.55*col_imgs_amount  ### 慢慢試囉～
-        canvas_height *= 1.2  ### 慢慢試囉～ 
+        canvas_width  -= 0.55 * col_imgs_amount  ### 慢慢試囉～
+        canvas_height *= 1.2  ### 慢慢試囉～
         canvas_width  *= 1.2  ### 慢慢試囉～
     # print("canvas_height",canvas_height)
     # print("canvas_width",canvas_width)
@@ -919,13 +914,13 @@ def matplot_visual_multi_row_imgs(rows_cols_titles, rows_cols_imgs, fig_title="e
 
     ### 建立canvas出來
     fig, ax = plt.subplots(nrows=row_imgs_amount, ncols=col_imgs_amount)
-    fig.set_size_inches(canvas_width, canvas_height) ### 設定 畫布大小
+    fig.set_size_inches(canvas_width, canvas_height)  ### 設定 畫布大小
     ###############################################################
     _draw_multi_row_imgs(fig, ax, row_imgs_amount, col_imgs_amount, canvas_height, canvas_width, rows_cols_titles, rows_cols_imgs, fig_title, bgr2rgb)
     ###############################################################
     ### 想畫得更漂亮一點，兩種還是有些一咪咪差距喔~
-    if(not add_loss): fig.tight_layout(rect=[0,0,1,0.95]) ### 待嘗試喔！
-    else:             fig.tight_layout(rect=[0,0.0035,1,0.95]) ### 待嘗試喔！
+    if(not add_loss): fig.tight_layout(rect=[0, 0, 1, 0.95])       ### 待嘗試喔！
+    else:             fig.tight_layout(rect=[0, 0.0035, 1, 0.95])  ### 待嘗試喔！
     ###############################################################
     ### 統一不存，因為可能還要給別人後續處理，這裡只負責畫圖喔！
     # plt.show()
@@ -940,10 +935,10 @@ def draw_loss_util(fig, ax, logs_dir, epoch, epochs ):
 
     logs_file_names = get_dir_certain_file_name(logs_dir, "npy")
     y_loss_array = np.load( logs_dir + "/" + logs_file_names[0])
-    
+
     plt.sca(ax)  ### plt指向目前的 小畫布 這是為了設定 xylim 和 xylabel
-    plt.ylim(0,LOSS_YLIM)     ;plt.ylabel(logs_file_names[0])
-    plt.xlim(0, epochs) ;plt.xlabel("epoch_num") 
+    plt.ylim(0, LOSS_YLIM)   ; plt.ylabel(logs_file_names[0])
+    plt.xlim(0,  epochs)     ; plt.xlabel("epoch_num")
     ax.plot(x_epoch, y_loss_array)
     ax.scatter(epoch, y_loss_array[epoch], c="red")
     return fig, ax
@@ -958,7 +953,7 @@ def get_triangle_list(num):
         acc = 0
         for i in range(num):
             acc += i
-            if(acc > num): 
+            if(acc > num):
                 tri_list.append(i - 1)
                 break
 
@@ -973,11 +968,9 @@ def multi_processing_interface(core_amount, task_amount, task, task_args=None, p
     '''
     import multiprocessing
     from multiprocessing import Process
-    import time
-    from tqdm import tqdm
-    processes = [] ### 放 Process 的 list
-    split_amount = int(task_amount //core_amount) ### split_amount 的意思是： 一個core 可以"分到"幾個任務，目前的想法是 一個core對一個process，所以下面的process_amount 一開始設定==split_amount喔！
-    fract_amount = int(task_amount % core_amount) ### fract_amount 的意思是： 任務不一定可以均分給所有core，分完後還剩下多少個任務沒分出來
+    processes = []   ### 放 Process 的 list
+    split_amount = int(task_amount // core_amount)  ### split_amount 的意思是： 一個core 可以"分到"幾個任務，目前的想法是 一個core對一個process，所以下面的process_amount 一開始設定==split_amount喔！
+    fract_amount = int(task_amount % core_amount)   ### fract_amount 的意思是： 任務不一定可以均分給所有core，分完後還剩下多少個任務沒分出來
 
 
     ### 給方法4用的
@@ -991,11 +984,11 @@ def multi_processing_interface(core_amount, task_amount, task, task_args=None, p
         ### 決定 core_start_index 和 core_task_amount：
         ###     core_start_index：core 要處理的任務的 start_index
         ###     core_task_amount：core 要處理的任務數量
-        if(core_amount >= task_amount):  ### 如果 core的數量 比 任務數量多 或 一樣 的情況
-            core_start_index = go_core_i ### 如果 core的數量 比 任務數量多，一個任務一個core
-            core_task_amount = 1         ### 如果 core的數量 比 任務數量多，一個任務一個core
-            if(go_core_i >= task_amount):break ### 任務分完了，就break囉！要不然沒任務分給core拉
-            
+        if(core_amount >= task_amount):   ### 如果 core的數量 比 任務數量多 或 一樣 的情況
+            core_start_index = go_core_i  ### 如果 core的數量 比 任務數量多，一個任務一個core
+            core_task_amount = 1          ### 如果 core的數量 比 任務數量多，一個任務一個core
+            if(go_core_i >= task_amount): break  ### 任務分完了，就break囉！要不然沒任務分給core拉
+
         elif( core_amount < task_amount):  ### 如果 core的數量 比 任務數量多 少 的情況
             ### 在同core的情況下，快的排序應該是：4 > 2 > 3 > 1
             ########################################################################################################################
@@ -1006,28 +999,28 @@ def multi_processing_interface(core_amount, task_amount, task, task_args=None, p
             current_index += core_task_amount      ### 準備 下一個 core 的 start_index
             ########################################################################################################################
             ### 寫法3：最值觀的想法，把fraction 平均分給每個前面的core，但因為分配任務給core需要時間，越前面的core通常會越早做完，就要等後面的core，有點浪費！
-            # core_start_index = current_index 
+            # core_start_index = current_index
             # core_task_amount = split_amount
-            
+
             # if(go_core_i < fract_amount): core_task_amount += 1  ### 把 fract_amount 平均分給 前面的 core
             # current_index += core_task_amount                    ### 準備 下一個 core 的 start_index
 
             ########################################################################################################################
             ### 寫法2：fraction 全部都丟給 第一個core，因為分配任務給core也需要時間，所以第一個丟多一點在分配的過程中也可以做事情，缺點是如果 core_amount 越多，fraction數就可能越大，可能第一個被分到的任務太多，最後一個core都做完了 第一個core還沒做完
-            # core_start_index = split_amount*go_core_i  ### 定出 task_index 起始位置
+            # core_start_index = split_amount * go_core_i  ### 定出 task_index 起始位置
             # core_task_amount = split_amount            ### 一個process 要處理幾個任務，目前的想法是 一個core對一個process，所以 一開始設定==split_amount喔！
             # if(fract_amount != 0): ### 如果 任務分完後還剩下任務沒分完
             #     if  (go_core_i == 0): core_task_amount += fract_amount  ### 把 沒分完的任務給第一個core！因為在分配Process給core的過程也會花時間，這時間就可以給第一個core處理分剩的任務囉！
             #     elif(go_core_i  > 0): core_start_index += fract_amount  ### 第一個後的core 任務 index 就要做點位移囉！
-            
+
             ########################################################################################################################
             ### 寫法1
             ### 下面這寫法是把 沒分完的任務給第最後一個core，這樣最後的core最慢被分到又要做最多事情，會比較慢喔～
-            # if( go_core_i==(core_amount-1) and (fract_amount!=0) ): core_task_amount += fract_amount ### process分配到最後 如果 task_amount 還有剩，就加到最後一個process
-        
-        if(task_args is None):processes.append(Process( target=task, args=(core_start_index, core_task_amount) ) ) ### 根據上面的 core_start_index 和 core_task_amount 來 創建 Process
-        else:                 processes.append(Process( target=task, args=(core_start_index, core_task_amount, *task_args) ) ) ### 根據上面的 core_start_index 和 core_task_amount 來 創建 Process
-        if(print_msg): print("registering process_%02i dealing %04i~%04i task"% (go_core_i, core_start_index, core_start_index+core_task_amount-1) ) ### 大概顯示這樣的資訊：registering process_00 dealing 0000~0003 task
+            # if( go_core_i == (core_amount-1) and (fract_amount!=0) ): core_task_amount += fract_amount ### process分配到最後 如果 task_amount 還有剩，就加到最後一個process
+
+        if(task_args is None): processes.append(Process( target=task, args=(core_start_index, core_task_amount) ) )  ### 根據上面的 core_start_index 和 core_task_amount 來 創建 Process
+        else:                  processes.append(Process( target=task, args=(core_start_index, core_task_amount, *task_args) ) )  ### 根據上面的 core_start_index 和 core_task_amount 來 創建 Process
+        if(print_msg): print("registering process_%02i dealing %04i~%04i task" % (go_core_i, core_start_index, core_start_index + core_task_amount - 1) )  ### 大概顯示這樣的資訊：registering process_00 dealing 0000~0003 task
 
     ##############################################################################################################################
     ### 方法2，看某個worker做完，馬上分process給他做
@@ -1053,16 +1046,16 @@ def multi_processing_interface(core_amount, task_amount, task, task_args=None, p
             if(worker.is_alive() is False):  ### 一開始 worker 沒做事 .is_alive() 為 False 或 後來做完事情了， .is_alive() 會變False
                 if(worker_id > go_p): break  ### 防呆，正常來說要等於，如果 worker_amount > core_amount，就可能會有 大於的狀況發生 會出錯，這裡就會break囉！
                 ### 指定新 Process 給 沒事做 或 做完事情的 worker
-                workers[worker_id] = processes[go_p]   
+                workers[worker_id] = processes[go_p]
                 workers[worker_id].start()  ### .is_alive() 會變True
-                if(print_msg): print(" workers[%i] doing %i/%i process is starting" % (worker_id, go_p, process_amount))
+                if(print_msg): print(" workers[%i] doing %i/%i process is starting" % (worker_id, go_p + 1, process_amount))
                 go_p += 1
-            
+
     ### 方法1，但還是要等前面的process做完 才分配 下一個 process
     # for go_p, process in enumerate(processes):
-        # if( (go_p + 1) % 8 == 0): 
+        # if( (go_p + 1) % 8 == 0):
         #     for go_stop_p in range(go_p+1):
-        #         if(processes[go_stop_p].is_alive()): 
+        #         if(processes[go_stop_p].is_alive()):
         #             processes[go_stop_p].join()
         #     time.sleep(10)
 
@@ -1070,13 +1063,13 @@ def multi_processing_interface(core_amount, task_amount, task, task_args=None, p
         process.join()
 
 
-if(__name__=="__main__"):
+if(__name__ == "__main__"):
     from step0_access_path import access_path
     # in_imgs = get_dir_img(access_path+"datasets/wei_book/in_imgs")
     # gt_imgs = get_dir_img(access_path+"datasets/wei_book/gt_imgs")
-    
+
     # db = zip(in_imgs, gt_imgs)
     # for imgs in db:
     #     print(type(imgs))
 
-    get_max_db_move_xy(db_dir=access_path+"datasets", db_name="1_unet_page_h=384,w=256")
+    get_max_db_move_xy(db_dir=access_path + "datasets", db_name="1_unet_page_h=384,w=256")

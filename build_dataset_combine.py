@@ -765,7 +765,7 @@ if(__name__ == "__main__"):
 
     Page_num(ord_dir = step_1_dir, dst_dir = step_2_dir)
     Crop(ord_dir = step_2_dir, dst_dir = step_3_dir,     left = curve_left, top = curve_top,     crop_window_size_w = curve_crop_window_size_w, crop_window_size_h=curve_crop_window_size_h)
-    Resize(ord_dir = step_3_dir, dst_dir = step_4_dir,     width = curve_resize_width, height = curve_resize_height)
+    Resize_hw(ord_dir = step_3_dir, dst_dir = step_4_dir,     width = curve_resize_width, height = curve_resize_height)
     Crop_row_random(ord_dir = step_4_dir, dst_dir = step_5_dir, seed = 10, crop_num = same_crop_row_num,
                     image_range_width = curve_resize_width, image_range_height = curve_resize_height ,
                     base_left = 0, base_top = 0,
@@ -813,7 +813,7 @@ if(__name__ == "__main__"):
         left = straight_left, top = straight_top,
         crop_window_size_w = straight_crop_window_size_w, crop_window_size_h = straight_crop_window_size_h)
 
-    Resize(ord_dir = step_3_dir, dst_dir = step_4_dir,
+    Resize_hw(ord_dir = step_3_dir, dst_dir = step_4_dir,
         width = straight_resize_width, height = straight_resize_height)
 
     Crop_row_random(ord_dir = step_4_dir, dst_dir = step_5_dir, seed = 10, crop_num = same_crop_row_num,
