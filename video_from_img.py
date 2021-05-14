@@ -84,7 +84,7 @@ if(__name__ == "__main__"):
     ord_dir5 = data_access_path + "result" + "/" + "pure_rect2_right-loss_have_shuffle/wei_book_3_tf1_db+type4_complex+page_more_like_20200422-011813_model5_rect2_127.35_284"
     ord_dir6 = data_access_path + "result" + "/" + "pure_rect2_right-loss_have_shuffle/wei_book_3_tf1_db+type4_complex+page_more_like_20200422-012313_model6_mrf_rect2_128.245_143"
 
-    ord_dirs = [ord_dir1, ord_dir2, ord_dir3, ord_dir4, ord_dir5, ord_dir6]    
+    ord_dirs = [ord_dir1, ord_dir2, ord_dir3, ord_dir4, ord_dir5, ord_dir6]
     Video_combine_from_certain_dirs(ord_dirs, dst_dir, "combine_1,2,3,4,5,6.avi")
 
     ######################################################
