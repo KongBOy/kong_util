@@ -416,6 +416,7 @@ def Split_train_test(ord_dir, dst_dir, train_dir_name = "", test_dir_name = "",
 ##############################################################################################################################################################
 
 def Find_db_left_top_right_down(ord_dir, padding = 0, search_amount=-1):  ### padding是 印表機 印出來旁邊自動padding的空白，要自己去嘗試為多少喔！
+    print("    Find_db_left_top_right_down")
     padding = int(padding)  ### 可以把最後找到的 ltrd 往外pad，ex：left-padding, top-padding, right+padding, down+padding
 
     file_names = os.listdir(ord_dir)
@@ -431,7 +432,7 @@ def Find_db_left_top_right_down(ord_dir, padding = 0, search_amount=-1):  ### pa
     rights = []
     downs  = []
     if(search_amount == -1): search_amount = len(file_names)
-    for file_name in file_names[0:search_amount]:
+    for file_name in tqdm(file_names[0:search_amount]):
         ord_img = cv2.imread(ord_dir + "/" + file_name, 0)
         _, thresh1 = cv2.threshold(ord_img, 127, 255, cv2.THRESH_BINARY_INV)  ### 二值化影像
         # cv2.imshow("thresh1",thresh1)
@@ -515,6 +516,28 @@ def Photo_frame_padding(ord_dir, dst_dir, left_pad=140, top_pad=50, right_pad=14
         # cv2.imshow("canvas",canvas)
         # cv2.waitKey(0)
         print(dst_dir + "/" + file_name, "finished!!")
+
+def Pad_white_board(ord_dir, dst_dir, pad_direction=3, board=50):
+    """
+    pad_direction: 1l, 2t, 3r, 4d 補白色邊
+    board: 白邊寬度
+    """
+    file_names = get_dir_img_file_names(ord_dir)
+    Check_dir_exist_and_build_new_dir(dst_dir)
+
+
+    pad_direction = 3
+    board = 80
+
+    for file_name in file_names:
+        img = cv2.imread(file_name)
+        canvas = np.ones(shape=img.shape, dtype=np.uint8) * 255
+        if  (pad_direction == 1): canvas[:, board:, :] = img[:, :-board, :]  ### 左補白邊
+        elif(pad_direction == 3): canvas[:, :-board, :] = img[:, board:, :]  ### 右補白邊
+        elif(pad_direction == 2): canvas[board:, :, :] = img[:-board, :, :]  ### 頂補白邊
+        elif(pad_direction == 4): canvas[:-board, :, :] = img[board:, :, :]  ### 底補白邊
+
+        cv2.imwrite(dst_dir + "/" + file_name, canvas)
 
 
 def Save_as_gray(ord_dir, dst_dir, gray_three_channel=True):
