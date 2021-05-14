@@ -541,6 +541,7 @@ def Pad_white_board(ord_dir, dst_dir, pad_direction=3, board=50):
 
 
 def Save_as_gray(ord_dir, dst_dir, gray_three_channel=True):
+    print("doing Save_as_gray")
     ### 建立放結果的資料夾，如果有上次建立的結果要先刪掉
     Check_dir_exist_and_build(dst_dir)
 
@@ -689,6 +690,10 @@ def _use_ltrd_crop_multiprocess(ord_dir, dst_dir, file_names, l, t, r, d, crop_a
 
 def Find_ltrd_and_crop(ord_dir, dst_dir, padding=50, search_amount=-1, crop_according_lr_page=False, odd_x_shift=0, even_x_shift=0, multiprocess=True, core_amount=8):
     print("doing Find_ltrd_and_crop")
+    if(crop_according_lr_page is True and multiprocess is True):  ### 防呆
+        multiprocess = False
+        print("因為 crop_according_lr_page 模式有開啟，無法使用multiprocess，要不然 左、右 頁的 index 可能會讀錯，自動把multiprocess關掉囉~")
+
     start_time = time.time()
     ### 建立放結果的資料夾
     Check_dir_exist_and_build(dst_dir)
