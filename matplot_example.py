@@ -47,7 +47,7 @@ plt.subplots_adjust(left=0.01,         ### 左邊界 到 圖的距離 是 幾%
                     top=1.0 - 0.1,     ### 上邊界 到 圖的距離 是 幾%
                     wspace=0.01,       ### 圖左右之間的 寬
                     hspace=0.01        ### 圖左右之間的 高
-                    )   
+                    )
 
 
 plt.show()

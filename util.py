@@ -99,7 +99,6 @@ def get_dir_certain_move(ord_dir, certain_word):
 
 @Check_dir_exist_decorator
 def get_dir_img(ord_dir, float_return =False):
-    print("get_dir_img:", ord_dir)
     file_names = [file_name for file_name in os.listdir(ord_dir) if Check_img_filename(file_name) ]
     img_list = []
     for file_name in tqdm(file_names):
@@ -946,6 +945,7 @@ def draw_loss_util(fig, ax, logs_read_dir, epoch, epochs ):
 
 ############################################################################################################
 ############################################################################################################
+
 
 if(__name__ == "__main__"):
     from step0_access_path import access_path

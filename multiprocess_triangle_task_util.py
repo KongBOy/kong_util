@@ -1,4 +1,5 @@
-import pdb
+# import pdb
+
 def _get_triangle_list(num):  ### 不想被外面的.py 呼叫，所以加底線
     tri_amount = num  ## 換個名字比較好理解
     tri_height_list = []
