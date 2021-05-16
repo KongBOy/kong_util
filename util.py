@@ -488,12 +488,12 @@ def get_cmap(color_amount, cmap_name='hsv'):
 ############################################################################################################
 class Matplot_ax_util():
     @staticmethod
-    def Draw_ax_loss_during_train( ax, logs_dir, cur_epoch, epochs , ylim=LOSS_YLIM ):  ### logs_dir 不能改丟 result_obj喔！因為See裡面沒有Result喔！
+    def Draw_ax_loss_during_train( ax, logs_read_dir, cur_epoch, epochs , ylim=LOSS_YLIM ):  ### logs_read_dir 不能改丟 result_obj喔！因為See裡面沒有Result喔！
         x_epoch = np.arange(cur_epoch + 1)  ### x座標畫多少，畫到目前訓練的 cur_epoch，+1是為了index轉數量喔
 
-        logs_file_names = get_dir_certain_file_name(logs_dir, "npy")  ### 去logs_dir 抓 當時訓練時存的 loss.npy
+        logs_file_names = get_dir_certain_file_name(logs_read_dir, "npy")  ### 去logs_dir 抓 當時訓練時存的 loss.npy
         for loss_i, logs_file_name in enumerate(logs_file_names):
-            y_loss_array = np.load( logs_dir + "/" + logs_file_name)  ### 去logs_dir 抓 當時訓練時存的 loss.npy
+            y_loss_array = np.load( logs_read_dir + "/" + logs_file_name)  ### 去logs_dir 抓 當時訓練時存的 loss.npy
             loss_name = logs_file_name.split(".")[0]
             Matplot_ax_util._Draw_ax_loss(ax, cur_epoch, loss_name, loss_i, x_array=x_epoch, y_array=y_loss_array, xlim=epochs, ylim=ylim)
 
@@ -501,12 +501,12 @@ class Matplot_ax_util():
     @staticmethod
     ### 注意這會給 see, result, c_results 用喔！ 所以多 result的情況也要考慮，所以才要傳 min_epochs，
     ### 且因為有給see用，logs_dir 不能改丟 result_obj喔！因為See裡面沒有Result喔！
-    def Draw_ax_loss_after_train( ax, logs_dir, cur_epoch, min_epochs , ylim=LOSS_YLIM ):
+    def Draw_ax_loss_after_train( ax, logs_read_dir, cur_epoch, min_epochs , ylim=LOSS_YLIM ):
         x_epoch = np.arange(min_epochs)  ### x座標畫多少
 
-        logs_file_names = get_dir_certain_file_name(logs_dir, "npy")  ### 去logs_dir 抓 當時訓練時存的 loss.npy
+        logs_file_names = get_dir_certain_file_name(logs_read_dir, "npy")  ### 去logs_dir 抓 當時訓練時存的 loss.npy
         for loss_i, logs_file_name in enumerate(logs_file_names):
-            y_loss_array = np.load( logs_dir + "/" + logs_file_name)  ### 把loss讀出來
+            y_loss_array = np.load( logs_read_dir + "/" + logs_file_name)  ### 把loss讀出來
             loss_amount = len(y_loss_array)                           ### 訓練的當下存了多少個loss
             if( (min_epochs - 1) == loss_amount):                     ### 如果現在result剛好是訓練最少次的result，要注意有可能訓練時中斷在存loss前，造成 epochs數 比 loss數 多一個喔！這樣畫圖會出錯！
                 y_loss_array = np.append(y_loss_array, y_loss_array[-1])  ### 把loss array 最後補一個自己的尾巴
@@ -931,11 +931,11 @@ def matplot_visual_multi_row_imgs(rows_cols_titles, rows_cols_imgs, fig_title="e
 
 
 
-def draw_loss_util(fig, ax, logs_dir, epoch, epochs ):
+def draw_loss_util(fig, ax, logs_read_dir, epoch, epochs ):
     x_epoch = np.arange(epochs)
 
-    logs_file_names = get_dir_certain_file_name(logs_dir, "npy")
-    y_loss_array = np.load( logs_dir + "/" + logs_file_names[0])
+    logs_file_names = get_dir_certain_file_name(logs_read_dir, "npy")
+    y_loss_array = np.load( logs_read_dir + "/" + logs_file_names[0])
 
     plt.sca(ax)  ### plt指向目前的 小畫布 這是為了設定 xylim 和 xylabel
     plt.ylim(0, LOSS_YLIM)   ; plt.ylabel(logs_file_names[0])
