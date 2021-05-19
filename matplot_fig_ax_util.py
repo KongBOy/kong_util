@@ -358,7 +358,7 @@ class Matplot_multi_row_imgs(Matplot_util):
 
         for go_row, row_imgs in enumerate(self.r_c_imgs):
             for go_col, col_img in enumerate(row_imgs):
-                if(self.bgr2rgb): col_img[..., ::-1]  ### 如果有標示 輸入進來的 影像是 bgr，要轉rgb喔！
+                if(self.bgr2rgb): col_img = col_img[..., ::-1]  ### 如果有標示 輸入進來的 影像是 bgr，要轉rgb喔！
                 if(self.col_imgs_amount > 1):
                     self.ax[go_row, go_col].imshow(col_img)  ### 小畫布 畫上影像，別忘記要bgr -> rgb喔！
                     if  (len(self.r_c_titles) > 1): self.ax[go_row, go_col].set_title( self.r_c_titles[go_row][go_col], fontsize=16 )  ### 小畫布　標上小標題
