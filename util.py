@@ -60,8 +60,8 @@ def get_dir_img_file_names(ord_dir):
     return file_names
 
 @Check_dir_exist_decorator
-def get_dir_certain_file_name(ord_dir, certain_word):
-    file_names = [file_name for file_name in os.listdir(ord_dir) if (certain_word in file_name)]
+def get_dir_certain_file_name(ord_dir, certain_word, certain_ext="."):
+    file_names = [file_name for file_name in os.listdir(ord_dir) if (certain_word in file_name) and (certain_ext in file_name)]
     return file_names
 # def get_dir_certain_file_name(ord_dir, certain_word):
 #     if os.path.isdir(ord_dir): file_names = [file_name for file_name in os.listdir(ord_dir) if (certain_word in file_name)]
