@@ -16,10 +16,19 @@
 import multiprocessing
 from multiprocessing import Process
 
-def multi_processing_interface(core_amount, task_amount, task, task_args=None, print_msg=False):
+def multi_processing_interface(core_amount, task_amount, task, task_start_index=0, task_args=None, print_msg=False):
+    if(print_msg):
+        print("core_amount:", core_amount)
+        print("task_amount:", task_amount)
+        print("task_start_index:", task_start_index)
+        print("task:", task.__name__)
+        print("task_args:", task_args)
     '''
     理論上 core 就是 worker，但實際上我寫的想法是 core 可以無限切，但是實際的 worker 就要看cpu 是有限的囉！
     core切多的狀況 用在：當一個core要做的事情 需要的記憶體太大時，比如：wc 100000(十萬) 張，切 500 個 core之類的 一個core 只需要處理 200 張wc的記憶體 這樣子，但實際worker 就是固定的這樣子 (我設定下面 core_count*2+2)
+
+    task_amount 和 task_start_amount 的關係 應該要在 外面就自己算清楚囉！
+    例如 500個任務，想從 第2個開始，task_start_index=1，task_amount外面就要自己算好丟499喔！
     '''
     processes = []   ### 放 Process 的 list
     split_amount = int(task_amount // core_amount)  ### split_amount 的意思是： 一個core 可以"分到"幾個任務，目前的想法是 一個core對一個process，所以下面的process_amount 一開始設定==split_amount喔！
@@ -71,9 +80,9 @@ def multi_processing_interface(core_amount, task_amount, task, task_args=None, p
             ### 下面這寫法是把 沒分完的任務給第最後一個core，這樣最後的core最慢被分到又要做最多事情，會比較慢喔～
             # if( go_core_i == (core_amount-1) and (fract_amount!=0) ): core_task_amount += fract_amount ### process分配到最後 如果 task_amount 還有剩，就加到最後一個process
 
-        if(task_args is None): processes.append(Process( target=task, args=(core_start_index, core_task_amount) ) )  ### 根據上面的 core_start_index 和 core_task_amount 來 創建 Process
-        else:                  processes.append(Process( target=task, args=(core_start_index, core_task_amount, *task_args) ) )  ### 根據上面的 core_start_index 和 core_task_amount 來 創建 Process
-        if(print_msg): print("registering process_%02i dealing %04i~%04i task" % (go_core_i, core_start_index, core_start_index + core_task_amount - 1) )  ### 大概顯示這樣的資訊：registering process_00 dealing 0000~0003 task
+        if(task_args is None): processes.append(Process( target=task, args=(task_start_index + core_start_index, core_task_amount) ) )              ### 起始點從 task_start_index 開始，根據上面的 core_start_index 和 core_task_amount 來 創建 Process
+        else:                  processes.append(Process( target=task, args=(task_start_index + core_start_index, core_task_amount, *task_args) ) )  ### 起始點從 task_start_index 開始，根據上面的 core_start_index 和 core_task_amount 來 創建 Process
+        if(print_msg): print("registering process_%02i dealing %04i~%04i task" % (go_core_i, task_start_index + core_start_index, core_start_index + core_task_amount - 1) )  ### 大概顯示這樣的資訊：registering process_00 dealing 0000~0003 task
 
     ###############################################################################################################################################################################################
     ###############################################################################################################################################################################################
