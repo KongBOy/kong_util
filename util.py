@@ -152,6 +152,15 @@ def get_db_amount(ord_dir):
     file_names = [file_name for file_name in os.listdir(ord_dir) if Check_img_filename(file_name) or (".npy" in file_name) ]
     return len(file_names)
 
+
+def remove_dir_certain_file_name(ord_dir, certain_word, certain_ext=".", print_msg=False):
+    if(print_msg): print("ord_dir", ord_dir)
+    file_names = get_dir_certain_file_name(ord_dir, certain_word=certain_word, certain_ext=certain_ext)  ### 注意 get_dir_certain_file_name 的 ord_dir 只能用位置參數！不能用關鍵字參數喔！因為他有用decorator，然後我寫的不夠generalˊ口ˋ
+    for file_name in file_names:
+        remove_path = ord_dir + "/" + file_name
+        os.remove(remove_path)
+        if(print_msg): print(f"remove {remove_path} finish")
+
 ##########################################################
 def apply_move_map_boundary_mask(move_maps):
     boundary_width = 20
