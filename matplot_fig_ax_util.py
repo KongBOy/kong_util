@@ -95,78 +95,151 @@ class Matplot_single_row_imgs(Matplot_util):
         self.img_titles = img_titles
         self.fig_title  = fig_title
         self.bgr2rgb    = bgr2rgb
+
         self.add_loss   = add_loss
 
-        self.row_imgs_amount   = 1
-        self.col_imgs_amount   = len(self.imgs)
-        self.col_titles_amount = len(self.img_titles)
-        self._step1_build_check()
+        self.fig_row_amount   = 1
+        self.fig_col_amount   = len(self.imgs)
+        self.ax_titles_amount = len(self.img_titles)
+        self._step0_a_build_check()
 
 
-        self.canvas_height     = None
-        self.canvas_width      = None
+        self.canvas_height = None
+        self.canvas_width  = None
+        self.canvas_1_ax_h = None
+        self.canvas_1_ax_w = None
         self.fig = None
         self.ax  = None
-        self._step2_set_canvas_hw_and_build()
+        self._step0_b_set_canvas_hw_and_build()
 
+        self.first_time_row_col_finish = False
+        self.merged_ax_list = []
+        self.merged_gs_list = []
 
-    def _get_one_row_canvas_height(self):
-        height_list = []    ### imgs是個list，裡面放的圖片可能不一樣大喔
-        for img in self.imgs: height_list.append(img.shape[0])
-        return  (max(height_list) // 100 + 1.0) * 1.0 + 1.5  ### 慢慢試囉～ +1.5是要給title 和 matplot邊界margin喔
-
-    def _get_one_row_canvas_width(self):
-        width = 0
-        for img in self.imgs: width += img.shape[1]
-        if  (self.col_imgs_amount == 2): return  (width // 100 + 0) * 1.0 + 4.0   ### 慢慢試囉～ col=3時
-        elif(self.col_imgs_amount == 3): return  (width // 100 + 0) * 1.0 + 5.7   ### 慢慢試囉～ col=3時
-        elif(self.col_imgs_amount == 4): return  (width // 100 + 0) * 1.0 + 6.8   ### 慢慢試囉～ col=4時
-        elif(self.col_imgs_amount == 5): return  (width // 100 + 0) * 1.0 + 8.5   ### 慢慢試囉～ col=5時
-        elif(self.col_imgs_amount == 6): return  (width // 100 + 0) * 1.0 + 10.5  ### 慢慢試囉～ col=6時
-        elif(self.col_imgs_amount == 7): return  (width // 100 + 0) * 1.0 + 11.5  ### 慢慢試囉～ col=7時
-        elif(self.col_imgs_amount >  7): return  (width // 100 + 0) * 1.0 + 11.5   ### 慢慢試囉～ col=7時，沒有試過用猜的，因為覺得用不到ˊ口ˋ用到再來試
-
-
-    def _step1_build_check(self):
+    def _step0_a_build_check(self):
         #### 防呆 ####################################################
         ### 正常來說 一個 title 對應 一張圖
-        if( self.col_titles_amount < self.col_imgs_amount):  ### 如果 title數 比 影像數多，那就用 空title來補
-            for _ in range(self.col_imgs_amount - self.col_titles_amount):
+        if( self.ax_titles_amount < self.fig_col_amount):  ### 如果 title數 比 影像數多，那就用 空title來補
+            for _ in range(self.fig_col_amount - self.ax_titles_amount):
                 self.img_titles.append("")
 
-        elif(self.col_titles_amount > self.col_imgs_amount):
+        elif(self.ax_titles_amount > self.fig_col_amount):
             print("title 太多了，沒有圖可以對應")
             return
 
-        if(self.col_imgs_amount == 0):
+        if(self.fig_col_amount == 0):
             print("沒圖可show喔！")
             return
 
-    def _step2_set_canvas_hw_and_build(self):
+    def _step0_b_get_one_row_canvas_height(self):
+        height_list = []    ### imgs是個list，裡面放的圖片可能不一樣大喔
+        for img in self.imgs: height_list.append(img.shape[0])
+        return  (max(height_list) // 100 + 1.0) * 1.15  ### 1.15 就慢慢試出來的囉～因為除了圖以外 還會有旁邊軸的標籤 和 margin也會被算進圖的大小裡， 所以要算比原圖大一點 才能讓show出的影像跟原始影像差不多大
+
+    def _step0_b_get_one_row_canvas_width(self):
+        width = 0
+        for img in self.imgs: width += img.shape[1]
+        return  (width // 100 + 0) * 1.15  ### 1.15 就慢慢試出來的囉～因為除了圖以外 還會有旁邊軸的標籤 和 margin也會被算進圖的大小裡， 所以要算比原圖大一點 才能讓show出的影像跟原始影像差不多大 col=1時
+        # if  (self.fig_col_amount == 1): return  (width // 100 + 0) * 1.15  ### 1.1 就慢慢試出來的囉～因為除了圖以外 還會有旁邊軸的標籤 和 margin也會被算進圖的大小裡， 所以要算比原圖大一點 才能讓show出的影像跟原始影像差不多大 col=1時
+        # elif(self.fig_col_amount == 2): return  (width // 100 + 0) * 1.15  ### 1.1 就慢慢試出來的囉～因為除了圖以外 還會有旁邊軸的標籤 和 margin也會被算進圖的大小裡， 所以要算比原圖大一點 才能讓show出的影像跟原始影像差不多大 col=2時
+        # elif(self.fig_col_amount == 3): return  (width // 100 + 0) * 1.15  ### 1.1 就慢慢試出來的囉～因為除了圖以外 還會有旁邊軸的標籤 和 margin也會被算進圖的大小裡， 所以要算比原圖大一點 才能讓show出的影像跟原始影像差不多大 col=3時
+        # elif(self.fig_col_amount == 4): return  (width // 100 + 0) * 1.15  ### 1.1 就慢慢試出來的囉～因為除了圖以外 還會有旁邊軸的標籤 和 margin也會被算進圖的大小裡， 所以要算比原圖大一點 才能讓show出的影像跟原始影像差不多大 col=4時
+        # elif(self.fig_col_amount == 5): return  (width // 100 + 0) * 1.15  ### 1.1 就慢慢試出來的囉～因為除了圖以外 還會有旁邊軸的標籤 和 margin也會被算進圖的大小裡， 所以要算比原圖大一點 才能讓show出的影像跟原始影像差不多大 col=5時
+        # elif(self.fig_col_amount == 6): return  (width // 100 + 0) * 1.15  ### 1.1 就慢慢試出來的囉～因為除了圖以外 還會有旁邊軸的標籤 和 margin也會被算進圖的大小裡， 所以要算比原圖大一點 才能讓show出的影像跟原始影像差不多大 col=6時
+        # elif(self.fig_col_amount == 7): return  (width // 100 + 0) * 1.15  ### 1.1 就慢慢試出來的囉～因為除了圖以外 還會有旁邊軸的標籤 和 margin也會被算進圖的大小裡， 所以要算比原圖大一點 才能讓show出的影像跟原始影像差不多大 col=7時
+        # elif(self.fig_col_amount >  7): return  (width // 100 + 0) * 1.15  ### 1.1 就慢慢試出來的囉～因為除了圖以外 還會有旁邊軸的標籤 和 margin也會被算進圖的大小裡， 所以要算比原圖大一點 才能讓show出的影像跟原始影像差不多大 col=7時
+
+    def _step0_b_set_canvas_hw_and_build(self):
         ### 設定canvas的大小
-        self.canvas_height = self._get_one_row_canvas_height()
-        self.canvas_width  = self._get_one_row_canvas_width()
+        self.canvas_height = self._step0_b_get_one_row_canvas_height()
+        self.canvas_width  = self._step0_b_get_one_row_canvas_width()
+        self.canvas_1_ax_h = self.canvas_height / self.fig_row_amount
+        self.canvas_1_ax_w = self.canvas_width  / self.fig_col_amount
         if(self.add_loss):   ### 多一些空間來畫loss
-            self.row_imgs_amount += 1  ### 多一row來畫loss
-            self.canvas_height += 3    ### 慢慢試囉～
-            self.canvas_width  -= 1.5 * self.col_imgs_amount  ### 慢慢試囉～
-        # print("canvas_height", self.canvas_height)
-        # print("canvas_width ", self.canvas_width)
-        # print("row_imgs_amount", self.row_imgs_amount)
-        # print("col_imgs_amount", self.col_imgs_amount)
+            self.fig_row_amount += 1  ### 多一row來畫loss
+            self.canvas_height   += self.canvas_1_ax_h    ### 慢慢試囉～
+            # self.canvas_width  -= 1.5 * self.fig_col_amount  ### 慢慢試囉～
+        print("canvas_height",   self.canvas_height)
+        print("canvas_width ",   self.canvas_width)
+        print("canvas_1_ax_h ",  self.canvas_1_ax_h)
+        print("canvas_1_ax_w ",  self.canvas_1_ax_w)
+        print("fig_row_amount", self.fig_row_amount)
+        print("fig_col_amount", self.fig_col_amount)
 
         ### 建立canvas出來
-        self.fig, self.ax = plt.subplots(nrows=self.row_imgs_amount, ncols=self.col_imgs_amount)
+        self.fig, self.ax = plt.subplots(nrows=self.fig_row_amount, ncols=self.fig_col_amount)
         self.fig.set_size_inches(self.canvas_width, self.canvas_height)  ### 設定 畫布大小
+
+    def step1_add_row_col(self, add_where="", merge=True):
+        if(add_where == "add_row"):
+            self.fig_row_amount += 1
+            self.canvas_height   += self.canvas_1_ax_h
+        elif(add_where == "add_col"):
+            self.fig_col_amount += 1
+            self.canvas_width   += self.canvas_1_ax_w
+
+        fig_new, ax_new = plt.subplots(nrows=self.fig_row_amount, ncols=self.fig_col_amount)  ### 新畫一張 加一個row的 新大圖
+        fig_new.set_size_inches(self.canvas_width, self.canvas_height)            ### 設定 新大圖 的 畫布大小
+        gs_new = ax_new[0, 0].get_gridspec()                                      ### 取得 新大圖 的 grid範圍規格表
+
+        if(merge):  ### 如果新增的 row/col 是想合併的樣式
+            if  (add_where == "add_row"):
+                merge_grid_gs =         gs_new[-1, :]                             ### 取得 新大圖 的 最後一row整個 的 grid範圍資訊
+                for ax_new_final_row in ax_new[-1, :]: ax_new_final_row.remove()  ### 新大圖 的最後一row 取消顯示
+            elif(add_where == "add_col"):
+                merge_grid_gs =         gs_new[:, -1]                             ### 取得 新大圖 的 最後一col整個 的 grid範圍資訊
+                for ax_new_final_col in ax_new[:, -1]: ax_new_final_col.remove()  ### 新大圖 的最後一col 取消顯示
+
+            ax_new_merge = fig_new.add_subplot(merge_grid_gs)                     ### 根據 最後一row/col整個 的 grid範圍資訊 貼上一張新 subplots
+
+            self.merged_ax_list.append(ax_new_merge)                              ### 把 ax merge資訊存起來
+            self.merged_gs_list.append(merge_grid_gs)                             ### 把 gs merge範圍存起來
+
+        ### 因為 fig_new 是 新的subplots圖，第二次以上做 merge 的話，第二次以前的結果 都會被新subplots圖蓋掉，所以要對 新subplots圖 把 之前的 merge過的動作都重做一次喔！
+        if(self.first_time_row_col_finish):                        ### 等於1 是第一次執行，不需同步，第一次以後才需要同步囉
+            for go_pass, pass_gs in enumerate(self.merged_gs_list[:-1]):  ### 走訪到 最新的 merged_gs 以前
+                print("here~~~~~~~~~~~~~~~")
+                self.merged_ax_list[go_pass] = self._syn_with_pass_merged_grid(pass_gs, fig_new, ax_new, gs_new)
+
+        plt.close(self.fig)                                                   ### 把舊圖關掉
+        self.fig = fig_new
+        self.ax  = ax_new
+        if(merge): self.first_time_row_col_finish = True
+
+    def _syn_with_pass_merged_grid(self, pass_gs, fig_new, ax_new, gs_new):
+        """
+        pass_gs： 之前的 merge 範圍資訊
+        fig_new： 目前的 新 subplots圖 的 fig
+        ax_new：  目前的 新 subplots圖 的 ax
+        gs_new：  目前的 新 subplots圖 的 grid範圍資訊
+        """
+        ### 把過去的 merge 的 上下左右 抓出來
+        t = pass_gs.rowspan.start; d = pass_gs.rowspan.stop
+        l = pass_gs.colspan.start; r = pass_gs.colspan.stop
+
+        ### 過去 已merge的ax位置 相對應於 新ax的哪裡，相當於pass_update的概念
+        pass_gs_update = gs_new[t:d, l:r]
+        print("ax_new", ax_new)
+        print("pass_gs", pass_gs)
+        ### 新大圖上 把 之前合併的grid 取消顯示
+        for go_r in pass_gs.rowspan:
+            for go_c in pass_gs.colspan:
+                print(go_r, go_c)
+                ax_new[go_r, go_c].remove()
+
+        ### 把 過去已merge 的地方 根據 對應的 新ax 補起來
+        pass_ax_update = fig_new.add_subplot(pass_gs_update)
+        return pass_ax_update
 
 
     def _step3_draw(self, used_ax):
         ### 這就是手動微調 text的位置囉ˊ口ˋ
-        self.fig.text(x=0.5, y=0.945, s=self.fig_title, fontsize=20, c=(0., 0., 0., 1.),  horizontalalignment='center',)
+        ### (0.5 / self.canvas_height) 的意思是 我想留 50px 左右 給上方
+        self.fig.text(x=0.5, y= 1 - (0.5 / self.canvas_height), s=self.fig_title, fontsize=28, c=(0., 0., 0., 1.),  horizontalalignment='center',)
 
         for go_img, img in enumerate(self.imgs):
             if(self.bgr2rgb): img = img[..., ::-1]  ### 如果有標示 輸入進來的 影像是 bgr，要轉rgb喔！
-            if(self.col_imgs_amount > 1):  ### 這個if 是為了 ax, ax[...] 的操作
+            if(self.fig_col_amount > 1):  ### 這個if 是為了 ax, ax[...] 的操作
                 used_ax[go_img].imshow(img)  ### 小畫布 畫上影像，別忘記要bgr -> rgb喔！
                 used_ax[go_img].set_title( self.img_titles[go_img], fontsize=16 )  ### 小畫布上的 title
 
@@ -183,8 +256,11 @@ class Matplot_single_row_imgs(Matplot_util):
     def Draw_img(self):  ### 呼叫 _step3_draw 畫圖
         ###############################################################
         ### 注意 _draw_single_row_imgs 的 ax 只能丟 一row，所以才寫這if/else
-        if(not self.add_loss): used_ax = self.ax
-        elif(self.add_loss):   used_ax = self.ax[0]  ### 只能丟第一row喔！因為_draw_single_row_imgs 裡面的操作方式 是 一row的方式，丟兩row ax維度會出問題！
+        # if(not self.add_loss): used_ax = self.ax
+        # elif(self.add_loss):   used_ax = self.ax[0]  ### 只能丟第一row喔！因為_draw_single_row_imgs 裡面的操作方式 是 一row的方式，丟兩row ax維度會出問題！
+        if(type(self.ax) == type(np.array(1))):
+            used_ax = self.ax[0]  ### 只能丟第一row喔！因為_draw_single_row_imgs 裡面的操作方式 是 一row的方式，丟兩row ax維度會出問題！
+        else: used_ax = self.ax
         self._step3_draw(used_ax)
         ###############################################################
         ### 想畫得更漂亮一點，兩種還是有些一咪咪差距喔~
@@ -204,9 +280,9 @@ class Matplot_multi_row_imgs(Matplot_util):
         self.bgr2rgb = bgr2rgb
         self.add_loss = add_loss
 
-        self.row_imgs_amount   = len(self.r_c_imgs)
-        self.col_imgs_amount   = len(self.r_c_imgs[0])
-        self.col_titles_amount = len(self.r_c_imgs[0])
+        self.fig_row_amount   = len(self.r_c_imgs)
+        self.fig_col_amount   = len(self.r_c_imgs[0])
+        self.ax_titles_amount = len(self.r_c_imgs[0])
         self._step1_build_check()
 
         self.canvas_height     = None
@@ -217,15 +293,15 @@ class Matplot_multi_row_imgs(Matplot_util):
 
     def _step1_build_check(self):
         #### 防呆 ####################################################
-        if( self.col_titles_amount < self.col_imgs_amount):
+        if( self.ax_titles_amount < self.fig_col_amount):
             for row_titles in self.r_c_titles:
-                for _ in range(self.col_imgs_amount - self.col_titles_amount):
+                for _ in range(self.fig_col_amount - self.ax_titles_amount):
                     row_titles.append("")
-        elif(self.col_titles_amount > self.col_imgs_amount):
+        elif(self.ax_titles_amount > self.fig_col_amount):
             print("title 太多了，沒有圖可以對應")
             return
 
-        if(self.col_imgs_amount == 0):
+        if(self.fig_col_amount == 0):
             print("沒圖可show喔！")
             return
 
@@ -248,17 +324,17 @@ class Matplot_multi_row_imgs(Matplot_util):
         self.canvas_height = self._get_row_col_canvas_height()
         self.canvas_width  = self._get_row_col_canvas_width ()
         if(self.add_loss):   ### 多一些空間來畫loss
-            self.row_imgs_amount += 1  ### 多一row來畫loss
+            self.fig_row_amount += 1  ### 多一row來畫loss
             self.canvas_height += 3.0  ### 慢慢試囉～
-            self.canvas_width  -= 0.55 * self.col_imgs_amount  ### 慢慢試囉～
+            self.canvas_width  -= 0.55 * self.fig_col_amount  ### 慢慢試囉～
             self.canvas_height *= 1.1  #1.2最好，但有點佔記憶體  ### 慢慢試囉～
             self.canvas_width  *= 1.1  #1.2最好，但有點佔記憶體  ### 慢慢試囉～
         # print("canvas_height",canvas_height)
         # print("canvas_width",canvas_width)
-        # print("row_imgs_amount", row_imgs_amount)
+        # print("fig_row_amount", fig_row_amount)
 
         ### 建立canvas出來
-        self.fig, self.ax = plt.subplots(nrows=self.row_imgs_amount, ncols=self.col_imgs_amount)
+        self.fig, self.ax = plt.subplots(nrows=self.fig_row_amount, ncols=self.fig_col_amount)
         self.fig.set_size_inches(self.canvas_width, self.canvas_height)  ### 設定 畫布大小
 
     def _step3_draw(self):
@@ -271,7 +347,7 @@ class Matplot_multi_row_imgs(Matplot_util):
         for go_row, row_imgs in enumerate(self.r_c_imgs):
             for go_col, col_img in enumerate(row_imgs):
                 if(self.bgr2rgb): col_img = col_img[..., ::-1]  ### 如果有標示 輸入進來的 影像是 bgr，要轉rgb喔！
-                if(self.col_imgs_amount > 1):
+                if(self.fig_col_amount > 1):
                     self.ax[go_row, go_col].imshow(col_img)  ### 小畫布 畫上影像，別忘記要bgr -> rgb喔！
                     if  (len(self.r_c_titles) > 1): self.ax[go_row, go_col].set_title( self.r_c_titles[go_row][go_col], fontsize=16 )  ### 小畫布　標上小標題
                     elif(len(self.r_c_titles) == 1 and go_row == 0): self.ax[go_row, go_col].set_title( self.r_c_titles[go_row][go_col], fontsize=16 )  ### 小畫布　標上小標題
@@ -310,3 +386,96 @@ def draw_loss_util(fig, ax, logs_read_dir, epoch, epochs ):
     ax.plot(x_epoch, y_loss_array)
     ax.scatter(epoch, y_loss_array[epoch], c="red")
     return fig, ax
+
+def subplots_combine_example():
+    ### https://matplotlib.org/stable/gallery/subplots_axes_and_figures/gridspec_and_subplots.html
+    import matplotlib.pyplot as plt
+
+    fig, axs = plt.subplots(ncols=3, nrows=3)
+    gs = axs[1, 2].get_gridspec()  ### 取得 整張圖的 grid範圍規格表 我猜
+
+    ### 發現其實 ax[不管在哪邊].get_gridspec()都是一樣的呀~~
+    ### 所以應該是隨便指定 ax 的某個位置，取得 整張圖的 grid範圍規格表 我猜
+    for go_r, r_ax in enumerate(axs):
+        for go_c, c_ax in enumerate(r_ax):
+            print(f"gs == gs[{go_r}, {go_c}]:", gs == axs[go_r, go_c].get_gridspec())
+            print(axs[go_r, go_c].get_gridspec()[go_r, go_c])
+    print(axs[0, 0].get_gridspec()[1:, -1])
+
+    # remove the underlying axes
+    ### 這裡remove 的 用途是讓 這些圖 不要顯示出來，才不會蓋過新圖
+    for ax in axs[1:, -1]:
+        ### https://matplotlib.org/3.2.2/api/_as_gen/matplotlib.axes.Axes.remove.html
+        ### ax.remove() 不是真的刪掉 ax，是讓 ax 不顯示出來！
+        ax.remove()
+
+    ### 在 grid範圍規格表 指定的位置 畫上新圖
+    axbig = fig.add_subplot(gs[1:, -1])
+    axbig.annotate('Big Axes \nGridSpec[1:, -1]', (0.1, 0.5), xycoords='axes fraction', va='center')
+
+    fig.tight_layout()
+
+    fig2, axs2 = plt.subplots(ncols=3, nrows=3)
+    plt.show()
+
+
+if(__name__ == "__main__"):
+    # fig, ax = plt.subplots(nrows=3, ncols=3)
+    # gs = ax[0, 0].get_gridspec()  ### 取得 整張圖的 grid範圍規格表 我猜
+
+    # fig_new, ax_new = plt.subplots(nrows=4, ncols=3)
+    # gs_new = ax_new[0, 0].get_gridspec()  ### 取得 整張圖的 grid範圍規格表 我猜
+
+    # for ax_new_final_row in ax_new[-1]: ax_new_final_row.remove()
+
+    # ax_new_row = fig_new.add_subplot(gs_new[-1, :])
+    # print(ax_new[0, 0].get_gridspec())
+    # print(ax_new_row.grid())
+    # print(gs_new[-1, :])
+    # plt.close(fig)
+
+    # plt.show()
+    ############################################################################################################################
+    import cv2
+    this_py_path = "C:/Users/TKU/Desktop/kong_model2/kong_util"
+    img1 = cv2.imread(f"{this_py_path}/img_data/0a-in_img.jpg")
+    img2 = cv2.imread(f"{this_py_path}/img_data/0b-gt_a_gt_flow.jpg")
+    img3 = cv2.imread(f"{this_py_path}/img_data/epoch_0000_a_flow_visual.jpg")
+
+    single_row_imgs = Matplot_single_row_imgs(imgs       = [img1, img2, img3],
+                                              img_titles = ["in_img", "pred", "GT"],
+                                              fig_title  = "epoch0000",
+                                              bgr2rgb    = True,
+                                              add_loss   = False)
+
+    # single_row_imgs.step1_add_row_col(add_where="add_row", merge=False)
+    # single_row_imgs.step1_add_row_col(add_where="add_row", merge=False)
+
+    # single_row_imgs.step1_add_row_col(add_where="add_row", merge=True)
+    # single_row_imgs.step1_add_row_col(add_where="add_row", merge=False)
+
+    single_row_imgs.step1_add_row_col(add_where="add_row", merge=True)
+    print("2 finish")
+    single_row_imgs.step1_add_row_col(add_where="add_row", merge=False)
+    print("3 finish")
+    single_row_imgs.step1_add_row_col(add_where="add_row", merge=True)
+    print("4 finish")
+    single_row_imgs.step1_add_row_col(add_where="add_col", merge=True)
+    print("5 finish")
+    single_row_imgs.Draw_img()
+    single_row_imgs.merged_ax_list[0].imshow(img1)
+    single_row_imgs.merged_ax_list[1].imshow(img1)
+    single_row_imgs.merged_ax_list[2].imshow(img1)
+    single_row_imgs.ax[2, 0].imshow(img1)
+    single_row_imgs.ax[2, 1].imshow(img1)
+    single_row_imgs.ax[2, 2].imshow(img1)
+    single_row_imgs.ax[2, 3].imshow(img1)
+    plt.show()
+    ############################################################################################################################
+
+    # subplots_combine_example()
+    # fig, ax = plt.subplots(1,2)
+    # import numpy as np
+    # print(type(ax))
+    # print(ax.shape)
+    # print(type(np.array(1)))
