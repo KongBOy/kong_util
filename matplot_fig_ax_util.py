@@ -159,12 +159,12 @@ class Matplot_single_row_imgs(Matplot_util):
             self.fig_row_amount += 1  ### 多一row來畫loss
             self.canvas_height   += self.canvas_1_ax_h    ### 慢慢試囉～
             # self.canvas_width  -= 1.5 * self.fig_col_amount  ### 慢慢試囉～
-        print("canvas_height",   self.canvas_height)
-        print("canvas_width ",   self.canvas_width)
-        print("canvas_1_ax_h ",  self.canvas_1_ax_h)
-        print("canvas_1_ax_w ",  self.canvas_1_ax_w)
-        print("fig_row_amount", self.fig_row_amount)
-        print("fig_col_amount", self.fig_col_amount)
+        # print("canvas_height",   self.canvas_height)
+        # print("canvas_width ",   self.canvas_width)
+        # print("canvas_1_ax_h ",  self.canvas_1_ax_h)
+        # print("canvas_1_ax_w ",  self.canvas_1_ax_w)
+        # print("fig_row_amount", self.fig_row_amount)
+        # print("fig_col_amount", self.fig_col_amount)
 
         ### 建立canvas出來
         self.fig, self.ax = plt.subplots(nrows=self.fig_row_amount, ncols=self.fig_col_amount)
@@ -259,8 +259,9 @@ class Matplot_single_row_imgs(Matplot_util):
         # if(not self.add_loss): used_ax = self.ax
         # elif(self.add_loss):   used_ax = self.ax[0]  ### 只能丟第一row喔！因為_draw_single_row_imgs 裡面的操作方式 是 一row的方式，丟兩row ax維度會出問題！
         if(type(self.ax) == type(np.array(1))):
-            used_ax = self.ax[0]  ### 只能丟第一row喔！因為_draw_single_row_imgs 裡面的操作方式 是 一row的方式，丟兩row ax維度會出問題！
-        else: used_ax = self.ax
+            if(  self.ax.ndim == 1): used_ax = self.ax
+            elif(self.ax.ndim  > 1): used_ax = self.ax[0]  ### 只能丟第一row喔！因為_draw_single_row_imgs 裡面的操作方式 是 一row的方式，丟兩row ax維度會出問題！
+
         self._step3_draw(used_ax)
         ###############################################################
         ### 想畫得更漂亮一點，兩種還是有些一咪咪差距喔~
