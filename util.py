@@ -6,6 +6,7 @@ import shutil
 from tqdm import tqdm
 
 
+
 def rename_by_order(ord_dir, split_symbol="-", start_one=True):  ### 使用的時候要非常小心喔！
     import math
     file_names = os.listdir(ord_dir)
@@ -46,7 +47,12 @@ def Check_img_filename(file_name):
 
 def Check_dir_exist_decorator(get_dir_fun):         ### 加在 get_dir 那種function上
     def wrapper(*args, **kwargs):                   ### 應該是最 general 的寫法了
-        if os.path.isdir(args[0]):                  ### 主要是要拿到 ord_dir，所以目前的寫法限定 get_dir_fun 需要用 位置參數，不能用關鍵字參數囉！
+        ### 先抓出 ord_dir
+        ord_dir = ""
+        if("ord_dir" in kwargs.keys()): ord_dir = kwargs["ord_dir"]
+        else: ord_dir = args[0]
+
+        if os.path.isdir(ord_dir):                  ### 檢查 ord_dir 是否存在
             result = get_dir_fun(*args, **kwargs)   ### 如果資料夾存在，做事情
         else:                                       ### 如果資料夾不存在，回傳[]
             print(args[0] + " 資料夾不存在，回傳[]")
@@ -153,13 +159,25 @@ def get_db_amount(ord_dir):
     return len(file_names)
 
 
+@Check_dir_exist_decorator
 def remove_dir_certain_file_name(ord_dir, certain_word, certain_ext=".", print_msg=False):
-    if(print_msg): print("ord_dir", ord_dir)
     file_names = get_dir_certain_file_name(ord_dir, certain_word=certain_word, certain_ext=certain_ext)  ### 注意 get_dir_certain_file_name 的 ord_dir 只能用位置參數！不能用關鍵字參數喔！因為他有用decorator，然後我寫的不夠generalˊ口ˋ
     for file_name in file_names:
         remove_path = ord_dir + "/" + file_name
         os.remove(remove_path)
         if(print_msg): print(f"remove {remove_path} finish")
+
+
+@Check_dir_exist_decorator
+def move_dir_certain_file(ord_dir, certain_word, certain_ext=".", dst_dir=".", print_msg=False):
+    from build_dataset_combine import Check_dir_exist_and_build
+    file_names = get_dir_certain_file_name(ord_dir, certain_word=certain_word, certain_ext=certain_ext)  ### 注意 get_dir_certain_file_name 的 ord_dir 只能用位置參數！不能用關鍵字參數喔！因為他有用decorator，然後我寫的不夠generalˊ口ˋ
+    Check_dir_exist_and_build(dst_dir)
+    for file_name in file_names:
+        ord_path = ord_dir + "/" + file_name
+        dst_path = dst_dir + "/" + file_name
+        shutil.move(ord_path, dst_path)
+        if(print_msg): print(f"move {ord_path} to {dst_path} finish")
 
 ##########################################################
 def apply_move_map_boundary_mask(move_maps):
@@ -483,12 +501,11 @@ def Show_move_map_apply(move_map):
 
 
 if(__name__ == "__main__"):
-    from step0_access_path import access_path
-    # in_imgs = get_dir_img(access_path+"datasets/wei_book/in_imgs")
-    # gt_imgs = get_dir_img(access_path+"datasets/wei_book/gt_imgs")
-
+    pass
     # db = zip(in_imgs, gt_imgs)
     # for imgs in db:
     #     print(type(imgs))
 
-    get_max_db_move_xy(db_dir=access_path + "datasets", db_name="1_unet_page_h=384,w=256")
+    # get_max_db_move_xy(db_dir=access_path + "datasets", db_name="1_unet_page_h=384,w=256")
+    move_dir_certain_file(ord_dir="G:/0 data_dir/result/5_14_flow_unet/type8_blender_os_book-testest/see_010-test", certain_word="epoch", certain_ext=".npz", 
+                          dst_dir="D:/0 data_dir/result/5_14_flow_unet/type8_blender_os_book-testest/see_010-test")
