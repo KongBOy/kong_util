@@ -170,13 +170,13 @@ class Matplot_single_row_imgs(Matplot_util):
         self.fig, self.ax = plt.subplots(nrows=self.fig_row_amount, ncols=self.fig_col_amount)
         self.fig.set_size_inches(self.canvas_width, self.canvas_height)  ### 設定 畫布大小
 
-    def step1_add_row_col(self, add_where="", merge=True):
+    def step1_add_row_col(self, add_where="", merge=True, grid_ratio=1):
         if(add_where == "add_row"):
             self.fig_row_amount += 1
-            self.canvas_height   += self.canvas_1_ax_h
+            self.canvas_height   += self.canvas_1_ax_h * grid_ratio
         elif(add_where == "add_col"):
             self.fig_col_amount += 1
-            self.canvas_width   += self.canvas_1_ax_w
+            self.canvas_width   += self.canvas_1_ax_w * grid_ratio
 
         fig_new, ax_new = plt.subplots(nrows=self.fig_row_amount, ncols=self.fig_col_amount)  ### 新畫一張 加一個row的 新大圖
         fig_new.set_size_inches(self.canvas_width, self.canvas_height)            ### 設定 新大圖 的 畫布大小
@@ -198,7 +198,7 @@ class Matplot_single_row_imgs(Matplot_util):
         ### 因為 fig_new 是 新的subplots圖，第二次以上做 merge 的話，第二次以前的結果 都會被新subplots圖蓋掉，所以要對 新subplots圖 把 之前的 merge過的動作都重做一次喔！
         if(self.first_time_row_col_finish):                        ### 等於1 是第一次執行，不需同步，第一次以後才需要同步囉
             for go_pass, pass_gs in enumerate(self.merged_gs_list[:-1]):  ### 走訪到 最新的 merged_gs 以前
-                print("here~~~~~~~~~~~~~~~")
+                # print("here~~~~~~~~~~~~~~~")
                 self.merged_ax_list[go_pass] = self._syn_with_pass_merged_grid(pass_gs, fig_new, ax_new, gs_new)
 
         plt.close(self.fig)                                                   ### 把舊圖關掉
@@ -219,12 +219,12 @@ class Matplot_single_row_imgs(Matplot_util):
 
         ### 過去 已merge的ax位置 相對應於 新ax的哪裡，相當於pass_update的概念
         pass_gs_update = gs_new[t:d, l:r]
-        print("ax_new", ax_new)
-        print("pass_gs", pass_gs)
+        # print("ax_new", ax_new)
+        # print("pass_gs", pass_gs)
         ### 新大圖上 把 之前合併的grid 取消顯示
         for go_r in pass_gs.rowspan:
             for go_c in pass_gs.colspan:
-                print(go_r, go_c)
+                # print(go_r, go_c, "remove()")
                 ax_new[go_r, go_c].remove()
 
         ### 把 過去已merge 的地方 根據 對應的 新ax 補起來
@@ -417,6 +417,41 @@ def subplots_combine_example():
     fig.tight_layout()
 
     fig2, axs2 = plt.subplots(ncols=3, nrows=3)
+    plt.show()
+
+def subplots_adjust_axes_size_ratio_example():
+    ### https://stackoverflow.com/questions/53521778/matplotlib-set-subplot-axis-size-iteratively
+    import matplotlib.pyplot as plt
+    from matplotlib.gridspec import GridSpec
+    import cv2
+
+    this_py_path = "C:/Users/TKU/Desktop/kong_model2/kong_util"
+    img1 = cv2.imread(f"{this_py_path}/img_data/0a-in_img.jpg")
+    img2 = cv2.imread(f"{this_py_path}/img_data/0b-gt_a_gt_flow.jpg")
+    img3 = cv2.imread(f"{this_py_path}/img_data/epoch_0000_a_flow_visual.jpg")
+
+    ### step1 先架構好 整張圖的骨架
+    # create figure
+    f, ax = plt.subplots(3, 1, figsize=(10, 10))
+
+    ### step2 把圖都畫上去
+    # plot some data
+    # ax[0].plot([1, 2, 3])
+    # ax[1].plot([1, 0, 1])
+    # ax[2].plot([1, 2, 20])
+    ax[0].imshow(img1)
+    ax[1].imshow(img2)
+    ax[2].imshow(img3)
+
+    ### step3 重新規劃一下 各個圖 要顯示的 大小比例
+    # adjust subplot sizes
+    gs = GridSpec(3, 1, height_ratios=[5, 2, 1])
+    print("gs:", gs)
+    for i in range(3):
+        print(f"gs[{i}]:", gs[i])
+        print(f"gs[{i}].get_position(f):", gs[i].get_position(f))  ### 可以看到
+        ax[i].set_position(gs[i].get_position(f))  ### 根據目前的圖(f)， 重新規劃一下 各個圖 要顯示的 大小比例
+
     plt.show()
 
 
