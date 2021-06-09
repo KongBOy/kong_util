@@ -448,8 +448,8 @@ def subplots_adjust_axes_size_ratio_example():
     gs = GridSpec(3, 1, height_ratios=[5, 2, 1])
     print("gs:", gs)
     for i in range(3):
-        print(f"gs[{i}]:", gs[i])
-        print(f"gs[{i}].get_position(f):", gs[i].get_position(f))  ### 可以看到
+        print(f"gs[{i}]:", gs[i])  ### 可以看到 目前使用的規格的範圍
+        print(f"gs[{i}].get_position(f):", gs[i].get_position(f))  ### 可以看到 目前取用的這個的規格的範圍 對應到 f 上 框出的box是在哪裡
         ax[i].set_position(gs[i].get_position(f))  ### 根據目前的圖(f)， 重新規劃一下 各個圖 要顯示的 大小比例
 
     plt.show()
