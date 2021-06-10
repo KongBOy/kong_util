@@ -90,10 +90,11 @@ class Matplot_util(Matplot_fig_util): pass
 
 
 class Matplot_single_row_imgs(Matplot_util):
-    def __init__(self, imgs, img_titles, fig_title, bgr2rgb=False, add_loss=False):
+    def __init__(self, imgs, img_titles, fig_title, pure_img=False, bgr2rgb=False, add_loss=False):
         self.imgs       = imgs  ### imgs是個list，裡面放的圖片可能不一樣大喔
         self.img_titles = img_titles
         self.fig_title  = fig_title
+        self.pure_img   = pure_img
         self.bgr2rgb    = bgr2rgb
 
         self.add_loss   = add_loss
@@ -134,12 +135,14 @@ class Matplot_single_row_imgs(Matplot_util):
     def _step0_b_get_one_row_canvas_height(self):
         height_list = []    ### imgs是個list，裡面放的圖片可能不一樣大喔
         for img in self.imgs: height_list.append(img.shape[0])
-        return  (max(height_list) // 100 + 1.0) * 1.15  ### 1.15 就慢慢試出來的囉～因為除了圖以外 還會有旁邊軸的標籤 和 margin也會被算進圖的大小裡， 所以要算比原圖大一點 才能讓show出的影像跟原始影像差不多大
+        if(self.pure_img): return  (max(height_list) // 100 + 1.0) * 1.00  ### 純影像 沒有任何其他東西
+        else:              return  (max(height_list) // 100 + 1.0) * 1.15  ### 1.15 就慢慢試出來的囉～因為除了圖以外 還會有旁邊軸的標籤 和 margin也會被算進圖的大小裡， 所以要算比原圖大一點 才能讓show出的影像跟原始影像差不多大
 
     def _step0_b_get_one_row_canvas_width(self):
         width = 0
         for img in self.imgs: width += img.shape[1]
-        return  (width // 100 + 0) * 1.15  ### 1.15 就慢慢試出來的囉～因為除了圖以外 還會有旁邊軸的標籤 和 margin也會被算進圖的大小裡， 所以要算比原圖大一點 才能讓show出的影像跟原始影像差不多大 col=1時
+        if(self.pure_img): return  (width // 100 + 0) * 1.00  ### 純影像 沒有任何其他東西
+        else:              return  (width // 100 + 0) * 1.15  ### 1.15 就慢慢試出來的囉～因為除了圖以外 還會有旁邊軸的標籤 和 margin也會被算進圖的大小裡， 所以要算比原圖大一點 才能讓show出的影像跟原始影像差不多大 col=1時
         # if  (self.fig_col_amount == 1): return  (width // 100 + 0) * 1.15  ### 1.1 就慢慢試出來的囉～因為除了圖以外 還會有旁邊軸的標籤 和 margin也會被算進圖的大小裡， 所以要算比原圖大一點 才能讓show出的影像跟原始影像差不多大 col=1時
         # elif(self.fig_col_amount == 2): return  (width // 100 + 0) * 1.15  ### 1.1 就慢慢試出來的囉～因為除了圖以外 還會有旁邊軸的標籤 和 margin也會被算進圖的大小裡， 所以要算比原圖大一點 才能讓show出的影像跟原始影像差不多大 col=2時
         # elif(self.fig_col_amount == 3): return  (width // 100 + 0) * 1.15  ### 1.1 就慢慢試出來的囉～因為除了圖以外 還會有旁邊軸的標籤 和 margin也會被算進圖的大小裡， 所以要算比原圖大一點 才能讓show出的影像跟原始影像差不多大 col=3時
@@ -268,6 +271,7 @@ class Matplot_single_row_imgs(Matplot_util):
         ### 想畫得更漂亮一點，兩種還是有些一咪咪差距喔~
         if(not self.add_loss): self.fig.tight_layout(rect=[0, 0, 1, 0.93])
         else:                  self.fig.tight_layout(rect=[0, 0.006, 1, 0.95])
+        if(self.pure_img): self.fig.tight_layout()
         ###############################################################
         ### Draw_img完，不一定要馬上Draw_loss喔！像是train的時候 就是分開的 1.see(Draw_img), 2.train, 3.loss(Draw_loss)
 
