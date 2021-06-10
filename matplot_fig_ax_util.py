@@ -258,6 +258,7 @@ class Matplot_single_row_imgs(Matplot_util):
         ### 注意 _draw_single_row_imgs 的 ax 只能丟 一row，所以才寫這if/else
         # if(not self.add_loss): used_ax = self.ax
         # elif(self.add_loss):   used_ax = self.ax[0]  ### 只能丟第一row喔！因為_draw_single_row_imgs 裡面的操作方式 是 一row的方式，丟兩row ax維度會出問題！
+        used_ax = self.ax
         if(type(self.ax) == type(np.array(1))):
             if(  self.ax.ndim == 1): used_ax = self.ax
             elif(self.ax.ndim  > 1): used_ax = self.ax[0]  ### 只能丟第一row喔！因為_draw_single_row_imgs 裡面的操作方式 是 一row的方式，丟兩row ax維度會出問題！
