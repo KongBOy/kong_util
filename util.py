@@ -231,13 +231,17 @@ def get_maxmin_train_move(db_dir="datasets", db_name="1_unet_page_h=384,w=256"):
 
 #######################################################
 ### 用來給視覺化參考的顏色map
-def get_reference_map( max_move, max_from_move_dir=False, move_dir="", x_decrease=False, y_decrease=False, color_shift=1):  ### 根據你的db內 最大最小值 產生 參考流的map
+def get_reference_map( max_move, max_from_move_dir=False, move_dir="", bgr2rgb=False, x_decrease=False, y_decrease=False, color_shift=1):  ### 根據你的db內 最大最小值 產生 參考流的map
+    '''
+    y_decrease： 是要給 原點在左下角 的情況用的
+
+    '''
     max_move = max_move
     if(max_from_move_dir) : max_move = find_db_max_move(move_dir)
 
     visual_row = 512
     visual_col = visual_row
-    x = np.linspace(-max_move, max_move, visual_col)
+    x = np.linspace(-max_move, max_move, visual_row)
     if(x_decrease): x = x[::-1]
     x_map = np.tile(x, (visual_row, 1))
 
@@ -247,7 +251,7 @@ def get_reference_map( max_move, max_from_move_dir=False, move_dir="", x_decreas
     y_map = y_map.T
 
     map1 = method1(x_map, y_map, max_value=max_move)
-    map2 = method2(x_map, y_map, color_shift=color_shift)
+    map2 = method2(x_map, y_map, bgr2rgb=bgr2rgb, color_shift=color_shift)
     return map1, map2, x_map, y_map
 
 def find_db_max_move(ord_dir):
@@ -275,16 +279,23 @@ def method1(x, y, max_value=-10000):  ### 這個 max_value的值 意義上來說
     return visual_map
 
 ### 視覺化方法2：用hsv，感覺可以！
-def method2(x, y, color_shift=1, white_bg=True):  ### 最大位移量不可以超過 255，要不然顏色強度會不準，不過實際用了map來顯示發現通常值都不大，所以還加個color_shift喔~
+def method2(x, y, color_shift=1, bgr2rgb=False, white_bg=True):  ### 最大位移量不可以超過 255，要不然顏色強度會不準，不過實際用了map來顯示發現通常值都不大，所以還加個color_shift喔~
+    """
+    code：https://github.com/opencv/opencv/blob/master/samples/python/opt_flow.py
+    觀念：https://www.youtube.com/watch?v=hW4gZ4tGwds
+
+    bgr2rgb  ： 是要給 matplot.imshow用的， 因為 opencv 是 bgr 喔！ 所以下面的 cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR) 轉出來式 BGR 喔！
+    return 的值域式 0~255
+    """
     h, w = x.shape[:2]                     ### 影像寬高
     fx, fy = x, y                          ### u是x方向怎麼移動，v是y方向怎麼移動
     ang = np.arctan2(fy, fx) + np.pi       ### 得到運動的角度
+    # print("ang", ang)
     val = np.sqrt(fx * fx + fy * fy)       ### 得到運動的位移長度
+    # print("val", val)
     hsv = np.zeros((h, w, 3), np.uint8)    ### 初始化一個canvas
     hsv[..., 0] = ang * (180 / np.pi / 2)  ### B channel為 角度訊息的顏色
     hsv[..., 1] = 255                      ### G channel為 255飽和度
-    # print("ang", ang)
-    # print("val", val)
     hsv[..., 2] = np.minimum(val * color_shift, 255)   ### R channel為 位移 和 255中較小值来表示亮度，因為值最大為255，val的除4拿掉就ok了！
     # print("hsv[...,2]", hsv[...,2])
     # print("")
@@ -294,8 +305,9 @@ def method2(x, y, color_shift=1, white_bg=True):  ### 最大位移量不可以�
         white_back[..., 0] -= hsv[..., 2]
         white_back[..., 1] -= hsv[..., 2]
         white_back[..., 2] -= hsv[..., 2]
-    #        cv2.imshow("white_back",white_back)
+#        cv2.imshow("white_back",white_back)
         bgr += white_back
+    if(bgr2rgb): bgr = bgr[..., ::-1]
     return bgr
 
 #######################################################
