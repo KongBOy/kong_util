@@ -135,14 +135,14 @@ class Matplot_single_row_imgs(Matplot_util):
     def _step0_b_get_one_row_canvas_height(self):
         height_list = []    ### imgs是個list，裡面放的圖片可能不一樣大喔
         for img in self.imgs: height_list.append(img.shape[0])
-        if(self.pure_img): return  (max(height_list) // 100 + 1.0) * 1.00  ### 純影像 沒有任何其他東西
-        else:              return  (max(height_list) // 100 + 1.0) * 1.15  ### 1.15 就慢慢試出來的囉～因為除了圖以外 還會有旁邊軸的標籤 和 margin也會被算進圖的大小裡， 所以要算比原圖大一點 才能讓show出的影像跟原始影像差不多大
+        if(self.pure_img): return  (max(height_list) / 100 + 0.0) * 1.00  ### 純影像 沒有任何其他東西
+        else:              return  (max(height_list) / 100 + 0.0) * 1.15  ### 1.15 就慢慢試出來的囉～因為除了圖以外 還會有旁邊軸的標籤 和 margin也會被算進圖的大小裡， 所以要算比原圖大一點 才能讓show出的影像跟原始影像差不多大
 
     def _step0_b_get_one_row_canvas_width(self):
         width = 0
         for img in self.imgs: width += img.shape[1]
-        if(self.pure_img): return  (width // 100 + 0) * 1.00  ### 純影像 沒有任何其他東西
-        else:              return  (width // 100 + 0) * 1.15  ### 1.15 就慢慢試出來的囉～因為除了圖以外 還會有旁邊軸的標籤 和 margin也會被算進圖的大小裡， 所以要算比原圖大一點 才能讓show出的影像跟原始影像差不多大 col=1時
+        if(self.pure_img): return  (width / 100 + 0) * 1.00  ### 純影像 沒有任何其他東西
+        else:              return  (width / 100 + 0) * 1.15  ### 1.15 就慢慢試出來的囉～因為除了圖以外 還會有旁邊軸的標籤 和 margin也會被算進圖的大小裡， 所以要算比原圖大一點 才能讓show出的影像跟原始影像差不多大 col=1時
         # if  (self.fig_col_amount == 1): return  (width // 100 + 0) * 1.15  ### 1.1 就慢慢試出來的囉～因為除了圖以外 還會有旁邊軸的標籤 和 margin也會被算進圖的大小裡， 所以要算比原圖大一點 才能讓show出的影像跟原始影像差不多大 col=1時
         # elif(self.fig_col_amount == 2): return  (width // 100 + 0) * 1.15  ### 1.1 就慢慢試出來的囉～因為除了圖以外 還會有旁邊軸的標籤 和 margin也會被算進圖的大小裡， 所以要算比原圖大一點 才能讓show出的影像跟原始影像差不多大 col=2時
         # elif(self.fig_col_amount == 3): return  (width // 100 + 0) * 1.15  ### 1.1 就慢慢試出來的囉～因為除了圖以外 還會有旁邊軸的標籤 和 margin也會被算進圖的大小裡， 所以要算比原圖大一點 才能讓show出的影像跟原始影像差不多大 col=3時
@@ -236,42 +236,47 @@ class Matplot_single_row_imgs(Matplot_util):
 
 
     def _step3_draw(self, used_ax):
+        '''
+        used_ax 只接受 1r1c 和 1r多c 喔， 不接受 多r多c( 會取第1row)
+        '''
         ### 這就是手動微調 text的位置囉ˊ口ˋ
         ### (0.5 / self.canvas_height) 的意思是 我想留 50px 左右 給上方
         self.fig.text(x=0.5, y= 1 - (0.5 / self.canvas_height), s=self.fig_title, fontsize=28, c=(0., 0., 0., 1.),  horizontalalignment='center',)
 
         for go_img, img in enumerate(self.imgs):
             if(self.bgr2rgb): img = img[..., ::-1]  ### 如果有標示 輸入進來的 影像是 bgr，要轉rgb喔！
-            if(self.fig_col_amount > 1):  ### 這個if 是為了 ax, ax[...] 的操作
+            if(self.fig_col_amount == 1):  used_ax = [used_ax]  ### 把 (1r1c 的) ax 包成 (1r多c 的) ax[...]， 能確定是 1r1c 因為能來到這個 method 就代表 是 1r1c 或 1r多c， 而又 如果 fig_col_amount==1 就代表一錠是 1r1c 的 case 囉！
+
+            ### 因為上面有包成 ax[...]，以下統一用 ax[...] 的方式來處理囉！ 就不用 多寫一個if/else來區分 ax/ax[...] 不同的操作方式了！
+            if(not self.pure_img):
                 used_ax[go_img].imshow(img)  ### 小畫布 畫上影像，別忘記要bgr -> rgb喔！
                 used_ax[go_img].set_title( self.img_titles[go_img], fontsize=16 )  ### 小畫布上的 title
-
-                plt.sca(used_ax[go_img])  ### plt指向目前的 小畫布 這是為了設定 yticks和xticks
-                plt.yticks( (0, img.shape[0]), (0, img.shape[0]) )   ### 設定 y軸 顯示的字，前面的tuple是位置，後面的tuple是要顯示的字
-                plt.xticks( (0, img.shape[1]), ("", img.shape[1]) )  ### 設定 x軸 顯示的字，前面的tuple是位置，後面的tuple是要顯示的字
-            else:
-                used_ax.imshow(img)  ### 小畫布 畫上影像
-                used_ax.set_title( self.img_titles[go_img], fontsize=16 )  ### 小畫布上的 title
-
-                plt.yticks( (0, img.shape[0]), (0, img.shape[0]) )   ### 設定 y軸 顯示的字，前面的tuple是位置，後面的tuple是要顯示的字
-                plt.xticks( (0, img.shape[1]), ("", img.shape[1]) )  ### 設定 x軸 顯示的字，前面的tuple是位置，後面的tuple是要顯示的字
+                used_ax[go_img].set_yticks( (0, img.shape[0]) )   ### 設定 y軸 顯示的字，tuple是要顯示的數字， 目前是顯示 0 和 h
+                used_ax[go_img].set_xticks( (0, img.shape[1]) )   ### 設定 x軸 顯示的字，tuple是要顯示的數字
+            else:  ### 目前的 pure_img 只有給 SIFT_d 來用， 所以就先針對他 來 設計要怎麼 show 圖囉！
+                ax_img = used_ax[go_img].imshow(img, vmin=0, vmax=50)
+                used_ax[go_img].set_yticks(())  ### 設定 y軸 不顯示字
+                used_ax[go_img].set_xticks(())  ### 設定 x軸 不顯示字
+                cax = plt.axes([0.85, 0.1, 0.010, 0.2])  ### 左下角x, 左下角y, w是整張圖的幾%, h是整張圖的幾%
+                self.fig.colorbar(ax_img, ax=used_ax[go_img], cax=cax)
 
     def Draw_img(self):  ### 呼叫 _step3_draw 畫圖
         ###############################################################
         ### 注意 _draw_single_row_imgs 的 ax 只能丟 一row，所以才寫這if/else
         # if(not self.add_loss): used_ax = self.ax
         # elif(self.add_loss):   used_ax = self.ax[0]  ### 只能丟第一row喔！因為_draw_single_row_imgs 裡面的操作方式 是 一row的方式，丟兩row ax維度會出問題！
-        used_ax = self.ax
-        if(type(self.ax) == type(np.array(1))):
-            if(  self.ax.ndim == 1): used_ax = self.ax
-            elif(self.ax.ndim  > 1): used_ax = self.ax[0]  ### 只能丟第一row喔！因為_draw_single_row_imgs 裡面的操作方式 是 一row的方式，丟兩row ax維度會出問題！
+        used_ax = self.ax  ### 先假設 為 1r1c
+        if(type(self.ax) == type(np.array(1))):            ### 如果是np.array的形式，就不是1r1c， 而有可能是 1r多c 或 多r多c
+            if(  self.ax.ndim == 1): used_ax = self.ax     ### 1r多c，沒問題！
+            elif(self.ax.ndim  > 1): used_ax = self.ax[0]  ### 多r多c，只能丟第一row喔！因為_draw_single_row_imgs 裡面的操作方式 是 一row的方式，丟兩row ax維度會出問題！ 所以取第0row，就變 1r多c了， 也代表了圖繪從左上角開始畫喔！
 
-        self._step3_draw(used_ax)
+        self._step3_draw(used_ax)  ### 只接受 1r1c 和 1r多c 喔， 不接受 多r多c
         ###############################################################
         ### 想畫得更漂亮一點，兩種還是有些一咪咪差距喔~
-        if(not self.add_loss): self.fig.tight_layout(rect=[0, 0, 1, 0.93])
-        else:                  self.fig.tight_layout(rect=[0, 0.006, 1, 0.95])
-        if(self.pure_img): self.fig.tight_layout()
+        if(not self.pure_img):
+            if(not self.add_loss): self.fig.tight_layout(rect=[0, 0, 1, 0.93])
+            else:                  self.fig.tight_layout(rect=[0, 0.006, 1, 0.95])
+        elif(self.pure_img):       self.fig.subplots_adjust(top=1, bottom=0, right=1, left=0, hspace=0, wspace=0)
         ###############################################################
         ### Draw_img完，不一定要馬上Draw_loss喔！像是train的時候 就是分開的 1.see(Draw_img), 2.train, 3.loss(Draw_loss)
 
@@ -393,7 +398,7 @@ def draw_loss_util(fig, ax, logs_read_dir, epoch, epochs ):
     ax.scatter(epoch, y_loss_array[epoch], c="red")
     return fig, ax
 
-def subplots_combine_example():
+def example_subplots_combine():
     ### https://matplotlib.org/stable/gallery/subplots_axes_and_figures/gridspec_and_subplots.html
     import matplotlib.pyplot as plt
 
@@ -424,7 +429,7 @@ def subplots_combine_example():
     fig2, axs2 = plt.subplots(ncols=3, nrows=3)
     plt.show()
 
-def subplots_adjust_axes_size_ratio_example():
+def example_subplots_adjust_axes_size_ratio():
     ### https://stackoverflow.com/questions/53521778/matplotlib-set-subplot-axis-size-iteratively
     import matplotlib.pyplot as plt
     from matplotlib.gridspec import GridSpec
@@ -458,6 +463,46 @@ def subplots_adjust_axes_size_ratio_example():
         ax[i].set_position(gs[i].get_position(f))  ### 根據目前的圖(f)， 重新規劃一下 各個圖 要顯示的 大小比例
 
     plt.show()
+
+def example_subplots_ax_and_axes():
+    from matplotlib import pyplot as plt
+    fig, ax = plt.subplots(nrows=2, ncols=1)
+    print(ax)  ### [<AxesSubplot:> <AxesSubplot:>]
+    fig, ax = plt.subplots(nrows=1, ncols=2)
+    print(ax)  ### [<AxesSubplot:> <AxesSubplot:>]
+    fig, ax = plt.subplots(nrows=2, ncols=2)
+    print(ax)
+    ### [[<AxesSubplot:> <AxesSubplot:>]
+    ###  [<AxesSubplot:> <AxesSubplot:>]]
+
+
+def example_pure_img():
+    ### https://gist.github.com/zhou13/b4ee8e815aee83e88df5b865896aaf5a
+    from matplotlib import pyplot as plt
+    import cv2
+    this_py_path = "C:/Users/TKU/Desktop/kong_model2/kong_util"
+    img1 = cv2.imread(f"{this_py_path}/img_data/0a-in_img.jpg")
+
+    fig, ax = plt.subplots(1, 1)
+    fig.set_size_inches(7.68, 7.68)
+
+    ### 關閉 軸 的 三個方法
+    ### 方法1
+    ax.set_xticks([])
+    ax.set_yticks([])
+    ### 方法2
+    # plt.sca(ax)
+    # plt.axis('off')
+    ### 方法3
+    # ax.xaxis.set_major_locator(plt.NullLocator())
+    # ax.yaxis.set_major_locator(plt.NullLocator())
+
+    ax.imshow(img1)
+    fig.subplots_adjust(top=1, bottom=0, right=1, left=0, hspace=0, wspace=0)
+
+    plt.show()
+
+    # plt.savefig(f"filename.png")  ### 如何存
 
 
 if(__name__ == "__main__"):
@@ -512,8 +557,8 @@ if(__name__ == "__main__"):
     single_row_imgs.ax[2, 2].imshow(img1)
     single_row_imgs.ax[2, 3].imshow(img1)
     plt.show()
-    ############################################################################################################################
 
+    ############################################################################################################################
     # subplots_combine_example()
     # fig, ax = plt.subplots(1,2)
     # import numpy as np
