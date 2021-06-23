@@ -231,28 +231,58 @@ def get_maxmin_train_move(db_dir="datasets", db_name="1_unet_page_h=384,w=256"):
 
 #######################################################
 ### 用來給視覺化參考的顏色map
-def get_reference_map( max_move, max_from_move_dir=False, move_dir="", bgr2rgb=False, x_decrease=False, y_decrease=False, color_shift=1):  ### 根據你的db內 最大最小值 產生 參考流的map
+def get_coord_reference_map( x_min, x_max, y_min, y_max, w_res, h_res, mask_ch=2, x_decrease=False, y_decrease=False, y_ch_first=False):
     '''
+    h_res     ： 網格 高度 的解析度(切幾格的意思)
+    w_res     ： 網格 寬度 的解析度(切幾格的意思)
+    mask_ch   ： mask 要放在第幾個channel
     y_decrease： 是要給 原點在左下角 的情況用的
+    x_decrease： 是要給 原點在右邊   的情況用的，應該是用不到 只是想說有 y_decrease， x 也寫一下好了ˊ口ˋ
+    y_ch_first： y channel 放前面(==True) 還是 x channel 放前面(==False)
 
+    return map值域：0~1
+    '''
+    x = np.linspace(x_min, x_max, w_res)
+    if(x_decrease): x = x[::-1]
+    x_map = np.tile(x, (h_res, 1))
+
+    y = np.linspace(y_min, y_max, h_res)
+    if(y_decrease): y = y[::-1]
+    y_map = np.tile(y, (w_res, 1))
+    y_map = y_map.T
+
+    if(y_ch_first): visual = method1(y_map, x_map, mask_ch=mask_ch)
+    else:           visual = method1(x_map, y_map, mask_ch=mask_ch)
+
+    return visual, x_map, y_map
+
+### 用來給視覺化參考的顏色map
+def get_flow_reference_map( max_move, max_from_move_dir=False, move_dir="", h_res=512, w_res=512, bgr2rgb=False, x_decrease=False, y_decrease=False, color_shift=1):  ### 根據你的db內 最大最小值 產生 參考流的map
+    '''
+    原名： get_reference_map
+    注意一下　method1 用這個 有問題喔！ method1 應該是 coordinate 的視覺化， 但這裡是 視覺化 flow， 所以不能用 method1
+    h_res     ： 網格 高度 的解析度(切幾格的意思)
+    w_res     ： 網格 寬度 的解析度(切幾格的意思)
+    y_decrease： 是要給 原點在左下角 的情況用的
+    x_decrease： 是要給 原點在右邊   的情況用的，應該是用不到 只是想說有 y_decrease， x 也寫一下好了ˊ口ˋ
+
+    return 的 map2 值域是 0~255
     '''
     max_move = max_move
     if(max_from_move_dir) : max_move = find_db_max_move(move_dir)
 
-    visual_row = 512
-    visual_col = visual_row
-    x = np.linspace(-max_move, max_move, visual_row)
+    x = np.linspace(-max_move, max_move, w_res)
     if(x_decrease): x = x[::-1]
-    x_map = np.tile(x, (visual_row, 1))
+    x_map = np.tile(x, (h_res, 1))
 
-    y = np.linspace(-max_move, max_move, visual_col)
+    y = np.linspace(-max_move, max_move, h_res)
     if(y_decrease): y = y[::-1]
-    y_map = np.tile(y, (visual_row, 1))
+    y_map = np.tile(y, (w_res, 1))
     y_map = y_map.T
 
-    map1 = method1(x_map, y_map, max_value=max_move)
+    # map1 = method1(x_map, y_map, max_value=max_move)  ### 但是要多看 method1 的效果好像也沒差，算了就先留著好了～
     map2 = method2(x_map, y_map, bgr2rgb=bgr2rgb, color_shift=color_shift)
-    return map1, map2, x_map, y_map
+    return map2, x_map, y_map
 
 def find_db_max_move(ord_dir):
     move_map_list = get_dir_move(ord_dir)
@@ -262,19 +292,21 @@ def find_db_max_move(ord_dir):
 
 #######################################################
 ### 視覺化方法1：感覺可以！但缺點是沒辦法用cv2，而一定要搭配matplot的imshow來自動填色
-def method1(x, y, max_value=-10000):  ### 這個 max_value的值 意義上來說要是整個db內位移最大值喔！這樣子出來的圖的顏色強度才會準確，後來覺得可刪
+def method1(x, y, max_value=-10000, mask_ch=2):  ### 這個 max_value的值 意義上來說要是整個db內位移最大值喔！這樣子出來的圖的顏色強度才會準確，後來覺得可刪
     '''
     回傳的 visual_map 的值域 為 0~1
     '''
     h, w = x.shape[:2]
-    z = np.ones(shape=(h, w))
-    visual_map = np.dstack((x, y))     ### step1.把x,y拚再一起同時處理
-    max_value = visual_map.max()        ### step2.先把值弄到 0~1
+    z = np.ones(shape=(h, w))          ### step0. mask 全 1
+    visual_map = np.dstack((x, y))     ### step1. 把x,y拚再一起同時處理
+    max_value = visual_map.max()       ### step2. 先把值弄到 0~1
     min_value = visual_map.min()
     visual_map = (visual_map - min_value) / (max_value - min_value + 0.000000001)
     # print("visual_map.max()", visual_map.max())
     # print("visual_map.min()", visual_map.min())
-    visual_map = np.dstack( (visual_map, z))         ### step4.再concat channel3，來給imshow自動決定顏色
+    if  (mask_ch == 0): visual_map = np.dstack( (z, visual_map) )                              ### step4.mask再和map concat， mask放 channel1，來給imshow自動決定顏色
+    elif(mask_ch == 1): visual_map = np.dstack( (visual_map[..., 0], z, visual_map[..., 1]) )  ### step4.mask再和map concat， mask放 channel2，來給imshow自動決定顏色
+    elif(mask_ch == 2): visual_map = np.dstack( (visual_map, z) )                              ### step4.mask再和map concat， mask放 channel3，來給imshow自動決定顏色
 #    plt.imshow(visual_map)
     return visual_map
 
@@ -285,7 +317,7 @@ def method2(x, y, color_shift=1, bgr2rgb=False, white_bg=True):  ### 最大位�
     觀念：https://www.youtube.com/watch?v=hW4gZ4tGwds
 
     bgr2rgb  ： 是要給 matplot.imshow用的， 因為 opencv 是 bgr 喔！ 所以下面的 cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR) 轉出來式 BGR 喔！
-    return 的值域式 0~255
+    return 的值域是 0~255
     """
     h, w = x.shape[:2]                     ### 影像寬高
     fx, fy = x, y                          ### u是x方向怎麼移動，v是y方向怎麼移動
