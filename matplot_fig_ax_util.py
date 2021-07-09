@@ -1,11 +1,13 @@
-from util import get_dir_certain_file_name
+from util import get_dir_certain_file_name, method1
 import numpy as np
 
 import matplotlib.pyplot as plt
 import matplotlib.cm as cmx
 import matplotlib.colors as colors
+import matplotlib.patches as patches
+from mpl_toolkits.mplot3d.art3d import Line3DCollection, Poly3DCollection
 
-
+import sys
 LOSS_YLIM = 2.0
 
 def get_cmap(color_amount, cmap_name='hsv'):
@@ -501,9 +503,396 @@ def example_pure_img():
     fig.subplots_adjust(top=1, bottom=0, right=1, left=0, hspace=0, wspace=0)
 
     plt.show()
-
     # plt.savefig(f"filename.png")  ### 如何存
 
+
+### 偷偷畫一個透明方形 來達到 xlim, ylim 的效果
+XLIM = 1.4
+YLIM = 1.4
+
+def change_into_3D_coord_ax(fig, ax, ax_c, ax_r=0, ax_rows=1, fig_title=None,
+            xlabel="x", ylabel="y", zlabel="z",
+            y_flip=False, y_coord=None, tight_layout=True):
+    '''
+    注意！ 如果有多row， 只能丟 1 row 近來喔
+    fig   ： 要加入 3D 圖的 fig
+    ax    ： 因為要隱藏 2D的子圖，所以需要這個，fig.axes[...].remove() 刪除好像就真的整個刪掉了會出事 不要用比較好
+    ax_i  ： 想加 3D圖 到 哪張fig的哪張子圖
+    y_fip ：
+    '''
+
+    ax[ax_c].remove()  ### 因為 是 3D子圖 要和 2D子圖 放同張figure， 所以要 ax[ax_c].remove() 把原本的 2D子圖 隱藏起來(.remove())
+    ax_cols = len(ax)  ### 定位出 ax3d 要加入 fig 的哪個的位置， 需要知道目前的 fig_rows/cols
+    ax3d = fig.add_subplot(ax_rows, ax_cols, (ax_r + 1) * (ax_c + 1), projection="3d")  ### +1 是因為 add_subplot( 括號裡面index 都是從 1 開始！)
+
+    ### 設定 xyz_label
+    ax3d.set_xlabel(xlabel)
+    ax3d.set_ylabel(ylabel)
+    ax3d.set_zlabel(zlabel)
+
+    ### 設定title
+    if(fig_title is not None): ax3d.set_title(fig_title)
+    ### y軸顛倒
+    if(y_flip):
+        if( y_coord is None):
+            print("change_into_3D_coord_ax_combine 如果 y_flip 設定True， 需要 y_coord 參數， 才能知道 y_max/min 來顛倒y軸， \
+                目前偵測到沒給 y_coord 因此停止程式， 麻煩去給一下囉～")
+            sys.exit()
+        else:
+            y_max = y_coord.max()
+            y_min = y_coord.min()
+            ax3d.set_ylim(y_max, y_min)
+    if(tight_layout): fig.tight_layout()
+
+    ### 偷偷畫一個透明方形 來達到 xlim, ylim 的效果
+    # verts = np.array(  [[(-XLIM, -YLIM, 0),
+    #                     (-XLIM,  YLIM, 0),
+    #                     ( XLIM,  YLIM, 0),
+    #                     ( XLIM, -YLIM, 0),
+    #                 ]] )
+    # ax3d.add_collection3d(Poly3DCollection(verts, alpha=1))  ### Poly3DCollection 偷偷畫一個透明方形 來達到 xlim, ylim 的效果  ### 雖然有點作用，但大小還是不一樣
+    # ax3d.set_xlim(-XLIM,  XLIM)  ### 雖然有點作用，但大小還是不一樣
+    # ax3d.set_ylim( YLIM, -YLIM)  ### 雖然有點作用，但大小還是不一樣
+    return ax3d
+
+def mesh3D_scatter_and_z0_plane(x_m, y_m, z_m, fig_title,
+        xlabel="x", ylabel="y", zlabel="z",
+        cmap="viridis",
+        y_flip=False, scatter_alpha=1.0, plane_alpha=0.5, tight_layout=False,
+        fig=None, ax=None, ax_c=None, ax_r=0):
+    fig, ax, ax_c = check_fig_ax_init(fig, ax, ax_c, fig_rows=1, fig_cols=1, ax_size=5, tight_layout=True)
+    ##########################################################################################################
+    h_res, w_res = x_m.shape[:2]
+    ax3d = change_into_3D_coord_ax(fig, ax, ax_c, fig_title=fig_title, xlabel=xlabel, ylabel=ylabel, zlabel=zlabel, y_flip=y_flip, y_coord=y_m[..., 1], tight_layout=tight_layout)
+    ax3d.set_title(fig_title)
+    ax3d.scatter(x_m, y_m, z_m , c = np.arange(h_res * w_res), s=1, cmap=cmap, alpha=scatter_alpha)
+    ax3d = draw_3D_xy_plane_by_mesh_f(ax3d, x_m=x_m, y_m=y_m, z=0, alpha=plane_alpha )
+    ax_c += 1
+
+    return fig, ax, ax_c, ax3d
+
+
+def change_into_img_2D_coord_ax(ax):
+    '''
+    image 的 coordinate 概念：
+        x軸 往右 增加
+        y軸 往下 增加
+
+    最後不 return 其實也可以， 但為了外面寫 ax[...] 的美觀統一性， 所以這邊就return 一下囉
+    '''
+    if(not ax.yaxis_inverted()): ax.invert_yaxis()  ### 整張圖上下顛倒(如果還沒顛倒過的話)
+    ax.spines['right'].set_color('None')
+    ax.spines['top']  .set_color('None')
+    ax.xaxis.set_ticks_position('bottom')         # 設定bottom 為 x軸
+    ax.yaxis.set_ticks_position('left')           # 設定left   為 y軸
+    ax.spines['bottom'].set_position(('data', 0))  # 設定bottom x軸 位置(要丟tuple)
+    ax.spines['left']  .set_position(('data', 0))  # 設定left   y軸 位置(要丟tuple)
+    ax.add_patch( patches.Rectangle( (-XLIM, -YLIM), 2 * XLIM, 2 * YLIM, alpha=0))   ### 偷偷畫一個透明方形 來達到 xlim, ylim 的效果
+    return ax
+
+
+def check_fig_ax_init(fig=None, ax=None, ax_c=None, ax_r=0, fig_rows=1, fig_cols=5, ax_size=7, tight_layout=True):
+    """
+    檢查 fig/ax 是否 同時都存在， 如果同時都存在OK， 同時都不存在 就 建立新subplots， 一者不在代表有錯誤，應該是忘記傳另一方近來， 就停止程式去修正囉
+    fig_cols/ ax_size/ tight_layout 只有在 fig/ax is None 要建立新subplots 時才會用到
+    """
+    if   (fig is None and ax is None):
+        fig, ax = plt.subplots(nrows=fig_rows, ncols=fig_cols)
+        fig.set_size_inches(ax_size * fig_cols, ax_size * fig_rows)
+        if(tight_layout): fig.tight_layout()
+        ax_c = 0
+    elif(fig is not None and ax is None):
+        print("有fig， 但忘記傳 ax 近來囉！ 停止程式，麻煩去把ax 傳進來 或者 fig/ax 都不要傳進來 讓 funtion 自己建立新subplots")
+        sys.exit()
+    elif(fig is None and ax is not None):
+        print("有ax， 但忘記傳 fig 近來囉！ 停止程式，麻煩去把fig 傳進來 或者 fig/ax 都不要傳進來 讓 funtion 自己建立新subplots")
+        sys.exit()
+    elif((fig is not None and ax is not None)):
+        if(ax_c is None):
+            print("有fig/ax， 但忘記傳 ax_c 近來囉！ 停止程式，麻煩去把ax_c 傳進來 或者 fig/ax 都不要傳進來 讓 funtion 自己建立新subplots")
+            sys.exit()
+    ### 怕有 fig_rows == 1 and fig_cols==1 的情況， ax 不是 np.array， 遇到這情況就要把他轉乘 np.array喔！
+    if(type(ax) != type(np.array(1))): ax = np.array([ax])
+
+    ### 走到這裡 可以確認 fig/ax/ax_c 都有東西，就回傳回去囉
+    return fig, ax, ax_c
+
+def draw_3D_xy_plane_by_mesh_f(ax3d, x_m, y_m, z=0, alpha=0.5):
+    '''
+    ax3       d： 要是 projection=3d 的那種 ax3d
+    x_m   ： 沒錯就是要分開寫， 這樣 mesh_x, mesh_y 分別是不同東西時(比如：d_mesh, alpha_mesh)才比較好處理
+    z          ： xy平面 z 的高度
+    alpha      ： 透明度
+
+    最後不 return 其實也可以， 但為了外面寫 ax3d 的美觀統一性， 所以這邊就return 一下囉
+    '''
+    row, col = x_m.shape[:2]
+    ax3d.plot_surface(x_m,
+                      y_m,
+                      z * np.ones(shape=(row, col)),
+                      alpha=0.5)
+    return ax3d
+
+
+
+
+def coord_f_2D_scatter(coord_f, h_res, w_res, fig_title=None, fig=None, ax=None, ax_c=None, ax_r=0):
+    fig, ax, ax_c = check_fig_ax_init(fig, ax, ax_c, fig_rows=1, fig_cols=1, ax_size=5, tight_layout=True)
+    ##########################################################################################################
+    if(fig_title is not None): ax[ax_c].set_title(fig_title)  ### 設定title
+    ax[ax_c] = change_into_img_2D_coord_ax(ax[ax_c])          ### 構圖 變成 2D img coord 的形式
+    ax[ax_c].scatter(coord_f[:, 0], coord_f[:, 1], c = np.arange(h_res * w_res), s=1, cmap="hsv")  ### 用scatter 視覺化
+    ax_c += 1
+    return fig, ax, ax_c
+
+def coord_m_2D_scatter(coord_m,
+                       fig_title=None,
+                       fig_C=None, fig_alpha=1,
+                       fig=None, ax=None, ax_c=None, ax_r=0):
+    fig, ax, ax_c = check_fig_ax_init(fig, ax, ax_c, fig_rows=1, fig_cols=1, ax_size=5, tight_layout=True)
+    h_res, w_res = coord_m.shape[:2]
+    ##########################################################################################################
+    if(fig_title is not None): ax[ax_c].set_title(fig_title)  ### 設定title
+    if(fig_C is None): fig_C = np.arange(h_res * w_res)
+    ##########################################################################################################
+    ax[ax_c] = change_into_img_2D_coord_ax(ax[ax_c])          ### 構圖 變成 2D img coord 的形式
+    ### 真正要做的事情開始
+    ax[ax_c].scatter(coord_m[..., 0], coord_m[..., 1], c = fig_C, s=1, cmap="hsv", alpha=fig_alpha)  ### 用scatter 視覺化
+    ax_c += 1
+    return fig, ax, ax_c
+
+
+def get_jump_index(number, jump_step):
+    step = number - 1  ### 步數 比 格數 少1， 比如有10格， 第一格走到第10個只需要9步
+    jump_amount = step // jump_step
+    if(step % jump_step == 0): return [ go_j * jump_step for go_j in range(jump_amount + 1)  ]           ### 如果  整除，直接用
+    else                     : return [ go_j * jump_step for go_j in range(jump_amount + 1)  ] + [step]  ### 如果不整除，加最後的index
+
+def apply_jump_index(data, row_ids_m, col_ids_m):
+    if(check_is_numpy_and_is_map_form_or_exit(data)):
+        return data[row_ids_m, col_ids_m]
+
+def check_is_numpy_and_is_map_form_or_exit(data, print_msg=False):  ### 防呆
+    if(print_msg): print("執行 check_is_numpy_and_is_map_form_or_exit")
+
+    if(type(data) == type(np.array(1))): pass
+    else: sys.exit(f"資料型態不是 numpy array， 目前型態為 {type(data)}， 已停止程式， 請修正為 numpy array")
+
+    if  (data.ndim == 3): pass
+    elif(data.ndim == 2 and data.shape[1] > 3 ): pass  ### data.shape[1] < 3 可能是 (h * w, 3) 之類的忘記reshape了
+    else: sys.exit(f"確認為 numpy array， 但不是 map_form！ 目前shape為{data.shape}， 已停止程式， 請修正為 (h, w) 或 (h, w, c) 之類的樣子")
+
+    return True
+
+
+def move_map_1D_value(move_map_m, move_x, move_y,
+                      fig_title=None,
+                      fig=None, ax=None, ax_c=None, ax_r=0):
+    fig, ax, ax_c = check_fig_ax_init(fig, ax, ax_c, fig_rows=1, fig_cols=1, ax_size=5, tight_layout=True)
+    if(fig_title is not None): ax[ax_c].set_title(fig_title)  ### 設定title
+    h_res, w_res = move_map_m.shape[:2]
+    ##########################################################################################################
+    ax[ax_c].set_title(fig_title)
+    ax[ax_c] = change_into_img_2D_coord_ax(ax[ax_c])
+    ax[ax_c].scatter(move_map_m[..., 0], move_map_m[..., 1], c = np.arange(h_res * w_res), s=1, cmap="hsv")
+    ax[ax_c].arrow(0, 0, move_x, move_y, color="black", length_includes_head=True, width = 0.001,  head_width=0.01, alpha=0.2)  ### 移動向量，然後箭頭化的方式是(x,y,dx,dy)！ 不是(x1,y1,x2,y2)！head_width+1是怕col太小除完變0
+    ax_c += 1
+
+    return fig, ax, ax_c
+
+def move_map_2D_arrow(move_map_m, start_xy_m,
+        fig_title=None,
+        jump_r=7, jump_c=7,
+        arrow_C=None, arrow_cmap="viridis",
+        valid_boundary=0, boundary_C="orange", boundary_linewidth=3, boundary_fill=False,
+        show_before_move_coord=False, before_alpha=0.1, before_C=None, before_cmap="hsv",
+        show_after_move_coord=False, after_alpha=1.0,   after_C=None,  after_cmap="hsv",
+
+        fig=None, ax=None, ax_c=None, ax_r=0):
+    '''
+    move_map_m： shape為(h_res, w_res, 2) 移動的向量 move
+    start_xy_m： shape為(h_res, w_res, 2) 移動的起始 coord
+    jump  ： 一次跳幾格 show點
+    C/cmap： str直接指定顏色 或 shape為(h_res, w_res, 1) 單純把 點 編號 後 讓matplot自動幫你填 cmap 的顏色
+    color ： shape為(h_res, w_res, 3 或 4(含alpha透明度))， 值域 0~1， 每一點的顏色都可以自己指定
+    alpha ： 透明度
+    '''
+    fig, ax, ax_c = check_fig_ax_init(fig, ax, ax_c, fig_rows=1, fig_cols=1, ax_size=5, tight_layout=True)
+    ##########################################################################################################
+    if(fig_title is not None): ax[ax_c].set_title(fig_title)  ### 設定title
+    ax[ax_c] = change_into_img_2D_coord_ax(ax[ax_c])
+
+    ### 看要不要把 移動前的座標 畫出來
+    if(show_before_move_coord):
+        fig, ax, ax_c = coord_m_2D_scatter(start_xy_m,
+                            fig_alpha=before_alpha, fig_C=before_C,
+                            fig=fig, ax=ax, ax_c=ax_c, ax_r=ax_r)
+        ax_c -= 1
+
+
+    ### 處理 jump 的 index
+    h_res, w_res = start_xy_m.shape[:2]
+    row_ids = get_jump_index(h_res, jump_r)
+    col_ids = get_jump_index(w_res, jump_c)
+    row_ids_m, col_ids_m = np.meshgrid(col_ids, row_ids)
+
+    ### 處理 jump 的 index， 顏色 抓 jump 後的 顏色
+    if(arrow_C is None): arrow_C = np.zeros(shape=(h_res, w_res))
+    arrow_C = apply_jump_index(arrow_C, row_ids_m, col_ids_m)
+
+    ##########################################################################################################
+    ### 真正要做的事情開始
+    ax[ax_c].quiver(start_xy_m      [row_ids_m, col_ids_m, 0],
+                    start_xy_m      [row_ids_m, col_ids_m, 1],
+                    move_map_m[row_ids_m, col_ids_m, 0],
+                    move_map_m[row_ids_m, col_ids_m, 1],
+                    arrow_C, cmap=arrow_cmap,                ### arrow_C 的 關鍵字參數名字我猜不到 也查不大到， 但是發現只要放 第5個參數 就對囉！ 且無法丟None， 且當指定color時， 會以 arrow_C的顏色為主 忽略color， 所以目前無法用 color， 只能用 cmap調顏色
+                    angles='xy', scale_units='xy', scale=1, pivot="tail",  ### 設定 quiver 參考 xy座標 來畫圖，scale 指定1 才不會用到 auto-scale
+                   )
+
+    ### 看要不要把 移動後的座標 也畫出來
+    if(show_after_move_coord):
+        dis_coord_m = move_map_m + start_xy_m
+        fig, ax, ax_c = coord_m_2D_scatter(dis_coord_m,
+                                        fig_alpha=after_alpha, fig_C=after_C,
+                                        fig=fig, ax=ax, ax_c=ax_c, ax_r=ax_r)
+        ax_c -= 1
+
+    ### 看要不在 移動後的結果 框出一個 valid 區域， 已paper17 是用 pytorch 的 grid_sample， valid 區域維 -1~1
+    if(valid_boundary != 0):
+        ax[ax_c].add_patch( patches.Rectangle( (-valid_boundary, -valid_boundary), 2 * valid_boundary, 2 * valid_boundary, edgecolor=boundary_C , fill=boundary_fill, linewidth=boundary_linewidth))
+
+    ax_c += 1
+    return fig, ax, ax_c
+
+
+def move_map_3D_scatter(move_map_m, start_xy_m,
+                        fig_title=None,
+                        zticklabels=(),
+                        jump_r=1, jump_c=1,
+                        valid_boundary=0, boundary_C="orange", boundary_height=0.5, boundary_linewidth=3, boundary_fill=False,
+                        before_C=None, before_cmap="hsv", before_color=None, before_alpha=0.1, before_s=1, before_height=0,
+                        after_C=None,  after_cmap="hsv",  after_color=None,  after_alpha=1.0,  after_s=3,  after_height=0.5,
+                        fig=None, ax=None, ax_c=None, ax_r=0, ax_rows=1):
+    '''
+    move_map_m： shape為(h_res, w_res, 2) 移動的向量 move
+    start_xy_m： shape為(h_res, w_res, 2) 移動的起始 coord
+    zticklabels： z軸上要標得字
+    jump  ： 一次跳幾格 show點
+    C/cmap： str直接指定顏色 或 shape為(h_res, w_res, 1) 單純把 點 編號 後 讓matplot自動幫你填 cmap 的顏色
+    color ： shape為(h_res, w_res, 3 或 4(含alpha透明度))， 值域 0~1， 每一點的顏色都可以自己指定
+    alpha ： 透明度
+    height： 在 z 的高度
+    '''
+    fig, ax, ax_c = check_fig_ax_init(fig, ax, ax_c, fig_rows=1, fig_cols=1, ax_size=5, tight_layout=True)
+    if(fig_title is not None): ax[ax_c].set_title(fig_title)  ### 設定title
+    ax3d = change_into_3D_coord_ax(fig, ax, ax_c, ax_r, ax_rows, y_flip=True, y_coord=start_xy_m[..., 1], tight_layout=True)
+    ##########################################################################################################
+    ### 處理 jump 的 index
+    h_res, w_res = start_xy_m.shape[:2]
+    row_ids = get_jump_index(h_res, jump_r)
+    col_ids = get_jump_index(w_res, jump_c)
+    row_ids_m, col_ids_m = np.meshgrid(col_ids, row_ids)
+    ### 處理 jump 的 index， 顏色 抓 jump 後的 顏色
+    if(before_C is not None and type(before_C) != type("str")): before_C = apply_jump_index(before_C, row_ids_m, col_ids_m)
+    if(after_C  is not None and type(after_C)  != type("str")): after_C  = apply_jump_index(after_C , row_ids_m, col_ids_m)
+    if(before_color is not None):
+        before_color = apply_jump_index(before_color, row_ids_m, col_ids_m)
+        before_color = before_color.reshape(-1, 3)
+    if(after_color  is not None):
+        after_color  = apply_jump_index(after_color , row_ids_m, col_ids_m)
+        after_color  = after_color.reshape(-1, 3)
+
+
+    ax3d.set_title(fig_title)
+    y_max = start_xy_m[..., 1].max()
+    y_min = start_xy_m[..., 1].min()
+    ax3d.set_xlabel("x"); ax3d.set_ylabel("y"); ax3d.set_ylim(y_max, y_min)
+    ax3d.set_zlim(0, 1)
+    ax3d.set_zticklabels(zticklabels)
+
+    ##########################################################################################################
+    ### 真正要做的事情開始
+    ax3d.scatter(start_xy_m[row_ids_m, col_ids_m, 0]                                      , start_xy_m[row_ids_m, col_ids_m, 1]                                      , before_height, c=before_C, s=before_s, cmap=before_cmap, alpha=before_alpha, color=before_color)
+    ax3d.scatter(start_xy_m[row_ids_m, col_ids_m, 0] + move_map_m[row_ids_m, col_ids_m, 0], start_xy_m[row_ids_m, col_ids_m, 1] + move_map_m[row_ids_m, col_ids_m, 1], after_height , c=after_C , s=after_s, cmap=after_alpha, alpha=after_alpha)
+    if(valid_boundary != 0):
+        verts = np.array(  [[(-valid_boundary, -valid_boundary, boundary_height),
+                             (-valid_boundary,  valid_boundary, boundary_height),
+                             ( valid_boundary,  valid_boundary, boundary_height),
+                             ( valid_boundary, -valid_boundary, boundary_height),
+                             (-valid_boundary, -valid_boundary, boundary_height),  ### Poly不需要這個， 但多這個也沒差， 不過Line 必須要這個才能圍成方形， 所以就加這行囉！
+                            ]] )
+        if(boundary_fill): ax3d.add_collection3d(Poly3DCollection(verts, linewidth=boundary_linewidth, facecolor=boundary_C, alpha=0.5))  ### Poly3DCollection 目前找不到方法 內部空白， 所以乾脆用畫線的方式
+        else             : ax3d.add_collection3d(Line3DCollection(verts, linewidth=boundary_linewidth, color=boundary_C, alpha=0.5))  ### Poly3DCollection 目前找不到方法 內部空白， 所以乾脆用畫線的方式
+    ax_c += 1
+
+    return fig, ax, ax_c
+
+
+def move_map_2D_moving_visual(move_map_m, start_xy_m, fig_title="",
+                              fig=None, ax=None, ax_c=None, ax_r=0):
+    '''
+    start_xy_m  ： 單純視覺化用的座標而已
+    move_map_m  ： 單純視覺化出來而已
+    fig/ax/ax_c ： default 為 None， 代表要 建立新subplots
+                   若 不是 None，在 fig上 畫上此function裡產生的圖
+    '''
+    fig, ax, ax_c = check_fig_ax_init(fig, ax, ax_c, fig_rows=1, fig_cols=4, ax_size=5, tight_layout=True)
+    ##########################################################################################################
+
+    fig, ax, ax_c = move_map_2D_arrow(move_map_m, start_xy_m=start_xy_m, fig_title=":".join([fig_title, "move_map"]), jump_r=4, jump_c=4,
+                             show_before_move_coord=False, before_alpha=0.2,
+                             show_after_move_coord=False, after_alpha=0.8,
+                             fig=fig, ax=ax, ax_c=ax_c, ax_r=ax_r)
+
+    fig, ax, ax_c = move_map_2D_arrow(move_map_m, start_xy_m=start_xy_m, fig_title=":".join([fig_title, "move_map+coord==bm"]), jump_r=4, jump_c=4,
+                             show_before_move_coord=True, before_alpha=0.2,
+                             show_after_move_coord=False, after_alpha=0.8,
+                             fig=fig, ax=ax, ax_c=ax_c, ax_r=ax_r)
+
+    ax[ax_c].set_title(":".join([fig_title, "bm visual"]))
+    dis_coord_m = move_map_m + start_xy_m
+    dis_coord_method1_visual = method1(x=dis_coord_m[..., 0], y=dis_coord_m[..., 1], mask_ch=0)
+    ax[ax_c].imshow(dis_coord_method1_visual)
+    ax_c += 1
+
+    fig, ax, ax_c = move_map_2D_arrow(move_map_m, start_xy_m=start_xy_m, fig_title=":".join([fig_title, "bm moving"]), jump_r=4, jump_c=4,
+                             show_before_move_coord=True, before_alpha=0.2,
+                             show_after_move_coord=True, after_alpha=0.8,
+                             fig=fig, ax=ax, ax_c=ax_c, ax_r=ax_r)
+
+    ### 畫 2D scatter 移動後的 coord
+    fig, ax, ax_c = coord_m_2D_scatter(dis_coord_m, fig_title=":".join([fig_title, "dis_coord appearance is fm"]), fig=fig, ax=ax, ax_c=ax_c)
+
+
+    # ### 3D箭頭視覺化 效果不好： 分不同平面 畫箭頭 發現 箭頭中間的線太密看不到平面ˊ口ˋ
+    # 但這 3D_quiver例子 又捨不得刪掉， 先留著好了
+    # jump_r = 8
+    # jump_c = 7
+    # ax3d = change_into_3D_coord_ax(fig, ax, ax_c, y_flip=True, y_coord=start_xy_m[..., 1], tight_layout=True)
+    # ax3d.set_title("step5.move_map 3D_visual fold")
+    # ax3d.set_zlim(0, 1)
+    # ax3d.quiver(start_xy_m[::jump_r, ::jump_c, 0],
+    #             start_xy_m[::jump_r, ::jump_c, 1],
+    #             0,
+    #             move_map_m[::jump_r, ::jump_c, 0],
+    #            -move_map_m[::jump_r, ::jump_c, 1],  ### quiver 好像就算 整張圖y已經反轉了， 但畫出來的y沒有跟著轉， 所以只好自己加 "-" 來反轉囉！
+    #             0.5,
+    #             alpha=0.5)
+    # ax_c += 1
+
+
+    ### 畫 3D scatter 分不同平面 沒有箭頭的中間段 效果比較好
+    # jump_r = 2
+    # jump_c = 2
+    # ax3d = change_into_3D_coord_ax(fig, ax, ax_c, y_flip=True, y_coord=start_xy_m[..., 1], tight_layout=True)
+    # ax3d.set_title(f"step5.move_map_{dis_type} 3D_scatter_visual")
+    # ax3d.set_xlabel("x"); ax3d.set_ylabel("y"); ax3d.set_ylim(y_max, y_min)
+    # ax3d.set_zlim(0, 1)
+    # ax3d.scatter(start_xy_m[::jump_r, ::jump_c, 0]                                    , start_xy_m[::jump_r, ::jump_c, 1]                                    , 0   , c = np.arange(np.ceil(h_res / jump_r) * np.ceil(w_res / jump_c)), s=1, cmap="hsv", alpha=0.3)
+    # ax3d.scatter(start_xy_m[::jump_r, ::jump_c, 0] + move_map_m[::jump_r, ::jump_c, 0], start_xy_m[::jump_r, ::jump_c, 1] + move_map_m[::jump_r, ::jump_c, 1], 0.5 , c = np.arange(np.ceil(h_res / jump_r) * np.ceil(w_res / jump_c)), s=3, cmap="hsv")
+    # ax_c += 1
+    return fig, ax, ax_c
 
 if(__name__ == "__main__"):
     # fig, ax = plt.subplots(nrows=3, ncols=3)

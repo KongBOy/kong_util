@@ -31,14 +31,42 @@ def rename_by_remove_order(ord_dir, split_symbol="-"):  ### 使用的時候要�
         print(dst_name, "ok")
 
 #####################################################################################################################################
-def get_xy_map(row, col):
-    x = np.arange(col)
-    x = np.tile(x, (row, 1))
+### 參考連結：https://stackoverflow.com/questions/53907633/how-to-warp-an-image-using-deformed-mesh
+def get_xy_f_and_m(x_min, x_max, y_min, y_max, w_res, h_res, y_flip=False):  ### get_xy_flatten，拿到的map的shape：(..., 2)
+    '''
+    是用 np.linspace 喔！ x_min ~ x_max 就是真的到那個數字！ 不像 np.arange() 會是 x_min ~ x_max-1！
+    所以如果要還原以前寫的東西 要記得 x_max-1 喔！
+    
+    目前是用 和 image 一樣的坐標系(左上角為(0, 0))，
+    y_flip 還沒有實作， 應該是在blender 會用到(左下角為(0, 0))， 有用到的時候在實作吧
+    xy_m： x為：xy_f[...,0], y為：xy_f[...,1]
+    xy_f： x為：xy_f[:,0],   y為：xy_f[:,1]
 
-#    y = np.arange(row-1, -1, -1) ### 就是這裡要改一下拉！不要抄網路的，網路的是用scatter的方式來看(左下角(0,0)，x往右增加，y往上增加)
-    y = np.arange(row)  ### 改成這樣子 就是用image的方式來處理囉！(左上角(0,0)，x往右增加，y往上增加)
-    y = np.tile(y, (col, 1)).T
-    return x, y
+    '''
+    x = np.tile(np.reshape(np.linspace(x_min, x_max, w_res), [1, w_res]), [h_res, 1])  ### shape 為 (h_res, w_res)， 每col值一樣
+    y = np.tile(np.reshape(np.linspace(y_min, y_max, h_res), [h_res, 1]), [1, w_res])  ### shape 為 (h_res, w_res)， 每row值一樣
+    xy_m = np.dstack((x, y))
+
+    x_f = x.flatten()
+    y_f = y.flatten()
+    xy_f = np.array( [x_f, y_f], dtype=np.float64 )  ### 目前橫的放：x為：xy_f[0], y為：xy_f[1]
+    xy_f = xy_f.T  ### 弄成直的放 x為：xy_f[:,0], y為：xy_f[:,1]
+    return xy_f, xy_m
+
+def get_xy_map(row, col):
+    ### 舊版
+    #     x = np.arange(col)
+    #     x = np.tile(x, (row, 1))
+
+    # #    y = np.arange(row-1, -1, -1) ### 就是這裡要改一下拉！不要抄網路的，網路的是用scatter的方式來看(左下角(0,0)，x往右增加，y往上增加)
+    #     y = np.arange(row)  ### 改成這樣子 就是用image的方式來處理囉！(左上角(0,0)，x往右增加，y往上增加)
+    #     y = np.tile(y, (col, 1)).T
+
+    ### 新版
+    _, xy_m = get_xy_f_and_m(x_min=0, x_max=col - 1, y_min=0, y_max=row - 1, w_res=col, h_res=row, y_flip=False)
+    x_m = xy_m[..., 0]
+    y_m = xy_m[..., 1]
+    return x_m, y_m
 
 def Check_img_filename(file_name):
     file_name = file_name.lower()
@@ -262,19 +290,21 @@ def find_db_max_move(ord_dir):
 
 #######################################################
 ### 視覺化方法1：感覺可以！但缺點是沒辦法用cv2，而一定要搭配matplot的imshow來自動填色
-def method1(x, y, max_value=-10000):  ### 這個 max_value的值 意義上來說要是整個db內位移最大值喔！這樣子出來的圖的顏色強度才會準確，後來覺得可刪
+def method1(x, y, max_value=-10000, mask_ch=2):  ### 這個 max_value的值 意義上來說要是整個db內位移最大值喔！這樣子出來的圖的顏色強度才會準確，後來覺得可刪
     '''
     回傳的 visual_map 的值域 為 0~1
     '''
     h, w = x.shape[:2]
-    z = np.ones(shape=(h, w))
-    visual_map = np.dstack((x, y))     ### step1.把x,y拚再一起同時處理
-    max_value = visual_map.max()        ### step2.先把值弄到 0~1
+    z = np.ones(shape=(h, w))          ### step0. mask 全 1
+    visual_map = np.dstack((x, y))     ### step1. 把x,y拚再一起同時處理
+    max_value = visual_map.max()       ### step2. 先把值弄到 0~1
     min_value = visual_map.min()
     visual_map = (visual_map - min_value) / (max_value - min_value + 0.000000001)
     # print("visual_map.max()", visual_map.max())
     # print("visual_map.min()", visual_map.min())
-    visual_map = np.dstack( (visual_map, z))         ### step4.再concat channel3，來給imshow自動決定顏色
+    if  (mask_ch == 0): visual_map = np.dstack( (z, visual_map) )                              ### step4.mask再和map concat， mask放 channel1，來給imshow自動決定顏色
+    elif(mask_ch == 1): visual_map = np.dstack( (visual_map[..., 0], z, visual_map[..., 1]) )  ### step4.mask再和map concat， mask放 channel2，來給imshow自動決定顏色
+    elif(mask_ch == 2): visual_map = np.dstack( (visual_map, z) )                              ### step4.mask再和map concat， mask放 channel3，來給imshow自動決定顏色
 #    plt.imshow(visual_map)
     return visual_map
 
