@@ -70,5 +70,5 @@ def coordinate_dot(x_min, x_max, y_min, y_max, w_res, h_res, y_flip=False, dst_d
     plt.show()
 
 
-coordinate_dot(x_min=0, x_max=20, y_min=0, y_max=20, w_res=21, h_res=21, y_flip=True, dst_dir="grid_util_resultt")
-coordinate_dot(x_min=0, x_max= 1, y_min=0, y_max= 1, w_res=21, h_res=21, y_flip=True, dst_dir="grid_util_resultt")
+coordinate_dot(x_min=0, x_max=20, y_min=0, y_max=20, w_res=21, h_res=21, y_flip=True, dst_dir="grid_util_result")
+coordinate_dot(x_min=0, x_max= 1, y_min=0, y_max= 1, w_res=21, h_res=21, y_flip=True, dst_dir="grid_util_result")
