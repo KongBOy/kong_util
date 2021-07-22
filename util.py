@@ -36,7 +36,6 @@ def get_xy_f_and_m(x_min, x_max, y_min, y_max, w_res, h_res, y_flip=False):  ###
     '''
     是用 np.linspace 喔！ x_min ~ x_max 就是真的到那個數字！ 不像 np.arange() 會是 x_min ~ x_max-1！
     所以如果要還原以前寫的東西 要記得 x_max-1 喔！
-    
     目前是用 和 image 一樣的坐標系(左上角為(0, 0))，
     y_flip 還沒有實作， 應該是在blender 會用到(左下角為(0, 0))， 有用到的時候在實作吧
     xy_m： x為：xy_f[...,0], y為：xy_f[...,1]
@@ -67,6 +66,12 @@ def get_xy_map(row, col):
     x_m = xy_m[..., 0]
     y_m = xy_m[..., 1]
     return x_m, y_m
+
+def fill_nan_at_mask_zero(nan_mask, data):
+    for go_r, mask_r in enumerate(nan_mask):
+        for go_c, value in enumerate(mask_r):
+            if(value == 0): data[go_r, go_c] = np.nan  ### 會自動broadcast 進 所有channel喔！
+    return data
 
 def Check_img_filename(file_name):
     file_name = file_name.lower()
