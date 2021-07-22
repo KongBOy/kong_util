@@ -609,7 +609,7 @@ def _matplot_visual(imgs, file_names, dst_dir, img_type=None):
         plt.close()
 
 
-def Save_exr_as_mat(ord_dir, dst_dir, key_name, matplot_visual=False):
+def Save_exr_as_mat(ord_dir, dst_dir, key_name, matplot_visual=False, print_msg=False):
     ### 建立放結果的資料夾
     Check_dir_exist_and_build(dst_dir)
 
@@ -621,7 +621,8 @@ def Save_exr_as_mat(ord_dir, dst_dir, key_name, matplot_visual=False):
 
     for i, file_name in enumerate(tqdm(file_names)):
         name = file_name.split(".")[0]
-        savemat(dst_dir + "/" + name, {key_name: imgs[i]} )
+        savemat(dst_dir + "/" + name + ".mat", {key_name: imgs[i]} )
+        if(print_msg): print(dst_dir + "/" + name + ".mat")
 
     if(matplot_visual): _matplot_visual(imgs, file_names, dst_dir, key_name)
 
