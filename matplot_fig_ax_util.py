@@ -543,7 +543,7 @@ def coord_f_2D_scatter(coord_f, h_res, w_res, fig_title=None, fig=None, ax=None,
 
 def coord_m_2D_scatter(coord_m,
                        fig_title=None,
-                       fig_C=None, fig_alpha=1,
+                       fig_C=None, fig_cmap="hsv", fig_alpha=1,
                        fig=None, ax=None, ax_c=None, ax_r=0, tight_layout=False):
     fig, ax, ax_c = check_fig_ax_init(fig, ax, ax_c, fig_rows=1, fig_cols=1, ax_size=5, tight_layout=tight_layout)
     h_res, w_res = coord_m.shape[:2]
@@ -553,7 +553,7 @@ def coord_m_2D_scatter(coord_m,
     ##########################################################################################################
     ax[ax_c] = change_into_img_2D_coord_ax(ax[ax_c])          ### 構圖 變成 2D img coord 的形式
     ### 真正要做的事情開始
-    ax[ax_c].scatter(coord_m[..., 0], coord_m[..., 1], c = fig_C, s=1, cmap="hsv", alpha=fig_alpha)  ### 用scatter 視覺化
+    ax[ax_c].scatter(coord_m[..., 0], coord_m[..., 1], c = fig_C, s=1, cmap=fig_cmap, alpha=fig_alpha)  ### 用scatter 視覺化
     ax_c += 1
     return fig, ax, ax_c
 
@@ -602,7 +602,7 @@ def move_map_2D_arrow(move_map_m, start_xy_m,
         arrow_C=None, arrow_cmap="viridis", arrow_alpha=1.0,
         boundary_value=0, boundary_C="orange", boundary_linewidth=3, boundary_fill=False,
         show_before_move_coord=False, before_alpha=0.1, before_C=None, before_cmap="hsv",
-        show_after_move_coord=False, after_alpha=1.0,   after_C=None,  after_cmap="hsv",
+        show_after_move_coord=False,  after_alpha=1.0,   after_C=None,  after_cmap="hsv",
 
         fig=None, ax=None, ax_c=None, ax_r=0, tight_layout=False):
     '''
@@ -610,7 +610,7 @@ def move_map_2D_arrow(move_map_m, start_xy_m,
     start_xy_m： shape為(h_res, w_res, 2) 移動的起始 coord
     jump  ： 一次跳幾格 show點
     C/cmap： str直接指定顏色 或 shape為(h_res, w_res, 1) 單純把 點 編號 後 讓matplot自動幫你填 cmap 的顏色
-    color ： shape為(h_res, w_res, 3 或 4(含alpha透明度))， 值域 0~1， 每一點的顏色都可以自己指定， 記得在丟進去matplot 時要 reshape 成 (-1, 3) 或 (-1, 4) 喔！
+    color ： shape為(h_res, w_res, 3 或 4(含alpha透明度))， 值域 0.~1.， 每一點的顏色都可以自己指定， 記得在丟進去matplot 時要把 color reshape 成 (-1, 3) 或 (-1, 4) 喔！
     alpha ： 透明度
     '''
     fig, ax, ax_c = check_fig_ax_init(fig, ax, ax_c, fig_rows=1, fig_cols=1, ax_size=5, tight_layout=tight_layout)
@@ -621,7 +621,7 @@ def move_map_2D_arrow(move_map_m, start_xy_m,
     ### 看要不要把 移動前的座標 畫出來
     if(show_before_move_coord):
         fig, ax, ax_c = coord_m_2D_scatter(start_xy_m,
-                            fig_alpha=before_alpha, fig_C=before_C,
+                            fig_alpha=before_alpha, fig_C=before_C, fig_cmap=before_cmap,
                             fig=fig, ax=ax, ax_c=ax_c, ax_r=ax_r)
         ax_c -= 1
 
@@ -650,7 +650,7 @@ def move_map_2D_arrow(move_map_m, start_xy_m,
     if(show_after_move_coord):
         dis_coord_m = move_map_m + start_xy_m
         fig, ax, ax_c = coord_m_2D_scatter(dis_coord_m,
-                                        fig_alpha=after_alpha, fig_C=after_C,
+                                        fig_alpha=after_alpha, fig_C=after_C, fig_cmap=after_cmap,
                                         fig=fig, ax=ax, ax_c=ax_c, ax_r=ax_r)
         ax_c -= 1
 
@@ -676,7 +676,7 @@ def move_map_3D_scatter(move_map_m, start_xy_m,
     zticklabels： z軸上要標得字
     jump  ： 一次跳幾格 show點
     C/cmap： str直接指定顏色 或 shape為(h_res, w_res, 1) 單純把 點 編號 後 讓matplot自動幫你填 cmap 的顏色
-    color ： shape為(h_res, w_res, 3 或 4(含alpha透明度))， 值域 0~1， 每一點的顏色都可以自己指定
+    color ： shape為(h_res, w_res, 3 或 4(含alpha透明度))， 值域 0.~1.， 每一點的顏色都可以自己指定， 記得在丟進去matplot 時要把 color reshape 成 (-1, 3) 或 (-1, 4) 喔！
     alpha ： 透明度
     height： 在 z 的高度
     '''
@@ -806,7 +806,7 @@ def img_scatter_visual(img,
     jump_r = jump_r
     jump_c = jump_c
     start_xy_f, start_xy_m = get_xy_f_and_m(x_min=x_min, x_max=x_max, y_min=y_min, y_max=y_max, w_res=w_res, h_res=h_res)  ### 拿到map的shape：(..., 2), f 是 flatten 的意思
-    ax[ax_c].scatter(start_xy_m[..., 0], start_xy_m[..., 1], s = s, color=img.reshape(-1, 3) /255, alpha=alpha)
+    ax[ax_c].scatter(start_xy_m[..., 0], start_xy_m[..., 1], s = s, color=img.reshape(-1, 3) / 255, alpha=alpha)
     ax_c += 1
     return fig, ax, ax_c
 
