@@ -657,7 +657,7 @@ def Save_npy_as_knpy(ord_dir, dst_dir):
     ### 建立放結果的資料夾
     Check_dir_exist_and_build(dst_dir)
 
-    npy_file_names = get_dir_certain_file_name(ord_dir, "npy")   ### 把想轉換的 .npy 的檔案名讀出來
+    npy_file_names = get_dir_certain_file_name(ord_dir, ".npy")   ### 把想轉換的 .npy 的檔案名讀出來
     for npy_file_name in tqdm(npy_file_names):
         file_name = npy_file_name.split(".")[0]                 ### 把 "檔案名". "npy" 分開，只抓檔案名等等才好存 ".knpy"
         with open(ord_dir + "/" + npy_file_name, "rb") as fr:   ### 把 .npy 用 open 且 read byte 的形式打開
