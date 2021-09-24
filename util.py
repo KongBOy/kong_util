@@ -99,6 +99,14 @@ def get_dir_img_file_names(ord_dir):
     return file_names
 
 @Check_dir_exist_decorator
+def get_dir_img_paths(ord_dir, float_return =False):
+    '''
+    bmp, jpg, jpeg, png
+    '''
+    file_names = get_dir_img_file_names(ord_dir)
+    return [ord_dir + "/" + file_name for file_name in file_names]
+
+@Check_dir_exist_decorator
 def get_dir_certain_file_name(ord_dir, certain_word, certain_ext="."):
     file_names = [file_name for file_name in os.listdir(ord_dir) if (certain_word in file_name) and (certain_ext in file_name)]
     return file_names
@@ -106,6 +114,11 @@ def get_dir_certain_file_name(ord_dir, certain_word, certain_ext="."):
 #     if os.path.isdir(ord_dir): file_names = [file_name for file_name in os.listdir(ord_dir) if (certain_word in file_name)]
 #     else: file_names = []
 #     return file_names
+
+@Check_dir_exist_decorator
+def get_dir_certain_file_paths(ord_dir, certain_word, certain_ext="."):
+    file_names = get_dir_certain_file_name(ord_dir, certain_word, certain_ext)
+    return [ord_dir + "/" + file_name for file_name in file_names]
 
 @Check_dir_exist_decorator
 def get_dir_dir_name(ord_dir):
@@ -138,6 +151,9 @@ def get_dir_certain_move(ord_dir, certain_word):
 
 @Check_dir_exist_decorator
 def get_dir_img(ord_dir, float_return =False):
+    '''
+    bmp, jpg, jpeg, png
+    '''
     file_names = [file_name for file_name in os.listdir(ord_dir) if Check_img_filename(file_name) ]
     img_list = []
     for file_name in tqdm(file_names):
