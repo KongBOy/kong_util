@@ -4,6 +4,7 @@ import cv2
 import numpy as np
 import random
 from util import get_dir_certain_file_name, get_dir_img_file_names, get_dir_exr, get_dir_mat, method1
+from multiprocess_util import multi_processing_interface
 
 from tqdm import tqdm
 
@@ -728,14 +729,32 @@ def Save_exr_as_npy(ord_dir, dst_dir, rgb=False, matplot_visual=False):  ### 不
         np.save( dst_dir + "/" + name, imgs[i] )  ### 改存成 .npy
 
     if(matplot_visual): _matplot_visual(imgs, file_names, dst_dir)
-##############################################################################################################################################################
-### knpy 是 kong_numpy的意思喔ˊ口ˋ，存的內容是把 numpy 的開頭資訊拿掉，讓tensorflow 可以直接decode！
-def Save_npy_as_knpy(ord_dir, dst_dir):
+
+
+from util import get_exr
+def _save_exr_as_npy(start_i, amount, ord_dir, dst_dir, file_names):
+    for i in tqdm(range(start_i, start_i + amount)):
+        file_name = file_names[i]
+        name, _ = file_name.split(".")  ### 把 檔名的 名字部分取出來
+        ord_exr_path = ord_dir + "/" + file_name
+        dst_npy_path = dst_dir + "/" + name
+
+        exr_img = get_exr(ord_exr_path)
+        np.save( dst_npy_path, exr_img )  ### 改存成 .npy
+
+def Save_exr_as_npy2(ord_dir, dst_dir, rgb=False, matplot_visual=False):  ### 不要 float_return = True 之類的，因為他存的時候不一定用float32喔！rgb可以轉，已用網站生成的結果比較確認過囉～https://www.onlineconvert.com/exr-to-mat
     ### 建立放結果的資料夾
     Check_dir_exist_and_build(dst_dir)
+    if(matplot_visual): Check_dir_exist_and_build(dst_dir + "/" + "matplot_visual")
 
-    npy_file_names = get_dir_certain_file_name(ord_dir, ".npy")   ### 把想轉換的 .npy 的檔案名讀出來
-    for npy_file_name in tqdm(npy_file_names):
+    file_names = get_dir_certain_file_name(ord_dir, ".exr")  ### 拿到exr的檔名
+    print("Save_exr_as_npy")
+    multi_processing_interface(core_amount=30, task_amount=len(file_names), task=_save_exr_as_npy, task_args=[ord_dir, dst_dir, file_names])
+
+##############################################################################################################################################################
+def _save_npy_as_knpy(start_i, amount, ord_dir, dst_dir, npy_file_names):
+    for i in tqdm(range(start_i, start_i + amount)):
+        npy_file_name = npy_file_names[i]
         file_name = npy_file_name.split(".")[0]                 ### 把 "檔案名". "npy" 分開，只抓檔案名等等才好存 ".knpy"
         with open(ord_dir + "/" + npy_file_name, "rb") as fr:   ### 把 .npy 用 open 且 read byte 的形式打開
             byte_strs = []                                      ### fr不能直接用，要用iter的方式才能讀內容
@@ -745,6 +764,27 @@ def Save_npy_as_knpy(ord_dir, dst_dir):
             with open(dst_dir + "/" + file_name + ".knpy", "wb") as fw:  ### 經過觀察，只要去掉第一個byte_str就可以去掉numpy的標頭檔資訊拉
                 for byte_str in byte_strs[1:]:                           ### 所以從 byte_strs的第二個元素開始把 byte_str寫進新檔案，且命名為 ".knpy"，kong_numpy的概念ˊ口ˋ
                     fw.write(byte_str)
+
+
+### knpy 是 kong_numpy的意思喔ˊ口ˋ，存的內容是把 numpy 的開頭資訊拿掉，讓tensorflow 可以直接decode！
+def Save_npy_as_knpy(ord_dir, dst_dir, core_amount=1):
+    ### 建立放結果的資料夾
+    Check_dir_exist_and_build(dst_dir)
+
+    npy_file_names = get_dir_certain_file_name(ord_dir, ".npy")   ### 把想轉換的 .npy 的檔案名讀出來
+    print("Save_npy_as_knpy")
+    if(core_amount <= 1): _save_npy_as_knpy(start_i=0, amount=len(npy_file_names), ord_dir=ord_dir, dst_dir=dst_dir, npy_file_names=npy_file_names)
+    else: multi_processing_interface(core_amount=core_amount, task_amount=len(npy_file_names), task=_save_npy_as_knpy, task_args=[ord_dir, dst_dir, npy_file_names])
+    # for npy_file_name in tqdm(npy_file_names):
+    #     file_name = npy_file_name.split(".")[0]                 ### 把 "檔案名". "npy" 分開，只抓檔案名等等才好存 ".knpy"
+    #     with open(ord_dir + "/" + npy_file_name, "rb") as fr:   ### 把 .npy 用 open 且 read byte 的形式打開
+    #         byte_strs = []                                      ### fr不能直接用，要用iter的方式才能讀內容
+    #         for byte_str in fr:                                 ### 所以丟進去 for 把所有 byte_str抓出來囉！
+    #             byte_strs.append(byte_str)
+
+    #         with open(dst_dir + "/" + file_name + ".knpy", "wb") as fw:  ### 經過觀察，只要去掉第一個byte_str就可以去掉numpy的標頭檔資訊拉
+    #             for byte_str in byte_strs[1:]:                           ### 所以從 byte_strs的第二個元素開始把 byte_str寫進新檔案，且命名為 ".knpy"，kong_numpy的概念ˊ口ˋ
+    #                 fw.write(byte_str)
 ##############################################################################################################################################################
 ##############################################################################################################################################################
 

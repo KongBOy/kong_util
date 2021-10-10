@@ -172,14 +172,19 @@ def get_dir_move(ord_dir):
     move_map_list = np.array(move_map_list, dtype=np.float32)
     return move_map_list
 
+def get_exr(path, rgb=False):
+    img = cv2.imread(path, cv2.IMREAD_ANYDEPTH | cv2.IMREAD_UNCHANGED)  ### 這行就可以了！
+    if(rgb): img = img[..., ::-1]
+    return img
+
 @Check_dir_exist_decorator
 def get_dir_exr(ord_dir, rgb=False):  ### 不要 float_return = True 之類的，因為他存的時候不一定用float32喔！rgb可以轉，已用網站生成的結果比較確認過囉～https://www.onlineconvert.com/exr-to-mat
     file_names = get_dir_certain_file_name(ord_dir, ".exr")
 
     imgs = []
-    for file_name in file_names:
-        img = cv2.imread(ord_dir + "/" + file_name, cv2.IMREAD_ANYDEPTH | cv2.IMREAD_UNCHANGED)  ### 這行就可以了！
-        if(rgb): img = img[..., ::-1]
+    for file_name in tqdm(file_names):
+        exr_path = ord_dir + "/" + file_name
+        img = get_exr(exr_path)
         imgs.append(img)
 
     ### 不要轉dtype，因為不確定exr存的是啥米型態！
