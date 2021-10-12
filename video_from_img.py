@@ -7,9 +7,17 @@ from util import get_dir_certain_img, get_dir_img
 import cv2
 import numpy as np
 from tqdm import tqdm
-def Video_combine_from_imgs(imgs, dst_dir, file_name="combine.avi", tail_long=False):
+def Video_combine_from_imgs(imgs, dst_dir, file_name="combine.avi", img_frame_size=3, tail_long=False):
+    ''' img_frame_size 是 一張張圖片 要用幾個frame'''
     h, w = imgs[0].shape[:2]
     size = (w, h)  ### 注意opencv size相關都是 w先再h喔！
+
+    if(img_frame_size > 1):
+        ord_n, ord_h, ord_w, ord_c = imgs.shape
+        imgs = np.transpose(imgs, (0, 3, 1, 2))          ### NHWC -> NCHW
+        imgs = np.tile(imgs, [1, img_frame_size, 1, 1])  ### C 複製 img_frame_size 次
+        imgs = imgs.reshape(ord_n * img_frame_size, ord_c, ord_h, ord_w)  ### 把C複製的結果變 N， 就有一張圖 在原本frame位置 copy很多次的效果
+        imgs = np.transpose(imgs, (0, 2, 3, 1))           ### NCHW 轉回 NHWC
 
     if(tail_long):
         second = 2
