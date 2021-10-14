@@ -21,11 +21,12 @@ def Pring_classmate_grouping(classmates, group_amount, print_msg=False):
     #     print(classmate)
 
     ### 每組內部自己排序
+    sorted_group = []
     for go_p, group in enumerate(groups):
-        group = sorted( group, key= lambda classmate: int(classmate[0]))
+        sorted_group.append(sorted( group, key= lambda classmate: int(classmate[0])))
 
     ### 每組內的人show出來
-    for go_p, group in enumerate(groups):
+    for go_p, group in enumerate(sorted_group):
         print(f"{chr(ord('A') + go_p)}組, {len(group)} 人, Total group:{len(groups)}")
         for classmate in group:
             print(classmate)
@@ -85,4 +86,4 @@ if(__name__ == "__main__"):
         [48, 408416518, "黃柏惀 不見了"]]
 
 
-    Pring_classmate_grouping(classmates)
+    Pring_classmate_grouping(classmates, group_amount=5)
