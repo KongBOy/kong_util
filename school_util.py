@@ -1,9 +1,9 @@
 import numpy as np
 
-def Pring_classmate_grouping(classmates, group_amount=6, print_msg=True):
+def Pring_classmate_grouping(classmates, group_amount, print_msg=False):
     classmates = np.array(classmates)
     '''
-    結構大概長這樣：
+    classmates 結構大概長這樣：
     classmates = [[1, 206410465, "溫  儒"],
                   [2, 207440388, "林永泰"],
                   [3, 404081134, "羅培瑋"],
@@ -26,7 +26,7 @@ def Pring_classmate_grouping(classmates, group_amount=6, print_msg=True):
 
     ### 每組內的人show出來
     for go_p, group in enumerate(groups):
-        print(f"Group_{chr(ord('A') + go_p)}, {len(group)} people, Total group:{len(groups)}")
+        print(f"{chr(ord('A') + go_p)}組, {len(group)} 人, Total group:{len(groups)}")
         for classmate in group:
             print(classmate)
         print("")
