@@ -1,4 +1,4 @@
-from util import get_dir_certain_file_name, method1
+from util import get_dir_certain_file_names, method1
 import numpy as np
 
 import matplotlib.pyplot as plt
@@ -28,7 +28,7 @@ class Matplot_ax_util():
     def Draw_ax_loss_during_train( ax, logs_read_dir, cur_epoch, epochs , ylim=LOSS_YLIM ):  ### logs_read_dir 不能改丟 result_obj喔！因為See裡面沒有Result喔！
         x_epoch = np.arange(cur_epoch + 1)  ### x座標畫多少，畫到目前訓練的 cur_epoch，+1是為了index轉數量喔
 
-        logs_file_names = get_dir_certain_file_name(logs_read_dir, "npy")  ### 去logs_dir 抓 當時訓練時存的 loss.npy
+        logs_file_names = get_dir_certain_file_names(logs_read_dir, "npy")  ### 去logs_dir 抓 當時訓練時存的 loss.npy
         for loss_i, logs_file_name in enumerate(logs_file_names):
             y_loss_array = np.load( logs_read_dir + "/" + logs_file_name)  ### 去logs_dir 抓 當時訓練時存的 loss.npy
             loss_name = logs_file_name.split(".")[0]
@@ -40,7 +40,7 @@ class Matplot_ax_util():
     ### 且因為有給see用，logs_dir 不能改丟 result_obj喔！因為See裡面沒有Result喔！
     def Draw_ax_loss_after_train( ax, logs_read_dir, cur_epoch, min_epochs , ylim=LOSS_YLIM ):
         x_epoch = np.arange(min_epochs)  ### x座標畫多少
-        logs_file_names = get_dir_certain_file_name(logs_read_dir, "npy")  ### 去logs_dir 抓 當時訓練時存的 loss.npy
+        logs_file_names = get_dir_certain_file_names(logs_read_dir, "npy")  ### 去logs_dir 抓 當時訓練時存的 loss.npy
         for loss_i, logs_file_name in enumerate(logs_file_names):
             y_loss_array = np.load( logs_read_dir + "/" + logs_file_name)  ### 把loss讀出來
             loss_amount = len(y_loss_array)                           ### 訓練的當下存了多少個loss
@@ -390,7 +390,7 @@ class Matplot_multi_row_imgs(Matplot_util):
 def draw_loss_util(fig, ax, logs_read_dir, epoch, epochs ):
     x_epoch = np.arange(epochs)
 
-    logs_file_names = get_dir_certain_file_name(logs_read_dir, "npy")
+    logs_file_names = get_dir_certain_file_names(logs_read_dir, "npy")
     y_loss_array = np.load( logs_read_dir + "/" + logs_file_names[0])
 
     plt.sca(ax)  ### plt指向目前的 小畫布 這是為了設定 xylim 和 xylabel

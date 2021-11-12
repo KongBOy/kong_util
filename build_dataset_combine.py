@@ -3,7 +3,7 @@ import shutil
 import cv2
 import numpy as np
 import random
-from util import get_dir_certain_file_name, get_dir_img_file_names, get_dir_exr, get_dir_mat, method1
+from util import get_dir_certain_file_names, get_dir_img_file_names, get_dir_exr, get_dir_mat, method1
 from multiprocess_util import multi_processing_interface
 
 from tqdm import tqdm
@@ -36,10 +36,10 @@ def build_datasets(src_in_dir,
     '''
     ###########################################################################################################
     ### 抓出 src 的檔名
-    in_file_names  = get_dir_certain_file_name(src_in_dir, certain_word=src_in_word)
-    gt_file_names  = get_dir_certain_file_name(src_gt_dir, certain_word=src_gt_word)
+    in_file_names  = get_dir_certain_file_names(src_in_dir, certain_word=src_in_word)
+    gt_file_names  = get_dir_certain_file_names(src_gt_dir, certain_word=src_gt_word)
     if(src_rec_hope_dir is not None):
-        rec_hope_list = get_dir_certain_file_name(src_rec_hope_dir, certain_word=src_rec_hope_word)
+        rec_hope_list = get_dir_certain_file_names(src_rec_hope_dir, certain_word=src_rec_hope_word)
     data_amount = len(in_file_names)
     if(train_amount is None): train_amount = int(data_amount * 0.9)
     # test_amount = data_amount - train_amount
@@ -694,7 +694,7 @@ def Save_exr_as_mat(ord_dir, dst_dir, key_name, matplot_visual=False, print_msg=
     from hdf5storage import savemat
     from util import get_dir_exr
 
-    file_names = get_dir_certain_file_name(ord_dir, ".exr")
+    file_names = get_dir_certain_file_names(ord_dir, ".exr")
     imgs = get_dir_exr(ord_dir)
 
     for i, file_name in enumerate(tqdm(file_names)):
@@ -709,7 +709,7 @@ def Save_mat_as_npy(ord_dir, dst_dir, key_name, matplot_visual=False ):
     Check_dir_exist_and_build(dst_dir)
 
     imgs = get_dir_mat(ord_dir, key_name)
-    file_names = get_dir_certain_file_name(ord_dir, ".mat")
+    file_names = get_dir_certain_file_names(ord_dir, ".mat")
     for i, file_name in enumerate(tqdm(file_names)):
         name = file_name.split(".")[0]
         np.save( dst_dir + "/" + name , imgs[i])
@@ -722,7 +722,7 @@ def Save_exr_as_npy(ord_dir, dst_dir, rgb=False, matplot_visual=False):  ### 不
     if(matplot_visual): Check_dir_exist_and_build(dst_dir + "/" + "matplot_visual")
 
     imgs = get_dir_exr(ord_dir, rgb)  ### 把exr 轉成 imgs
-    file_names = get_dir_certain_file_name(ord_dir, ".exr")  ### 拿到exr的檔名
+    file_names = get_dir_certain_file_names(ord_dir, ".exr")  ### 拿到exr的檔名
     print("Save_exr_as_npy")
     for i, file_name in enumerate(tqdm(file_names)):
         name, _ = file_name.split(".")  ### 把 檔名的 名字部分取出來
@@ -747,7 +747,7 @@ def Save_exr_as_npy2(ord_dir, dst_dir, rgb=False, matplot_visual=False):  ### �
     Check_dir_exist_and_build(dst_dir)
     if(matplot_visual): Check_dir_exist_and_build(dst_dir + "/" + "matplot_visual")
 
-    file_names = get_dir_certain_file_name(ord_dir, ".exr")  ### 拿到exr的檔名
+    file_names = get_dir_certain_file_names(ord_dir, ".exr")  ### 拿到exr的檔名
     print("Save_exr_as_npy")
     multi_processing_interface(core_amount=30, task_amount=len(file_names), task=_save_exr_as_npy, task_args=[ord_dir, dst_dir, file_names])
 
@@ -771,7 +771,7 @@ def Save_npy_as_knpy(ord_dir, dst_dir, core_amount=1):
     ### 建立放結果的資料夾
     Check_dir_exist_and_build(dst_dir)
 
-    npy_file_names = get_dir_certain_file_name(ord_dir, ".npy")   ### 把想轉換的 .npy 的檔案名讀出來
+    npy_file_names = get_dir_certain_file_names(ord_dir, ".npy")   ### 把想轉換的 .npy 的檔案名讀出來
     print("Save_npy_as_knpy")
     if(core_amount <= 1): _save_npy_as_knpy(start_i=0, amount=len(npy_file_names), ord_dir=ord_dir, dst_dir=dst_dir, npy_file_names=npy_file_names)
     else: multi_processing_interface(core_amount=core_amount, task_amount=len(npy_file_names), task=_save_npy_as_knpy, task_args=[ord_dir, dst_dir, npy_file_names])
@@ -854,7 +854,7 @@ def Convert_dir_pdf_to_jpg(ord_dir, dst_dir="pdf_to_jpg_result", print_msg=False
     from pdf2image import convert_from_path
     Check_dir_exist_and_build(dst_dir)
 
-    file_names = get_dir_certain_file_name(ord_dir, certain_word=".pdf")  ### 取得dir 內的 .pdf
+    file_names = get_dir_certain_file_names(ord_dir, certain_word=".pdf")  ### 取得dir 內的 .pdf
     for file_name in file_names:
         ord_pdf_path = f"{ord_dir}/{file_name}"        ### 定位出 來源pdf 的 path
         dst_half_path = f"{dst_dir}/{file_name[:-4]}"  ### 因為後面還要接上頁碼，所以這邊定位出 不含副檔名的 位置

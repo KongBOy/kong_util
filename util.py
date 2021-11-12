@@ -107,17 +107,17 @@ def get_dir_img_paths(ord_dir, float_return =False):
     return [ord_dir + "/" + file_name for file_name in file_names]
 
 @Check_dir_exist_decorator
-def get_dir_certain_file_name(ord_dir, certain_word, certain_ext="."):
+def get_dir_certain_file_names(ord_dir, certain_word, certain_ext="."):
     file_names = [file_name for file_name in os.listdir(ord_dir) if (certain_word in file_name) and (certain_ext in file_name)]
     return file_names
-# def get_dir_certain_file_name(ord_dir, certain_word):
+# def get_dir_certain_file_names(ord_dir, certain_word):
 #     if os.path.isdir(ord_dir): file_names = [file_name for file_name in os.listdir(ord_dir) if (certain_word in file_name)]
 #     else: file_names = []
 #     return file_names
 
 @Check_dir_exist_decorator
 def get_dir_certain_file_paths(ord_dir, certain_word, certain_ext="."):
-    file_names = get_dir_certain_file_name(ord_dir, certain_word, certain_ext)
+    file_names = get_dir_certain_file_names(ord_dir, certain_word, certain_ext)
     return [ord_dir + "/" + file_name for file_name in file_names]
 
 @Check_dir_exist_decorator
@@ -179,7 +179,7 @@ def get_exr(path, rgb=False):
 
 @Check_dir_exist_decorator
 def get_dir_exr(ord_dir, rgb=False):  ### 不要 float_return = True 之類的，因為他存的時候不一定用float32喔！rgb可以轉，已用網站生成的結果比較確認過囉～https://www.onlineconvert.com/exr-to-mat
-    file_names = get_dir_certain_file_name(ord_dir, ".exr")
+    file_names = get_dir_certain_file_names(ord_dir, ".exr")
 
     imgs = []
     for file_name in tqdm(file_names):
@@ -199,7 +199,7 @@ def get_dir_mat(ord_dir, key):
     from hdf5storage import loadmat
     # import scipy.io as scio ### 好像這個也可以，也在這邊紀錄一下囉
 
-    file_names = get_dir_certain_file_name(ord_dir, ".mat")
+    file_names = get_dir_certain_file_names(ord_dir, ".mat")
     imgs = []
     for file_name in file_names:
         mat = loadmat(ord_dir + "/" + file_name)
@@ -215,7 +215,7 @@ def get_db_amount(ord_dir):
 
 @Check_dir_exist_decorator
 def remove_dir_certain_file_name(ord_dir, certain_word, certain_ext=".", print_msg=False):
-    file_names = get_dir_certain_file_name(ord_dir, certain_word=certain_word, certain_ext=certain_ext)  ### 注意 get_dir_certain_file_name 的 ord_dir 只能用位置參數！不能用關鍵字參數喔！因為他有用decorator，然後我寫的不夠generalˊ口ˋ
+    file_names = get_dir_certain_file_names(ord_dir, certain_word=certain_word, certain_ext=certain_ext)  ### 注意 get_dir_certain_file_names 的 ord_dir 只能用位置參數！不能用關鍵字參數喔！因為他有用decorator，然後我寫的不夠generalˊ口ˋ
     for file_name in file_names:
         remove_path = ord_dir + "/" + file_name
         os.remove(remove_path)
@@ -225,7 +225,7 @@ def remove_dir_certain_file_name(ord_dir, certain_word, certain_ext=".", print_m
 @Check_dir_exist_decorator
 def move_dir_certain_file(ord_dir, certain_word, certain_ext=".", dst_dir=".", print_msg=False):
     from build_dataset_combine import Check_dir_exist_and_build
-    file_names = get_dir_certain_file_name(ord_dir, certain_word=certain_word, certain_ext=certain_ext)  ### 注意 get_dir_certain_file_name 的 ord_dir 只能用位置參數！不能用關鍵字參數喔！因為他有用decorator，然後我寫的不夠generalˊ口ˋ
+    file_names = get_dir_certain_file_names(ord_dir, certain_word=certain_word, certain_ext=certain_ext)  ### 注意 get_dir_certain_file_names 的 ord_dir 只能用位置參數！不能用關鍵字參數喔！因為他有用decorator，然後我寫的不夠generalˊ口ˋ
     Check_dir_exist_and_build(dst_dir)
     for file_name in file_names:
         ord_path = ord_dir + "/" + file_name

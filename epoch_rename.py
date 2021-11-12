@@ -2,11 +2,11 @@ import shutil
 import sys
 sys.path.append("..")
 from step0_access_path import access_path
-from util import get_dir_certain_file_name, get_dir_dir_name
+from util import get_dir_certain_file_names, get_dir_dir_names
 
 ### 應該用不到了，因為已經改寫好 訓練過程epoch產生的名字囉！
 def Rename_epoch(ord_dir):
-    file_names = get_dir_certain_file_name(ord_dir, ".png")
+    file_names = get_dir_certain_file_names(ord_dir, ".png")
     for file_name in file_names:
         old_epoch_string = file_name.split("-")[0].split("_")[1]
         new_epoch_string = "%04i" % int(old_epoch_string)
@@ -18,7 +18,7 @@ def Rename_epoch(ord_dir):
 
 
 if(__name__ == "__main__"):
-    ord_dirs = get_dir_dir_name(access_path + "result")
+    ord_dirs = get_dir_dir_names(access_path + "result")
     for dir_name in ord_dirs:
         Rename_epoch(access_path + "result" + "/" + dir_name)
     # print(ord_dirs)

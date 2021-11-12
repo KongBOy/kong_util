@@ -3,13 +3,13 @@ import sys
 sys.path.append("..")
 
 from step0_access_path import access_path
-from util import get_dir_certain_file_name
+from util import get_dir_certain_file_names
 from build_dataset_combine import Check_dir_exist_and_build
 
 
 def epoch_add_num_into_img(ord_dir, dst_dir):
     Check_dir_exist_and_build(dst_dir)
-    file_names = get_dir_certain_file_name(ord_dir, ".png")
+    file_names = get_dir_certain_file_names(ord_dir, ".png")
     for file_name in file_names:
         epoch_string = file_name.split("-")[0].split("_")[1]
         img = cv2.imread( ord_dir + "/" + file_name )

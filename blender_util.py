@@ -1,7 +1,7 @@
 import sys
 # sys.path.append("C:/Users/TKU/Desktop/kong_model2/kong_util")
 from build_dataset_combine import Check_dir_exist_and_build_new_dir
-from util import get_dir_certain_file_name
+from util import get_dir_certain_file_names
 import os
 
 import bpy
@@ -24,7 +24,7 @@ def get_dir_blends_and_extract_texture_image_file_name(blender_ord_dir, dst_dir,
 
     Check_dir_exist_and_build_new_dir(dst_dir)  ### 建立 放結果的資料夾
 
-    blender_file_names = get_dir_certain_file_name(blender_ord_dir, certain_word=".blend")  ### 抓出 blender_ord_dir 裡面的 所有.blend 的 file_names
+    blender_file_names = get_dir_certain_file_names(blender_ord_dir, certain_word=".blend")  ### 抓出 blender_ord_dir 裡面的 所有.blend 的 file_names
     for blender_file_name in blender_file_names:
         blender_file_path = f"{blender_ord_dir}/{blender_file_name}"           ### 定位出blender檔的path
         bpy.ops.wm.open_mainfile(filepath=blender_file_path)                   ### 在 Blender 內讀出 .blend 檔
