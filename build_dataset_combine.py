@@ -3,7 +3,7 @@ import shutil
 import cv2
 import numpy as np
 import random
-from util import get_dir_certain_file_names, get_dir_img_file_names, get_dir_exr, get_dir_mat, method1
+from util import get_dir_certain_file_names, get_dir_img_file_names, get_dir_exr, get_dir_mats, method1
 from multiprocess_util import multi_processing_interface
 
 from tqdm import tqdm
@@ -708,7 +708,7 @@ def Save_mat_as_npy(ord_dir, dst_dir, key_name, matplot_visual=False ):
     ### 建立放結果的資料夾
     Check_dir_exist_and_build(dst_dir)
 
-    imgs = get_dir_mat(ord_dir, key_name)
+    imgs = get_dir_mats(ord_dir, key_name)
     file_names = get_dir_certain_file_names(ord_dir, ".mat")
     for i, file_name in enumerate(tqdm(file_names)):
         name = file_name.split(".")[0]

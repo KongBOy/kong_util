@@ -2,7 +2,7 @@ import sys
 sys.path.append("..")
 
 # from step0_access_path import access_path
-from util import get_dir_certain_img, get_dir_img
+from util import get_dir_certain_imgs, get_dir_imgs
 
 import cv2
 import numpy as np
@@ -35,17 +35,17 @@ def Video_combine_from_imgs(imgs, dst_dir, file_name="combine.avi", img_frame_si
     out.release()
 
 def Video_combine_from_certain_dir(ord_dir, dst_dir, file_name="combine.avi"):
-    imgs = get_dir_certain_img( ord_dir, ".png", float_return=False)
+    imgs = get_dir_certain_imgs( ord_dir, ".png", float_return=False)
     Video_combine_from_imgs(imgs, dst_dir, file_name)
 
 def Video_combine_from_dir(ord_dir, dst_dir, file_name="combine.avi", tail_long=True):
     print("doing Video_combine_from_dir")
-    imgs = get_dir_img( ord_dir, float_return=False)
+    imgs = get_dir_imgs( ord_dir, float_return=False)
     Video_combine_from_imgs(imgs, dst_dir, file_name, tail_long=tail_long)
 
 def Video_combine_from_2_certain_dir(ord_dir1, ord_dir2, dst_dir, file_name="combine_2_dir_imgs.avi"):
-    imgs1 = get_dir_certain_img( ord_dir1, ".png", float_return=False)
-    imgs2 = get_dir_certain_img( ord_dir2, ".png", float_return=False)
+    imgs1 = get_dir_certain_imgs( ord_dir1, ".png", float_return=False)
+    imgs2 = get_dir_certain_imgs( ord_dir2, ".png", float_return=False)
     # print("imgs1.shape",imgs1.shape)
     # print("imgs2.shape",imgs2.shape)
 
@@ -66,10 +66,10 @@ def Video_combine_from_certain_dirs(ord_dirs, dst_dir, file_name="combine_2_dir_
         print("doing go_ord_dir:", go_ord_dir)
         result_imgs = None
         if(go_ord_dir == 0):  ### head
-            head_imgs = get_dir_certain_img( ord_dir, ".png", float_return=False)
+            head_imgs = get_dir_certain_imgs( ord_dir, ".png", float_return=False)
             result_imgs = head_imgs
         else:
-            body_imgs = get_dir_certain_img( ord_dir, ".png", float_return=False)
+            body_imgs = get_dir_certain_imgs( ord_dir, ".png", float_return=False)
             min_amount = min(len(head_imgs), len(body_imgs))
             head_imgs = np.concatenate( (head_imgs[:min_amount], body_imgs[:min_amount]), axis=1 )
             result_imgs = head_imgs

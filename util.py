@@ -131,7 +131,7 @@ def get_dir_certain_dir_names(ord_dir, certain_word):
     return file_names
 
 @Check_dir_exist_decorator
-def get_dir_certain_img(ord_dir, certain_word, float_return =True):
+def get_dir_certain_imgs(ord_dir, certain_word, float_return =True):
     file_names = [file_name for file_name in os.listdir(ord_dir) if Check_img_filename(file_name) and (certain_word in file_name) ]
     img_list = []
     for file_name in file_names:
@@ -141,7 +141,7 @@ def get_dir_certain_img(ord_dir, certain_word, float_return =True):
     return img_list
 
 @Check_dir_exist_decorator
-def get_dir_certain_move(ord_dir, certain_word):
+def get_dir_certain_moves(ord_dir, certain_word):
     file_names = [file_name for file_name in os.listdir(ord_dir) if (".npy" in file_name) and (certain_word in file_name)]
     move_map_list = []
     for file_name in file_names:
@@ -150,7 +150,7 @@ def get_dir_certain_move(ord_dir, certain_word):
     return move_map_list
 
 @Check_dir_exist_decorator
-def get_dir_img(ord_dir, float_return =False):
+def get_dir_imgs(ord_dir, float_return =False):
     '''
     bmp, jpg, jpeg, png
     '''
@@ -162,9 +162,16 @@ def get_dir_img(ord_dir, float_return =False):
     else:             img_list = np.array(img_list, dtype=np.uint8)
     return img_list
 
+@Check_dir_exist_decorator
+def get_dir_npys(ord_dir):
+    npy_paths = get_dir_certain_file_paths(ord_dir, certain_word=".npy")
+    npys = []
+    for npy_path in tqdm(npy_paths):
+        npys.append(np.load(npy_path))
+    return np.array(npys)
 
 @Check_dir_exist_decorator
-def get_dir_move(ord_dir):
+def get_dir_moves(ord_dir):
     file_names = [file_name for file_name in os.listdir(ord_dir) if ".npy" in file_name]
     move_map_list = []
     for file_name in file_names:
@@ -195,7 +202,7 @@ def get_dir_exr(ord_dir, rgb=False):  ### 不要 float_return = True 之類的�
 
 
 @Check_dir_exist_decorator
-def get_dir_mat(ord_dir, key):
+def get_dir_mats(ord_dir, key):
     from hdf5storage import loadmat
     # import scipy.io as scio ### 好像這個也可以，也在這邊紀錄一下囉
 
@@ -249,19 +256,19 @@ def get_max_db_move_xy_from_numpy(move_maps):  ### 注意這裡的 max/min 是�
     return max_move_x, max_move_y
 
 def get_max_db_move_xy_from_dir(ord_dir):
-    move_maps = get_dir_move(ord_dir)
+    move_maps = get_dir_moves(ord_dir)
     return get_max_db_move_xy_from_numpy(move_maps)
 
 def get_max_db_move_xy_from_certain_move(ord_dir, certain_word):
-    move_maps = get_dir_certain_move(ord_dir, certain_word)
+    move_maps = get_dir_certain_moves(ord_dir, certain_word)
     return get_max_db_move_xy_from_numpy(move_maps)
 
 
 def get_max_db_move_xy(db_dir="datasets", db_name="1_unet_page_h=384,w=256"):
     move_map_train_path = db_dir + "/" + db_name + "/" + "train/move_maps"
     move_map_test_path  = db_dir + "/" + db_name + "/" + "test/move_maps"
-    train_move_maps = get_dir_move(move_map_train_path)  # (1800, 384, 256, 2)
-    test_move_maps  = get_dir_move(move_map_test_path)   # (200, 384, 256, 2)
+    train_move_maps = get_dir_moves(move_map_train_path)  # (1800, 384, 256, 2)
+    test_move_maps  = get_dir_moves(move_map_test_path)   # (200, 384, 256, 2)
     db_move_maps = np.concatenate((train_move_maps, test_move_maps), axis=0)  # (2000, 384, 256, 2)
 
     max_move_x = db_move_maps[:, :, :, 0].max()
@@ -271,14 +278,14 @@ def get_max_db_move_xy(db_dir="datasets", db_name="1_unet_page_h=384,w=256"):
 #######################################################
 ### 複刻 step6_data_pipline.py 寫的 get_train_test_move_map_db
 def get_maxmin_train_move_from_path(move_map_train_path):
-    train_move_maps = get_dir_move(move_map_train_path)
+    train_move_maps = get_dir_moves(move_map_train_path)
     max_train_move = train_move_maps.max()  ###  236.52951204508076
     min_train_move = train_move_maps.min()  ### -227.09562801056995
     return max_train_move, min_train_move
 
 def get_maxmin_train_move(db_dir="datasets", db_name="1_unet_page_h=384,w=256"):
     move_map_train_path = db_dir + "/" + db_name + "/" + "train/move_maps"
-    train_move_maps = get_dir_move(move_map_train_path)
+    train_move_maps = get_dir_moves(move_map_train_path)
     max_train_move = train_move_maps.max()  ###  236.52951204508076
     min_train_move = train_move_maps.min()  ### -227.09562801056995
     return max_train_move, min_train_move
@@ -339,7 +346,7 @@ def get_flow_reference_map( max_move, max_from_move_dir=False, move_dir="", h_re
     return map2, x_map, y_map
 
 def find_db_max_move(ord_dir):
-    move_map_list = get_dir_move(ord_dir)
+    move_map_list = get_dir_moves(ord_dir)
     max_move = np.absolute(move_map_list).max()
     print("max_move:", max_move)
     return max_move
@@ -399,7 +406,7 @@ def method2(x, y, color_shift=1, bgr2rgb=False, white_bg=True):  ### 最大位�
 #######################################################
 def predict_unet_move_maps_back(predict_move_maps):
     from step0_access_path import access_path
-    train_move_maps = get_dir_move(access_path + "datasets/pad2000-512to256/train/move_maps")
+    train_move_maps = get_dir_moves(access_path + "datasets/pad2000-512to256/train/move_maps")
     max_train_move = train_move_maps.max()
     min_train_move = train_move_maps.min()
     predict_back_list = []
