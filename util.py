@@ -121,12 +121,12 @@ def get_dir_certain_file_paths(ord_dir, certain_word, certain_ext="."):
     return [ord_dir + "/" + file_name for file_name in file_names]
 
 @Check_dir_exist_decorator
-def get_dir_dir_name(ord_dir):
+def get_dir_dir_names(ord_dir):
     file_names = [file_name for file_name in os.listdir(ord_dir) if os.path.isdir(ord_dir + "/" + file_name) ]
     return file_names
 
 @Check_dir_exist_decorator
-def get_dir_certain_dir_name(ord_dir, certain_word):
+def get_dir_certain_dir_names(ord_dir, certain_word):
     file_names = [file_name for file_name in os.listdir(ord_dir) if ((certain_word in file_name) and os.path.isdir(ord_dir + "/" + file_name)) ]
     return file_names
 
