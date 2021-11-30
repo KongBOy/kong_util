@@ -3,8 +3,8 @@ def Show_model_layer_names(model):
         print(layer.name)
 
 
-# def Get_model_weights(model):
-#     for layer in model.layers:
-#         # print(layer.name)
-#         for weight in layer.weights:
-#             print("   ", weight.shape)
+def Show_model_weights(model):
+    for layer in model.layers:
+        print(layer.name)
+        for weight in layer.weights:
+            print("   ", weight.shape)
