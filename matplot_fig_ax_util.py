@@ -77,12 +77,15 @@ class Matplot_ax_util():
 
 class Matplot_fig_util(Matplot_ax_util):
     @staticmethod
-    def Save_fig(dst_dir, epoch, epoch_name="epoch"):
+    def Save_fig(dst_dir, name="epoch", epoch=-999):
         """
         存的長相是：dst_dir/{epoch_name}={epoch}.png
         存完會自動關閉 fig
         """
-        plt.savefig(dst_dir + "/" + "%s=%04i" % (epoch_name, epoch) )
+
+        if(epoch == -999): save_path = dst_dir + "/" + "%s" % (epoch)
+        else:              save_path = dst_dir + "/" + "%s=%04i" % (epoch_name, epoch)
+        plt.savefig(save_path)
         plt.close()  ### 一定要記得關喔！要不然圖開太多會當掉！
 
 class Matplot_util(Matplot_fig_util): pass
