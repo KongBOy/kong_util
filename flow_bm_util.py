@@ -5,6 +5,27 @@ import cv2
 from matplot_fig_ax_util import check_fig_ax_init, move_map_2D_arrow, img_scatter_visual
 from util import get_xy_f_and_m
 
+
+def check_flow_quality_then_I_w_F_to_R(dis_img, flow):
+    '''
+    dis_img: 0~255 uint8   (h, w, 3)
+    flow   : 0~1   float32 (h, w, 3) mask/y/x
+
+    目前的 check 無法 判別 fake_see 或 with C_with_Mgt 的狀況喔～～　因為 Mask 都是幾乎完美的呀 ~~
+    '''
+    h, w = flow.shape[:2]
+    total_pix_amount = h * w
+    valid_mask_pix_amount = (flow[..., 0] >= 0.99).astype(np.int).sum()
+    # print("valid_mask_pix_amount / total_pix_amount:", valid_mask_pix_amount / total_pix_amount)
+    if( valid_mask_pix_amount / total_pix_amount > 0.20):
+        bm  = use_flow_to_get_bm(flow, flow_scale=h)
+        rec = use_bm_to_rec_img (bm  , flow_scale=h, dis_img=dis_img)
+    else:
+        bm  = np.zeros(shape=(h, w, 2))
+        rec = np.zeros(shape=(h, w, 3))
+    return bm, rec
+
+
 def use_flow_to_get_bm(flow, flow_scale):
     '''
     參考code：https://github.com/cvlab-stonybrook/doc3D-dataset/issues/2
@@ -14,7 +35,9 @@ def use_flow_to_get_bm(flow, flow_scale):
 
     result: 值域 0~1
     '''
-    fl = flow.copy()     ### (540, 540, 3)
+    flow = flow.copy()
+    flow [..., 1] = 1 - flow[..., 1]  ### y 上下 flip， 因為blender 裡面 y軸朝上， 影像的 y軸朝下
+    fl = flow  ### (540, 540, 3)
     # msk = fl[:, :, 0] > 0    ### (540, 540)  ### 原本的DewarpNet這樣寫，但是可能是他們處理得很乾淨吧所以可以這樣，我的有雜邊所以需要 >=1 喔！
     msk = fl[:, :, 0] >= 0.99  # 1  ### 幹真的差好多，這樣就對了，self.mask是(540, 540, 3)，msk是(540, 540)所以這行還是要有喔
     # print("bm calculate flow mask.sum()", msk.sum())

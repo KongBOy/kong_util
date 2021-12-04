@@ -353,21 +353,23 @@ def find_db_max_move(ord_dir):
 
 #######################################################
 ### 視覺化方法1：感覺可以！但缺點是沒辦法用cv2，而一定要搭配matplot的imshow來自動填色
-def method1(x, y, max_value=-10000, mask_ch=2):  ### 這個 max_value的值 意義上來說要是整個db內位移最大值喔！這樣子出來的圖的顏色強度才會準確，後來覺得可刪
+def method1(x, y, mask=None, max_value=-10000, mask_ch=2):  ### 這個 max_value的值 意義上來說要是整個db內位移最大值喔！這樣子出來的圖的顏色強度才會準確，後來覺得可刪
     '''
     回傳的 visual_map 的值域 為 0~1
     '''
     h, w = x.shape[:2]
-    z = np.ones(shape=(h, w))          ### step0. mask 全 1
+    if(mask is None):       mask = np.ones(shape=(h, w, 1))          ### step0. mask 全 1
+    if(len(mask.shape)==2): mask = np.expand_dims(mask, -1)
     visual_map = np.dstack((x, y))     ### step1. 把x,y拚再一起同時處理
+    visual_map = visual_map * mask
     max_value = visual_map.max()       ### step2. 先把值弄到 0~1
     min_value = visual_map.min()
     visual_map = (visual_map - min_value) / (max_value - min_value + 0.000000001)
     # print("visual_map.max()", visual_map.max())
     # print("visual_map.min()", visual_map.min())
-    if  (mask_ch == 0): visual_map = np.dstack( (z, visual_map) )                              ### step4.mask再和map concat， mask放 channel1，來給imshow自動決定顏色
-    elif(mask_ch == 1): visual_map = np.dstack( (visual_map[..., 0], z, visual_map[..., 1]) )  ### step4.mask再和map concat， mask放 channel2，來給imshow自動決定顏色
-    elif(mask_ch == 2): visual_map = np.dstack( (visual_map, z) )                              ### step4.mask再和map concat， mask放 channel3，來給imshow自動決定顏色
+    if  (mask_ch == 0): visual_map = np.dstack( (mask, visual_map) )                              ### step4.mask再和map concat， mask放 channel1，來給imshow自動決定顏色
+    elif(mask_ch == 1): visual_map = np.dstack( (visual_map[..., 0], mask, visual_map[..., 1]) )  ### step4.mask再和map concat， mask放 channel2，來給imshow自動決定顏色
+    elif(mask_ch == 2): visual_map = np.dstack( (visual_map, mask) )                              ### step4.mask再和map concat， mask放 channel3，來給imshow自動決定顏色
 #    plt.imshow(visual_map)
     return visual_map
 
