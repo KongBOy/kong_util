@@ -15,14 +15,18 @@ def check_flow_quality_then_I_w_F_to_R(dis_img, flow):
     '''
     h, w = flow.shape[:2]
     total_pix_amount = h * w
-    valid_mask_pix_amount = (flow[..., 0] >= 0.99).astype(np.int).sum()
+    valid_mask_pix_amount = (flow[..., 0] >= 0.90).astype(np.int).sum()
+    # print("dis_img.shape:", dis_img.shape)
+    # print("valid_mask_pix_amount:", valid_mask_pix_amount)
     # print("valid_mask_pix_amount / total_pix_amount:", valid_mask_pix_amount / total_pix_amount)
     if( valid_mask_pix_amount / total_pix_amount > 0.20):
         bm  = use_flow_to_get_bm(flow, flow_scale=h)
         rec = use_bm_to_rec_img (bm  , flow_scale=h, dis_img=dis_img)
+        # print("here1~~~~~~~~~")
     else:
         bm  = np.zeros(shape=(h, w, 2))
         rec = np.zeros(shape=(h, w, 3))
+        # print("here2~~~~~~~~~")
     return bm, rec
 
 

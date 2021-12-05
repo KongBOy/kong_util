@@ -85,8 +85,8 @@ class Matplot_fig_util(Matplot_ax_util):
 
         if(epoch == -999): save_path = dst_dir + "/" + "%s" % name
         else:              save_path = dst_dir + "/" + "%s=%04i" % (name, epoch)
-        print("save_path:", save_path)
-        print("")
+        # print("save_path:", save_path)
+        # print("")
         plt.savefig(save_path)
         plt.close()  ### 一定要記得關喔！要不然圖開太多會當掉！
 
