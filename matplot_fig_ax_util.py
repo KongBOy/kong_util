@@ -299,8 +299,11 @@ class Matplot_multi_row_imgs(Matplot_util):
         self.add_loss = add_loss
 
         self.fig_row_amount   = len(self.r_c_imgs)
-        self.fig_col_amount   = len(self.r_c_imgs[0])
-        self.ax_titles_amount = len(self.r_c_imgs[0])
+
+        col_amounts = []
+        for c_imgs in self.r_c_imgs: col_amounts.append(len(c_imgs))
+        self.fig_col_amount   = max(col_amounts)
+        self.ax_titles_amount = max(col_amounts)
         self._step1_build_check()
 
         self.canvas_height     = None
@@ -332,9 +335,14 @@ class Matplot_multi_row_imgs(Matplot_util):
         return (height // 100 + 0) * 1.2  ### 慢慢試囉～ +1.5是要給title 和 matplot邊界margin喔
 
     def _get_row_col_canvas_width(self):
-        width = 0
-        for col_imgs in self.r_c_imgs[0]: width += col_imgs.shape[1]
-        return (width // 100 + 1) * 1.2  ### 慢慢試囉～
+        def c_imgs_width(c_imgs):
+            width = 0
+            for img in c_imgs: width += img.shape[1]
+            return width
+        widths = []
+        for c_imgs in self.r_c_imgs: widths.append(c_imgs_width(c_imgs))
+        max_width = max(widths)
+        return (max_width // 100 + 1) * 1.2  ### 慢慢試囉～
 
     def _step2_set_canvas_hw_and_build(self):
         ###########################################################
@@ -367,7 +375,7 @@ class Matplot_multi_row_imgs(Matplot_util):
                 if(self.bgr2rgb): col_img = col_img[..., ::-1]  ### 如果有標示 輸入進來的 影像是 bgr，要轉rgb喔！
                 if(self.fig_col_amount > 1):
                     self.ax[go_row, go_col].imshow(col_img)  ### 小畫布 畫上影像，別忘記要bgr -> rgb喔！
-                    if  (len(self.r_c_titles) > 1): self.ax[go_row, go_col].set_title( self.r_c_titles[go_row][go_col], fontsize=16 )  ### 小畫布　標上小標題
+                    if  (len(self.r_c_titles) > 1):                  self.ax[go_row, go_col].set_title( self.r_c_titles[go_row][go_col], fontsize=16 )  ### 小畫布　標上小標題
                     elif(len(self.r_c_titles) == 1 and go_row == 0): self.ax[go_row, go_col].set_title( self.r_c_titles[go_row][go_col], fontsize=16 )  ### 小畫布　標上小標題
 
                     plt.sca(self.ax[go_row, go_col])  ### plt指向目前的 小畫布 這是為了設定 yticks和xticks
@@ -375,7 +383,7 @@ class Matplot_multi_row_imgs(Matplot_util):
                     plt.xticks( (0, col_img.shape[1]), ("", col_img.shape[1]) )  ### 設定 x軸 顯示的字，前面的tuple是位置，後面的tuple是要顯示的字
                 else:  ### 要多這if/else是因為，col_imgs_amount == 1時，ax[]只會有一維！用二維的寫法會出錯！所以才獨立出來寫喔～
                     self.ax[go_row].imshow(col_img)  ### 小畫布 畫上影像
-                    if  (len(self.r_c_titles) > 1 ): self.ax[go_row].set_title( self.r_c_titles[go_row][go_col], fontsize=16 )  ### 小畫布　標上小標題
+                    if  (len(self.r_c_titles) > 1 ):                 self.ax[go_row].set_title( self.r_c_titles[go_row][go_col], fontsize=16 )  ### 小畫布　標上小標題
                     elif(len(self.r_c_titles) == 1 and go_row == 0): self.ax[go_row].set_title( self.r_c_titles[go_row][go_col], fontsize=16 )  ### 小畫布　標上小標題
                     plt.yticks( (0, col_img.shape[0]), (0, col_img.shape[0]) )   ### 設定 y軸 顯示的字，前面的tuple是位置，後面的tuple是要顯示的字
                     plt.xticks( (0, col_img.shape[1]), ("", col_img.shape[1]) )  ### 設定 x軸 顯示的字，前面的tuple是位置，後面的tuple是要顯示的字
