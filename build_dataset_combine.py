@@ -3,7 +3,7 @@ import shutil
 import cv2
 import numpy as np
 import random
-from util import get_dir_certain_file_names, get_dir_img_file_names, get_dir_exr, get_dir_mats, method1
+from util import get_dir_certain_file_names, get_dir_img_file_names, get_dir_exr, get_dir_mats, method1, get_dir_jpg_names
 from multiprocess_util import multi_processing_interface
 
 from tqdm import tqdm
@@ -870,6 +870,18 @@ def Convert_dir_pdf_to_jpg(ord_dir, dst_dir="pdf_to_jpg_result", print_msg=False
             dst_full_path = "%s_%03i.jpg" % (dst_half_path, go_page)  ### 根據 頁碼 定位出 精確 dst_path
             page.save(dst_full_path, "JPEG")
         if(print_msg): print(f"{ord_pdf_path} -> jpg finish")
+
+def Convert_jpg_to_png(ord_dir, dst_dir="jpg_to_png", print_msg=False):
+    import cv2
+    Check_dir_exist_and_build(dst_dir)
+
+    file_names = get_dir_jpg_names(ord_dir)  ### 取得dir 內的 .png
+    for file_name in file_names:
+        ord_jpg_path = f"{ord_dir}/{file_name}"           ### 定位出 來源jpg 的 path
+        dst_png_path = f"{dst_dir}/{file_name[:-4]}.png"  ### 定位出 目標png 的 path
+        img = cv2.imread(ord_jpg_path)
+        cv2.imwrite(dst_png_path, img)
+        if(print_msg): print("ord_jpg_path", ord_jpg_path, "->", dst_png_path, "finish")
 
 
 if(__name__ == "__main__"):

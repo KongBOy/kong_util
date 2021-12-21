@@ -108,12 +108,18 @@ def get_dir_img_paths(ord_dir, float_return =False):
 
 @Check_dir_exist_decorator
 def get_dir_certain_file_names(ord_dir, certain_word, certain_ext=".", certain_word2="."):
-    file_names = [file_name for file_name in os.listdir(ord_dir) if (certain_word in file_name) and (certain_ext in file_name) and (certain_word2 in file_name)]
+    file_names = [file_name for file_name in os.listdir(ord_dir) if (certain_word in file_name) and (certain_ext.lower() in file_name.lower()) and (certain_word2 in file_name)]
     return file_names
 # def get_dir_certain_file_names(ord_dir, certain_word):
 #     if os.path.isdir(ord_dir): file_names = [file_name for file_name in os.listdir(ord_dir) if (certain_word in file_name)]
 #     else: file_names = []
 #     return file_names
+
+@Check_dir_exist_decorator
+def get_dir_jpg_names(ord_dir):
+    file_names  = get_dir_certain_file_names(ord_dir, certain_word=".", certain_ext=".jpg")
+    file_names += get_dir_certain_file_names(ord_dir, certain_word=".", certain_ext=".jpeg")
+    return file_names
 
 @Check_dir_exist_decorator
 def get_dir_certain_file_paths(ord_dir, certain_word, certain_ext="."):
