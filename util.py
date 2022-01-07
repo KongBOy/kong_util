@@ -222,7 +222,7 @@ def get_dir_mats(ord_dir, key):
 
 
 def get_db_amount(ord_dir):
-    file_names = [file_name for file_name in os.listdir(ord_dir) if Check_img_filename(file_name) or (".npy" in file_name) ]
+    file_names = [file_name for file_name in os.listdir(ord_dir) if Check_img_filename(file_name) or (".npy" in file_name) or (".knpy" in file_name) ]
     return len(file_names)
 
 
