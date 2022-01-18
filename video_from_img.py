@@ -82,15 +82,15 @@ def Video_combine_from_certain_dirs(ord_dirs, dst_dir, file_name="combine_2_dir_
 
 
 if(__name__ == "__main__"):
-    from step0_access_path import data_access_path
+    from step0_access_path import Data_Access_Dir
     # from epoch_add_num_into_img import epoch_add_num_into_img
-    dst_dir  = data_access_path + "result" + "/" + "pure_rect2_right-loss_have_shuffle"
-    ord_dir1 = data_access_path + "result" + "/" + "pure_rect2_right-loss_have_shuffle/wei_book_1_type4_complex+page_more_like_20200422-005728_model6_mrf_rect2_127.40_317"
-    ord_dir2 = data_access_path + "result" + "/" + "pure_rect2_right-loss_have_shuffle/wei_book_1_type4_complex+page_more_like_20200422-012527_model5_rect2_128.242_165"
-    ord_dir3 = data_access_path + "result" + "/" + "pure_rect2_right-loss_have_shuffle/wei_book_2_tf1_db_20200420-145132_model6_mrf_rect2_finish"
-    ord_dir4 = data_access_path + "result" + "/" + "pure_rect2_right-loss_have_shuffle/wei_book_2_tf1_db_20200420-145843_model5_rect2_finish"
-    ord_dir5 = data_access_path + "result" + "/" + "pure_rect2_right-loss_have_shuffle/wei_book_3_tf1_db+type4_complex+page_more_like_20200422-011813_model5_rect2_127.35_284"
-    ord_dir6 = data_access_path + "result" + "/" + "pure_rect2_right-loss_have_shuffle/wei_book_3_tf1_db+type4_complex+page_more_like_20200422-012313_model6_mrf_rect2_128.245_143"
+    dst_dir  = Data_Access_Dir + "result" + "/" + "pure_rect2_right-loss_have_shuffle"
+    ord_dir1 = Data_Access_Dir + "result" + "/" + "pure_rect2_right-loss_have_shuffle/wei_book_1_type4_complex+page_more_like_20200422-005728_model6_mrf_rect2_127.40_317"
+    ord_dir2 = Data_Access_Dir + "result" + "/" + "pure_rect2_right-loss_have_shuffle/wei_book_1_type4_complex+page_more_like_20200422-012527_model5_rect2_128.242_165"
+    ord_dir3 = Data_Access_Dir + "result" + "/" + "pure_rect2_right-loss_have_shuffle/wei_book_2_tf1_db_20200420-145132_model6_mrf_rect2_finish"
+    ord_dir4 = Data_Access_Dir + "result" + "/" + "pure_rect2_right-loss_have_shuffle/wei_book_2_tf1_db_20200420-145843_model5_rect2_finish"
+    ord_dir5 = Data_Access_Dir + "result" + "/" + "pure_rect2_right-loss_have_shuffle/wei_book_3_tf1_db+type4_complex+page_more_like_20200422-011813_model5_rect2_127.35_284"
+    ord_dir6 = Data_Access_Dir + "result" + "/" + "pure_rect2_right-loss_have_shuffle/wei_book_3_tf1_db+type4_complex+page_more_like_20200422-012313_model6_mrf_rect2_128.245_143"
 
     ord_dirs = [ord_dir1, ord_dir2, ord_dir3, ord_dir4, ord_dir5, ord_dir6]
     Video_combine_from_certain_dirs(ord_dirs, dst_dir, "combine_1,2,3,4,5,6.avi")
@@ -118,10 +118,10 @@ if(__name__ == "__main__"):
     #                ]
     # for result_name in result_names:
     #     ### 先把 epoch數字 寫上img
-    #     ord_dir = data_access_path + "result" + "/" + result_name
+    #     ord_dir = Data_Access_Dir + "result" + "/" + result_name
     #     dst_dir = ord_dir    + "/" + "epoch_add_num_into_img"
     #     epoch_add_num_into_img(ord_dir, dst_dir)
 
     #     ### 再把img 串成影片
-    #     ord_dir = data_access_path + "result" + "/" + result_name + "/" + "epoch_add_num_into_img"
+    #     ord_dir = Data_Access_Dir + "result" + "/" + result_name + "/" + "epoch_add_num_into_img"
     #     Video_combine_from_certain_dir(ord_dir, dst_dir, "combine.avi")
