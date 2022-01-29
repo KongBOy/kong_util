@@ -6,6 +6,7 @@ import matplotlib.cm as cmx
 import matplotlib.colors as colors
 import matplotlib.patches as patches
 from mpl_toolkits.mplot3d.art3d import Line3DCollection, Poly3DCollection
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 import sys
 LOSS_YLIM = 2.0
@@ -97,12 +98,13 @@ class Matplot_util(Matplot_fig_util): pass
 
 
 class Matplot_single_row_imgs(Matplot_util):
-    def __init__(self, imgs, img_titles, fig_title, pure_img=False, bgr2rgb=False, add_loss=False):
+    def __init__(self, imgs, img_titles, fig_title, pure_img=False, bgr2rgb=False, add_loss=False, where_colorbar=None):
         self.imgs       = imgs  ### imgs是個list，裡面放的圖片可能不一樣大喔
         self.img_titles = img_titles
         self.fig_title  = fig_title
         self.pure_img   = pure_img
         self.bgr2rgb    = bgr2rgb
+        self.where_colorbar = where_colorbar
 
         self.add_loss   = add_loss
 
@@ -256,10 +258,15 @@ class Matplot_single_row_imgs(Matplot_util):
 
             ### 因為上面有包成 ax[...]，以下統一用 ax[...] 的方式來處理囉！ 就不用 多寫一個if/else來區分 ax/ax[...] 不同的操作方式了！
             if(not self.pure_img):
-                used_ax[go_img].imshow(img)  ### 小畫布 畫上影像，別忘記要bgr -> rgb喔！
+                used_ax_img = used_ax[go_img].imshow(img, vmin=0, vmax=1)  ### 小畫布 畫上影像，別忘記要bgr -> rgb喔！
                 used_ax[go_img].set_title( self.img_titles[go_img].replace("_&&_", "\n"), fontsize=16 )  ### 小畫布上的 title
                 used_ax[go_img].set_yticks( (0, img.shape[0]) )   ### 設定 y軸 顯示的字，tuple是要顯示的數字， 目前是顯示 0 和 h
                 used_ax[go_img].set_xticks( (0, img.shape[1]) )   ### 設定 x軸 顯示的字，tuple是要顯示的數字
+                if(self.where_colorbar is not None):
+                    if(self.where_colorbar[go_img] is not None):
+                        divider = make_axes_locatable(used_ax[go_img])
+                        cax = divider.append_axes("right", size="5%", pad=0.1)
+                        self.fig.colorbar(used_ax_img, cax=cax, orientation="vertical")
             else:  ### 目前的 pure_img 只有給 SIFT_d 來用， 所以就先針對他 來 設計要怎麼 show 圖囉！
                 ax_img = used_ax[go_img].imshow(img, vmin=0, vmax=50)
                 used_ax[go_img].set_yticks(())  ### 設定 y軸 不顯示字
@@ -291,12 +298,13 @@ class Matplot_single_row_imgs(Matplot_util):
 ##########################################################################################################################################################
 ##########################################################################################################################################################
 class Matplot_multi_row_imgs(Matplot_util):
-    def __init__(self, rows_cols_imgs, rows_cols_titles, fig_title, bgr2rgb=True, add_loss=False):
+    def __init__(self, rows_cols_imgs, rows_cols_titles, fig_title, bgr2rgb=True, add_loss=False, where_colorbar=None):
         self.r_c_imgs = rows_cols_imgs
         self.r_c_titles = rows_cols_titles
         self.fig_title = fig_title
         self.bgr2rgb = bgr2rgb
         self.add_loss = add_loss
+        self.where_colorbar = where_colorbar
 
         self.fig_row_amount   = len(self.r_c_imgs)
 
@@ -374,19 +382,29 @@ class Matplot_multi_row_imgs(Matplot_util):
             for go_col, col_img in enumerate(row_imgs):
                 if(self.bgr2rgb): col_img = col_img[..., ::-1]  ### 如果有標示 輸入進來的 影像是 bgr，要轉rgb喔！
                 if(self.fig_col_amount > 1):
-                    self.ax[go_row, go_col].imshow(col_img)  ### 小畫布 畫上影像，別忘記要bgr -> rgb喔！
+                    ax_img = self.ax[go_row, go_col].imshow(col_img, vmin=0, vmax=1)  ### 小畫布 畫上影像，別忘記要bgr -> rgb喔！
                     if  (len(self.r_c_titles) > 1):                  self.ax[go_row, go_col].set_title( self.r_c_titles[go_row][go_col].replace("_&&_", "\n"), fontsize=16 )  ### 小畫布　標上小標題
                     elif(len(self.r_c_titles) == 1 and go_row == 0): self.ax[go_row, go_col].set_title( self.r_c_titles[go_row][go_col].replace("_&&_", "\n"), fontsize=16 )  ### 小畫布　標上小標題
 
                     plt.sca(self.ax[go_row, go_col])  ### plt指向目前的 小畫布 這是為了設定 yticks和xticks
                     plt.yticks( (0, col_img.shape[0]), (0, col_img.shape[0]) )   ### 設定 y軸 顯示的字，前面的tuple是位置，後面的tuple是要顯示的字
                     plt.xticks( (0, col_img.shape[1]), ("", col_img.shape[1]) )  ### 設定 x軸 顯示的字，前面的tuple是位置，後面的tuple是要顯示的字
+                    if(self.where_colorbar is not None):
+                        if(self.where_colorbar[go_row, go_col] is not None):
+                            divider = make_axes_locatable(self.ax[go_row, go_col])
+                            cax = divider.append_axes("right", size="5%", pad=0.1)
+                            self.fig.colorbar(ax_img, cax=cax, orientation="vertical")
                 else:  ### 要多這if/else是因為，col_imgs_amount == 1時，ax[]只會有一維！用二維的寫法會出錯！所以才獨立出來寫喔～
-                    self.ax[go_row].imshow(col_img)  ### 小畫布 畫上影像
+                    ax_img = self.ax[go_row].imshow(col_img)  ### 小畫布 畫上影像
                     if  (len(self.r_c_titles) > 1 ):                 self.ax[go_row].set_title( self.r_c_titles[go_row][go_col].replace("_&&_", "\n"), fontsize=16 )  ### 小畫布　標上小標題
                     elif(len(self.r_c_titles) == 1 and go_row == 0): self.ax[go_row].set_title( self.r_c_titles[go_row][go_col].replace("_&&_", "\n"), fontsize=16 )  ### 小畫布　標上小標題
                     plt.yticks( (0, col_img.shape[0]), (0, col_img.shape[0]) )   ### 設定 y軸 顯示的字，前面的tuple是位置，後面的tuple是要顯示的字
                     plt.xticks( (0, col_img.shape[1]), ("", col_img.shape[1]) )  ### 設定 x軸 顯示的字，前面的tuple是位置，後面的tuple是要顯示的字
+                    if(self.where_colorbar is not None):
+                        if(self.where_colorbar[go_row] is not None):
+                            divider = make_axes_locatable(self.ax[go_row])
+                            cax = divider.append_axes("right", size="5%", pad=0.1)
+                            self.fig.colorbar(ax_img, cax=cax, orientation="vertical")
 
     def Draw_img(self):
         self._step3_draw()
