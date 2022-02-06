@@ -98,13 +98,14 @@ class Matplot_util(Matplot_fig_util): pass
 
 
 class Matplot_single_row_imgs(Matplot_util):
-    def __init__(self, imgs, img_titles, fig_title, pure_img=False, bgr2rgb=False, add_loss=False, where_colorbar=None):
+    def __init__(self, imgs, img_titles, fig_title, pure_img=False, bgr2rgb=False, add_loss=False, where_colorbar=None, w_same_as_first=False):
         self.imgs       = imgs  ### imgs是個list，裡面放的圖片可能不一樣大喔
         self.img_titles = img_titles
         self.fig_title  = fig_title
         self.pure_img   = pure_img
         self.bgr2rgb    = bgr2rgb
         self.where_colorbar = where_colorbar
+        self.w_same_as_first = w_same_as_first
 
         self.add_loss   = add_loss
 
@@ -149,7 +150,9 @@ class Matplot_single_row_imgs(Matplot_util):
 
     def _step0_b_get_one_row_canvas_width(self):
         width = 0
-        for img in self.imgs: width += img.shape[1]
+        if(self.w_same_as_first): width = self.imgs[0].shape[1] * len(self.imgs)
+        else:
+            for img in self.imgs:  width += img.shape[1]
         if(self.pure_img): return  (width / 100 + 0) * 1.00  ### 純影像 沒有任何其他東西
         else:              return  (width / 100 + 0) * 1.15  ### 1.15 就慢慢試出來的囉～因為除了圖以外 還會有旁邊軸的標籤 和 margin也會被算進圖的大小裡， 所以要算比原圖大一點 才能讓show出的影像跟原始影像差不多大 col=1時
         # if  (self.fig_col_amount == 1): return  (width // 100 + 0) * 1.15  ### 1.1 就慢慢試出來的囉～因為除了圖以外 還會有旁邊軸的標籤 和 margin也會被算進圖的大小裡， 所以要算比原圖大一點 才能讓show出的影像跟原始影像差不多大 col=1時
@@ -298,13 +301,14 @@ class Matplot_single_row_imgs(Matplot_util):
 ##########################################################################################################################################################
 ##########################################################################################################################################################
 class Matplot_multi_row_imgs(Matplot_util):
-    def __init__(self, rows_cols_imgs, rows_cols_titles, fig_title, bgr2rgb=True, add_loss=False, where_colorbar=None):
+    def __init__(self, rows_cols_imgs, rows_cols_titles, fig_title, bgr2rgb=True, add_loss=False, where_colorbar=None, w_same_as_first=False):
         self.r_c_imgs = rows_cols_imgs
         self.r_c_titles = rows_cols_titles
         self.fig_title = fig_title
         self.bgr2rgb = bgr2rgb
         self.add_loss = add_loss
         self.where_colorbar = where_colorbar
+        self.w_same_as_first = w_same_as_first
 
         self.fig_row_amount   = len(self.r_c_imgs)
 
@@ -345,7 +349,10 @@ class Matplot_multi_row_imgs(Matplot_util):
     def _get_row_col_canvas_width(self):
         def c_imgs_width(c_imgs):
             width = 0
-            for img in c_imgs: width += img.shape[1]
+            if(self.w_same_as_first):
+                width = c_imgs[0].shape[1] * len(c_imgs)
+            else:
+                for img in c_imgs: width += img.shape[1]
             return width
         widths = []
         for c_imgs in self.r_c_imgs: widths.append(c_imgs_width(c_imgs))
@@ -357,6 +364,7 @@ class Matplot_multi_row_imgs(Matplot_util):
         ### 設定canvas的大小
         self.canvas_height = self._get_row_col_canvas_height()
         self.canvas_width  = self._get_row_col_canvas_width ()
+        # print("self.canvas_width, self.canvas_height", self.canvas_width, self.canvas_height)
         if(self.add_loss):   ### 多一些空間來畫loss
             self.fig_row_amount += 1  ### 多一row來畫loss
             self.canvas_height += 3.0  ### 慢慢試囉～
@@ -390,7 +398,7 @@ class Matplot_multi_row_imgs(Matplot_util):
                     plt.yticks( (0, col_img.shape[0]), (0, col_img.shape[0]) )   ### 設定 y軸 顯示的字，前面的tuple是位置，後面的tuple是要顯示的字
                     plt.xticks( (0, col_img.shape[1]), ("", col_img.shape[1]) )  ### 設定 x軸 顯示的字，前面的tuple是位置，後面的tuple是要顯示的字
                     if(self.where_colorbar is not None):
-                        if(self.where_colorbar[go_row, go_col] is not None):
+                        if(self.where_colorbar[go_row][go_col] is not None):
                             divider = make_axes_locatable(self.ax[go_row, go_col])
                             cax = divider.append_axes("right", size="5%", pad=0.1)
                             self.fig.colorbar(ax_img, cax=cax, orientation="vertical")
