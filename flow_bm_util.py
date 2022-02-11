@@ -32,6 +32,9 @@ def check_flow_quality_then_I_w_F_to_R(dis_img, flow):
 
 def use_flow_to_get_bm(flow, flow_scale):
     '''
+    input:
+        flow: H, W, 3， ch1:Mask, ch2:y, ch3:x
+
     參考code：https://github.com/cvlab-stonybrook/doc3D-dataset/issues/2
 
     fl: the forward mapping in range [0,1]
@@ -160,3 +163,48 @@ def dis_bm_rec_visual( dis_img, bm, rec_img, img_smaller=0.5,
     #     show_before_move_coord=False, before_alpha=0.8,
     #     show_after_move_coord =True, after_alpha=0.10, after_C="red",
     #     fig=fig, ax=ax, ax_c=1)
+
+if(__name__ == "__main__"):
+    import os
+    import numpy as np
+    import cv2
+    import matplotlib.pyplot as plt
+
+    dis_dir = r"J:\kong_render_os_book_and_paper_all_have_dtd_hdr_mix_bg_512\0_image"
+    dis_file_names = os.listdir(dis_dir)
+
+    uv_dir = r"J:\kong_render_os_book_and_paper_all_have_dtd_hdr_mix_bg_512\1_uv_npy"
+    uv_file_names = os.listdir(uv_dir)
+    for go_f, _ in enumerate(os.listdir(uv_dir)):
+        dis_path = f"{dis_dir}/{dis_file_names[go_f]}"
+        dis_img = cv2.imread(dis_path)
+
+        uv_path  = f"{uv_dir}/{uv_file_names[go_f]}"
+        uv = np.load(uv_path)
+        h, w, c = uv.shape
+        m = uv[..., 0]
+        y = uv[..., 1]
+        x = uv[..., 2]
+        bm  = use_flow_to_get_bm(uv, flow_scale=h)
+        bm_y = bm[..., 0]
+        bm_x = bm[..., 1]
+
+
+        from flow_bm_tf_try import bilinear_sampler
+        tf_dis_img = dis_img[np.newaxis, ...].astype(np.float32)
+        tf_x       = x      [np.newaxis, ...]
+        tf_y       = y      [np.newaxis, ...]
+        tf_bm_x    = bm_x   [np.newaxis, ...]
+        tf_bm_y    = bm_y   [np.newaxis, ...]
+        result = bilinear_sampler(tf_dis_img, tf_bm_x, tf_bm_y)
+        # result = bilinear_sampler(tf_dis_img, tf_x, tf_y)
+        
+        print(result.shape)
+        print(result.numpy().max())
+        print(result.numpy().min())
+        # fig, ax = plt.subplots(nrows=1, ncols=3)
+        # ax[0].imshow(m)
+        # ax[1].imshow(dis_img)
+        # ax[2].imshow(result[0].numpy().astype(np.uint8))
+        # plt.show()
+
