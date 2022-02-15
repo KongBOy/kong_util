@@ -98,7 +98,7 @@ class Matplot_util(Matplot_fig_util): pass
 
 
 class Matplot_single_row_imgs(Matplot_util):
-    def __init__(self, imgs, img_titles, fig_title, pure_img=False, bgr2rgb=False, add_loss=False, where_colorbar=None, w_same_as_first=False):
+    def __init__(self, imgs, img_titles, fig_title, pure_img=False, bgr2rgb=False, add_loss=False, where_colorbar=None, w_same_as_first=False, one_ch_vmin=None, one_ch_vmax=None):
         self.imgs       = imgs  ### imgs是個list，裡面放的圖片可能不一樣大喔
         self.img_titles = img_titles
         self.fig_title  = fig_title
@@ -106,6 +106,8 @@ class Matplot_single_row_imgs(Matplot_util):
         self.bgr2rgb    = bgr2rgb
         self.where_colorbar = where_colorbar
         self.w_same_as_first = w_same_as_first
+        self.one_ch_vmin = one_ch_vmin
+        self.one_ch_vmax = one_ch_vmax
 
         self.add_loss   = add_loss
 
@@ -261,7 +263,7 @@ class Matplot_single_row_imgs(Matplot_util):
 
             ### 因為上面有包成 ax[...]，以下統一用 ax[...] 的方式來處理囉！ 就不用 多寫一個if/else來區分 ax/ax[...] 不同的操作方式了！
             if(not self.pure_img):
-                used_ax_img = used_ax[go_img].imshow(img, vmin=0, vmax=1)  ### 小畫布 畫上影像，別忘記要bgr -> rgb喔！
+                used_ax_img = used_ax[go_img].imshow(img, vmin=self.one_ch_vmin, vmax=self.one_ch_vmax)  ### 小畫布 畫上影像，別忘記要bgr -> rgb喔！
                 used_ax[go_img].set_title( self.img_titles[go_img].replace("_&&_", "\n"), fontsize=16 )  ### 小畫布上的 title
                 used_ax[go_img].set_yticks( (0, img.shape[0]) )   ### 設定 y軸 顯示的字，tuple是要顯示的數字， 目前是顯示 0 和 h
                 used_ax[go_img].set_xticks( (0, img.shape[1]) )   ### 設定 x軸 顯示的字，tuple是要顯示的數字
@@ -301,7 +303,7 @@ class Matplot_single_row_imgs(Matplot_util):
 ##########################################################################################################################################################
 ##########################################################################################################################################################
 class Matplot_multi_row_imgs(Matplot_util):
-    def __init__(self, rows_cols_imgs, rows_cols_titles, fig_title, bgr2rgb=True, add_loss=False, where_colorbar=None, w_same_as_first=False):
+    def __init__(self, rows_cols_imgs, rows_cols_titles, fig_title, bgr2rgb=True, add_loss=False, where_colorbar=None, w_same_as_first=False, one_ch_vmin=None, one_ch_vmax=None):
         self.r_c_imgs = rows_cols_imgs
         self.r_c_titles = rows_cols_titles
         self.fig_title = fig_title
@@ -309,6 +311,8 @@ class Matplot_multi_row_imgs(Matplot_util):
         self.add_loss = add_loss
         self.where_colorbar = where_colorbar
         self.w_same_as_first = w_same_as_first
+        self.one_ch_vmin = one_ch_vmin
+        self.one_ch_vmax = one_ch_vmax
 
         self.fig_row_amount   = len(self.r_c_imgs)
 
@@ -390,7 +394,7 @@ class Matplot_multi_row_imgs(Matplot_util):
             for go_col, col_img in enumerate(row_imgs):
                 if(self.bgr2rgb): col_img = col_img[..., ::-1]  ### 如果有標示 輸入進來的 影像是 bgr，要轉rgb喔！
                 if(self.fig_col_amount > 1):
-                    ax_img = self.ax[go_row, go_col].imshow(col_img, vmin=0, vmax=1)  ### 小畫布 畫上影像，別忘記要bgr -> rgb喔！
+                    ax_img = self.ax[go_row, go_col].imshow(col_img, vmin=self.one_ch_vmin, vmax=self.one_ch_vmax)  ### 小畫布 畫上影像，別忘記要bgr -> rgb喔！
                     if  (len(self.r_c_titles) > 1):                  self.ax[go_row, go_col].set_title( self.r_c_titles[go_row][go_col].replace("_&&_", "\n"), fontsize=16 )  ### 小畫布　標上小標題
                     elif(len(self.r_c_titles) == 1 and go_row == 0): self.ax[go_row, go_col].set_title( self.r_c_titles[go_row][go_col].replace("_&&_", "\n"), fontsize=16 )  ### 小畫布　標上小標題
 
