@@ -269,7 +269,7 @@ class Matplot_single_row_imgs(Matplot_util):
                 used_ax[go_img].set_xticks( (0, img.shape[1]) )   ### 設定 x軸 顯示的字，tuple是要顯示的數字
                 if(self.where_colorbar is not None):
                     if(self.where_colorbar[go_img] is not None):
-                        divider = make_axes_locatable(used_ax[go_img])
+                        divider = make_axes_locatable(used_ax[go_img])  ### 參考：https://matplotlib.org/stable/gallery/axes_grid1/simple_colorbar.html#sphx-glr-gallery-axes-grid1-simple-colorbar-py
                         cax = divider.append_axes("right", size="5%", pad=0.1)
                         self.fig.colorbar(used_ax_img, cax=cax, orientation="vertical")
             else:  ### 目前的 pure_img 只有給 SIFT_d 來用， 所以就先針對他 來 設計要怎麼 show 圖囉！
@@ -403,7 +403,7 @@ class Matplot_multi_row_imgs(Matplot_util):
                     plt.xticks( (0, col_img.shape[1]), ("", col_img.shape[1]) )  ### 設定 x軸 顯示的字，前面的tuple是位置，後面的tuple是要顯示的字
                     if(self.where_colorbar is not None):
                         if(self.where_colorbar[go_row][go_col] is not None):
-                            divider = make_axes_locatable(self.ax[go_row, go_col])
+                            divider = make_axes_locatable(self.ax[go_row, go_col])  ### 參考：https://matplotlib.org/stable/gallery/axes_grid1/simple_colorbar.html#sphx-glr-gallery-axes-grid1-simple-colorbar-py
                             cax = divider.append_axes("right", size="5%", pad=0.1)
                             self.fig.colorbar(ax_img, cax=cax, orientation="vertical")
                 else:  ### 要多這if/else是因為，col_imgs_amount == 1時，ax[]只會有一維！用二維的寫法會出錯！所以才獨立出來寫喔～
@@ -414,7 +414,7 @@ class Matplot_multi_row_imgs(Matplot_util):
                     plt.xticks( (0, col_img.shape[1]), ("", col_img.shape[1]) )  ### 設定 x軸 顯示的字，前面的tuple是位置，後面的tuple是要顯示的字
                     if(self.where_colorbar is not None):
                         if(self.where_colorbar[go_row] is not None):
-                            divider = make_axes_locatable(self.ax[go_row])
+                            divider = make_axes_locatable(self.ax[go_row])  ### 參考：https://matplotlib.org/stable/gallery/axes_grid1/simple_colorbar.html#sphx-glr-gallery-axes-grid1-simple-colorbar-py
                             cax = divider.append_axes("right", size="5%", pad=0.1)
                             self.fig.colorbar(ax_img, cax=cax, orientation="vertical")
 
