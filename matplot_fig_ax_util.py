@@ -264,7 +264,11 @@ class Matplot_single_row_imgs(Matplot_util):
             ### 因為上面有包成 ax[...]，以下統一用 ax[...] 的方式來處理囉！ 就不用 多寫一個if/else來區分 ax/ax[...] 不同的操作方式了！
             if(not self.pure_img):
                 used_ax_img = used_ax[go_img].imshow(img, vmin=self.one_ch_vmin, vmax=self.one_ch_vmax)  ### 小畫布 畫上影像，別忘記要bgr -> rgb喔！
-                used_ax[go_img].set_title( self.img_titles[go_img].replace("_&&_", "\n"), fontsize=16 )  ### 小畫布上的 title
+                ### title 一些換行的地方處理一下
+                proced_title = self.img_titles[go_img]
+                if("_&&_" in self.img_titles[go_img]): proced_title = proced_title.replace("_&&_", "\n")
+                if("__" in self.img_titles[go_img] and "_&&_" not in self.img_titles[go_img]):  proced_title = proced_title.replace("__", "\n")
+                used_ax[go_img].set_title( proced_title, fontsize=16 )  ### 小畫布上的 title
                 used_ax[go_img].set_yticks( (0, img.shape[0]) )   ### 設定 y軸 顯示的字，tuple是要顯示的數字， 目前是顯示 0 和 h
                 used_ax[go_img].set_xticks( (0, img.shape[1]) )   ### 設定 x軸 顯示的字，tuple是要顯示的數字
                 if(self.where_colorbar is not None):
@@ -346,18 +350,62 @@ class Matplot_multi_row_imgs(Matplot_util):
             print("本function 不能處理 single_row_imgs喔，因為matplot在row只有1時的維度跟1以上時不同！麻煩呼叫相對應處理single_row的function！")
 
     def _get_row_col_canvas_height(self):
-        height = 0
-        for row_imgs in self.r_c_imgs: height += row_imgs[0].shape[0]
-        return (height // 100 + 0) * 1.2  ### 慢慢試囉～ +1.5是要給title 和 matplot邊界margin喔
+        '''
+        有可能 會有 None 的情況， 所以要考慮整體的狀況才能決定 height 喔
+        '''
+        BIG_NUM = 1000000
+        height_acc = 0
+        h_ord = []
+        h_without_None = []
+        ### 先記錄 heights 狀況
+        for c_imgs in self.r_c_imgs:
+            # print("c_imgs[0]", c_imgs[0])
+            if   (c_imgs[0] is not None): h_ord.append(c_imgs[0].shape[0])
+            else: h_ord.append(BIG_NUM)  ### 隨便一個很大的數字
+        # print("h_ord", h_ord)
+        h_without_None = h_ord.copy()
+
+        ### 把 heights 為 None 的 地方替換成 heights的最小值
+        for go_h, h in enumerate(h_ord):
+            if(h == BIG_NUM):  ### 如果 為 None
+                if(min(h_ord) == BIG_NUM):
+                    print("出事了， 每個row 的第一個影像全都沒結果， 目前的寫法 '只靠'第一個影像來抓高度， 所以不給過喔， 要不然就要花時間 升級 我的code 從 '只靠'第一個影像 變成  結合多個 col 來判斷這樣子")
+                    exit()
+                else: h_without_None[go_h] = min(h_ord)
+
+        ### 把 heights 累加起來
+        for height in h_without_None: height_acc += height
+        # print("height_acc", height_acc)
+        return (height_acc // 100 + 0) * 1.2  ### 慢慢試囉～ +1.5是要給title 和 matplot邊界margin喔
 
     def _get_row_col_canvas_width(self):
+        '''
+        有可能 會有 None 的情況， 所以要考慮整體的狀況才能決定 width 喔
+        '''
         def c_imgs_width(c_imgs):
-            width = 0
-            if(self.w_same_as_first):
-                width = c_imgs[0].shape[1] * len(c_imgs)
-            else:
-                for img in c_imgs: width += img.shape[1]
-            return width
+            BIG_NUM = 1000000
+            w_ord = []
+            w_without_None = []
+            ### 先記錄 width 狀況
+            for img in c_imgs:
+                if   (img is not None): w_ord.append(img.shape[1])
+                else: w_ord.append(BIG_NUM)  ### 隨便一個很大的數字
+            w_without_None = w_ord.copy()
+
+            ### 把 width 為 None 的 地方替換成 widths的最小值
+            for go_w, w in enumerate(w_ord):
+                if(w == BIG_NUM):
+                    if(min(w_ord) == BIG_NUM): w_without_None[go_w] = 0  ### 如果 全為 None， 指派 0
+                    else: w_without_None[go_w] = min(w_ord)  ### 把 None 替換成 widths的最小值
+
+            ### 把 widths 累加起來
+            width_acc = 0
+            if(self.w_same_as_first):  ### 如果指定 所有影像的寬度 和 第一張影像一樣寬
+                width_acc = w_without_None[0] * len(c_imgs)
+            else:  ### 各影像寬度累加
+                for width in w_without_None: width_acc += width
+            # print("width_acc", width_acc)
+            return width_acc
         widths = []
         for c_imgs in self.r_c_imgs: widths.append(c_imgs_width(c_imgs))
         max_width = max(widths)
@@ -393,10 +441,15 @@ class Matplot_multi_row_imgs(Matplot_util):
         for go_row, row_imgs in enumerate(self.r_c_imgs):
             for go_col, col_img in enumerate(row_imgs):
                 if(self.bgr2rgb): col_img = col_img[..., ::-1]  ### 如果有標示 輸入進來的 影像是 bgr，要轉rgb喔！
+                ### title 一些換行的地方處理一下
+                proced_title = self.r_c_titles[go_row][go_col]
+                if("_&&_" in self.r_c_titles[go_row][go_col]):                                                    proced_title = proced_title.replace("_&&_", "\n")
+                if("__"   in self.r_c_titles[go_row][go_col] and "_&&_" not in self.r_c_titles[go_row][go_col]):  proced_title = proced_title.replace("__", "\n")
+
                 if(self.fig_col_amount > 1):
                     ax_img = self.ax[go_row, go_col].imshow(col_img, vmin=self.one_ch_vmin, vmax=self.one_ch_vmax)  ### 小畫布 畫上影像，別忘記要bgr -> rgb喔！
-                    if  (len(self.r_c_titles) > 1):                  self.ax[go_row, go_col].set_title( self.r_c_titles[go_row][go_col].replace("_&&_", "\n"), fontsize=16 )  ### 小畫布　標上小標題
-                    elif(len(self.r_c_titles) == 1 and go_row == 0): self.ax[go_row, go_col].set_title( self.r_c_titles[go_row][go_col].replace("_&&_", "\n"), fontsize=16 )  ### 小畫布　標上小標題
+                    if  (len(self.r_c_titles) >  1):                  self.ax[go_row, go_col].set_title( proced_title, fontsize=16 )  ### 小畫布　標上小標題
+                    elif(len(self.r_c_titles) == 1 and go_row == 0): self.ax[go_row, go_col].set_title( proced_title, fontsize=16 )  ### 小畫布　標上小標題
 
                     plt.sca(self.ax[go_row, go_col])  ### plt指向目前的 小畫布 這是為了設定 yticks和xticks
                     plt.yticks( (0, col_img.shape[0]), (0, col_img.shape[0]) )   ### 設定 y軸 顯示的字，前面的tuple是位置，後面的tuple是要顯示的字
@@ -408,8 +461,8 @@ class Matplot_multi_row_imgs(Matplot_util):
                             self.fig.colorbar(ax_img, cax=cax, orientation="vertical")
                 else:  ### 要多這if/else是因為，col_imgs_amount == 1時，ax[]只會有一維！用二維的寫法會出錯！所以才獨立出來寫喔～
                     ax_img = self.ax[go_row].imshow(col_img)  ### 小畫布 畫上影像
-                    if  (len(self.r_c_titles) > 1 ):                 self.ax[go_row].set_title( self.r_c_titles[go_row][go_col].replace("_&&_", "\n"), fontsize=16 )  ### 小畫布　標上小標題
-                    elif(len(self.r_c_titles) == 1 and go_row == 0): self.ax[go_row].set_title( self.r_c_titles[go_row][go_col].replace("_&&_", "\n"), fontsize=16 )  ### 小畫布　標上小標題
+                    if  (len(self.r_c_titles) >  1):                 self.ax[go_row].set_title( proced_title, fontsize=16 )  ### 小畫布　標上小標題
+                    elif(len(self.r_c_titles) == 1 and go_row == 0): self.ax[go_row].set_title( proced_title, fontsize=16 )  ### 小畫布　標上小標題
                     plt.yticks( (0, col_img.shape[0]), (0, col_img.shape[0]) )   ### 設定 y軸 顯示的字，前面的tuple是位置，後面的tuple是要顯示的字
                     plt.xticks( (0, col_img.shape[1]), ("", col_img.shape[1]) )  ### 設定 x軸 顯示的字，前面的tuple是位置，後面的tuple是要顯示的字
                     if(self.where_colorbar is not None):
