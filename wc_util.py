@@ -136,10 +136,15 @@ if(__name__ == "__main__"):
     import matplotlib.pyplot as plt
     import time
     from tqdm import tqdm
-    WM_dir = r"J:\kong_render_os_book_and_paper_all_have_dtd_hdr_mix_bg_512\2_wc_w_M_npy"
+    import os
+    # WM_dir = r"J:\kong_render_os_book_and_paper_all_have_dtd_hdr_mix_bg_512\2_wc_w_M_npy"
+    WM_dir = r"C:\Users\CVML\Desktop\see001_manually\kong_render_os_book_and_paper_all_have_dtd_hdr_mix_bg_512\2_wc_w_M_npy"
     WM_file_names = os.listdir(WM_dir)
 
-    dst_dir = r"J:\kong_render_os_book_and_paper_all_have_dtd_hdr_mix_bg_512\2_wc_w_M_npy_3D_visual"
+    # dst_dir = r"J:\kong_render_os_book_and_paper_all_have_dtd_hdr_mix_bg_512\2_wc_w_M_npy_3D_visual"
+
+    dst_dir = r"C:\Users\CVML\Desktop\see001_manually\kong_render_os_book_and_paper_all_have_dtd_hdr_mix_bg_512\2_wc_w_M_npy_3D_visual"
+    os.makedirs(dst_dir, exist_ok=True)
     for go_f, _ in enumerate(tqdm(os.listdir(WM_dir))):
         start_time = time.time()
         WM_path = f"{WM_dir}/{WM_file_names[go_f]}"
