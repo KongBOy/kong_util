@@ -46,7 +46,7 @@ def use_flow_to_get_bm(flow, flow_scale):
     flow [..., 1] = 1 - flow[..., 1]  ### y 上下 flip， 因為blender 裡面 y軸朝上， 影像的 y軸朝下
     fl = flow  ### (540, 540, 3)
     # msk = fl[:, :, 0] > 0    ### (540, 540)  ### 原本的DewarpNet這樣寫，但是可能是他們處理得很乾淨吧所以可以這樣，我的有雜邊所以需要 >=1 喔！
-    msk = fl[:, :, 0] >= 0.99  # 1  ### 幹真的差好多，這樣就對了，self.mask是(540, 540, 3)，msk是(540, 540)所以這行還是要有喔
+    msk = fl[:, :, 0] >= 0.99  # 1  ### 幹真的差好多，這樣就對了，self.mask是(540, 540, 3)，msk是(540, 540)所以這行還是要有喔， 原版只有 >0
     # print("bm calculate flow mask.sum()", msk.sum())
 
     ### 以下 分完 sh, sw 以後再仔細思考，好像這個只用 s 的才是最正確的，所以sh, sw 都設一樣囉，這版griddata沒有配好
@@ -74,21 +74,49 @@ def use_flow_to_get_bm(flow, flow_scale):
     result = np.stack([vy, vx], axis=-1)  ### (540, 540, 2), ch1:y, ch2:x
     return result
 
+# def use_bm_to_rec_img_old(bm, flow_scale, dis_img):
+#     bm = np.around(bm * flow_scale)
+
+#     sh = flow_scale
+#     sw = flow_scale
+#     # s2 = np.array([[[sh, sw]]])
+#     # bm = np.around(self.bm * s2)
+
+#     bm = bm.astype(np.int32)
+#     bm = np.clip(bm, 0, flow_scale - 1)
+#     # print("bm.max()", bm.max())
+#     # print("bm.min()", bm.min())
+#     result = dis_img[bm[..., 0], bm[..., 1], :]  ### 根據 bm 去 dis_img 把 圖片攤平
+#     result = cv2.resize(result, (sh, sw))  ### 覺得如果根據blender的運作原理，應該還是bm回 方形， 再 resize成自己要的形狀 比較符合 blender的運作
+#     return result
+
 
 def use_bm_to_rec_img(bm, flow_scale, dis_img):
-    bm = np.around(bm * flow_scale)
+    '''
+    bm: (h, w, 2)
+        訓練時設定的h, w
+        ch0 是 y, ch1 是 x
 
-    sh = flow_scale
-    sw = flow_scale
-    # s2 = np.array([[[sh, sw]]])
-    # bm = np.around(self.bm * s2)
+    dis_img: (H, W, 3)
+        原始拍照的大小
+    '''
+    # bm = np.around(bm * flow_scale)
+
+    sh = dis_img.shape[0]
+    sw = dis_img.shape[1]
+    bm = cv2.blur(bm, (3, 3))
+    bm = cv2.resize(bm, (sw, sh), interpolation=cv2.INTER_LANCZOS4)
+    s2 = np.array([[[sh, sw]]])
+    bm = bm * s2
+    # bm = np.around(bm * s2)
 
     bm = bm.astype(np.int32)
-    bm = np.clip(bm, 0, flow_scale - 1)
+    bm[0] = np.clip(bm[0], 0, sh - 1)
+    bm[1] = np.clip(bm[0], 0, sw - 1)
     # print("bm.max()", bm.max())
     # print("bm.min()", bm.min())
     result = dis_img[bm[..., 0], bm[..., 1], :]  ### 根據 bm 去 dis_img 把 圖片攤平
-    result = cv2.resize(result, (sh, sw))  ### 覺得如果根據blender的運作原理，應該還是bm回 方形， 再 resize成自己要的形狀 比較符合 blender的運作
+    # result = cv2.resize(result, (sh, sw))  ### 覺得如果根據blender的運作原理，應該還是bm回 方形， 再 resize成自己要的形狀 比較符合 blender的運作
     return result
 
 
