@@ -98,7 +98,7 @@ class Matplot_util(Matplot_fig_util): pass
 
 
 class Matplot_single_row_imgs(Matplot_util):
-    def __init__(self, imgs, img_titles, fig_title, pure_img=False, bgr2rgb=False, add_loss=False, where_colorbar=None, w_same_as_first=False, one_ch_vmin=None, one_ch_vmax=None):
+    def __init__(self, imgs, img_titles, fig_title, pure_img=False, bgr2rgb=False, add_loss=False, where_colorbar=None, w_same_as_first=False, one_ch_vmin=None, one_ch_vmax=None, fontsize=16, title_fontsize=28):
         self.imgs       = imgs  ### imgs是個list，裡面放的圖片可能不一樣大喔
         self.img_titles = img_titles
         self.fig_title  = fig_title
@@ -128,6 +128,9 @@ class Matplot_single_row_imgs(Matplot_util):
         self.first_time_row_col_finish = False
         self.merged_ax_list = []
         self.merged_gs_list = []
+
+        self.fontsize = fontsize
+        self.title_fontsize = title_fontsize
 
     def _step0_a_build_check(self):
         #### 防呆 ####################################################
@@ -255,7 +258,7 @@ class Matplot_single_row_imgs(Matplot_util):
         '''
         ### 這就是手動微調 text的位置囉ˊ口ˋ
         ### (0.5 / self.canvas_height) 的意思是 我想留 50px 左右 給上方
-        self.fig.text(x=0.5, y= 1 - (0.5 / self.canvas_height), s=self.fig_title, fontsize=28, c=(0., 0., 0., 1.),  horizontalalignment='center',)
+        self.fig.text(x=0.5, y= 1 - (0.5 / self.canvas_height), s=self.fig_title, fontsize=self.title_fontsize, c=(0., 0., 0., 1.),  horizontalalignment='center',)
 
         for go_img, img in enumerate(self.imgs):
             if(self.bgr2rgb): img = img[..., ::-1]  ### 如果有標示 輸入進來的 影像是 bgr，要轉rgb喔！
@@ -268,7 +271,7 @@ class Matplot_single_row_imgs(Matplot_util):
                 proced_title = self.img_titles[go_img]
                 if("_&&_" in self.img_titles[go_img]): proced_title = proced_title.replace("_&&_", "\n")
                 if("__" in self.img_titles[go_img] and "_&&_" not in self.img_titles[go_img]):  proced_title = proced_title.replace("__", "\n")
-                used_ax[go_img].set_title( proced_title, fontsize=16 )  ### 小畫布上的 title
+                used_ax[go_img].set_title( proced_title, fontsize=self.fontsize )  ### 小畫布上的 title
                 used_ax[go_img].set_yticks( (0, img.shape[0]) )   ### 設定 y軸 顯示的字，tuple是要顯示的數字， 目前是顯示 0 和 h
                 used_ax[go_img].set_xticks( (0, img.shape[1]) )   ### 設定 x軸 顯示的字，tuple是要顯示的數字
                 if(self.where_colorbar is not None):
@@ -307,7 +310,7 @@ class Matplot_single_row_imgs(Matplot_util):
 ##########################################################################################################################################################
 ##########################################################################################################################################################
 class Matplot_multi_row_imgs(Matplot_util):
-    def __init__(self, rows_cols_imgs, rows_cols_titles, fig_title, bgr2rgb=True, add_loss=False, where_colorbar=None, w_same_as_first=False, one_ch_vmin=None, one_ch_vmax=None):
+    def __init__(self, rows_cols_imgs, rows_cols_titles, fig_title, bgr2rgb=True, add_loss=False, where_colorbar=None, w_same_as_first=False, one_ch_vmin=None, one_ch_vmax=None, fontsize=16, title_fontsize=20):
         self.r_c_imgs = rows_cols_imgs
         self.r_c_titles = rows_cols_titles
         self.fig_title = fig_title
@@ -331,6 +334,9 @@ class Matplot_multi_row_imgs(Matplot_util):
         self.fig = None
         self.ax  = None
         self._step2_set_canvas_hw_and_build()
+
+        self.fontsize = fontsize
+        self.title_fontsize = title_fontsize
 
     def _step1_build_check(self):
         #### 防呆 ####################################################
@@ -436,7 +442,7 @@ class Matplot_multi_row_imgs(Matplot_util):
         從左上角 ax 開始畫圖，一張圖對一個title這樣子畫
         '''
         ### 這就是手動微調 text的位置囉ˊ口ˋ
-        self.fig.text(x=0.5, y=0.95, s=self.fig_title, fontsize=20, c=(0., 0., 0., 1.),  horizontalalignment='center',)
+        self.fig.text(x=0.5, y=0.95, s=self.fig_title, fontsize=self.title_fontsize, c=(0., 0., 0., 1.),  horizontalalignment='center',)
 
         for go_row, row_imgs in enumerate(self.r_c_imgs):
             for go_col, col_img in enumerate(row_imgs):
@@ -448,8 +454,8 @@ class Matplot_multi_row_imgs(Matplot_util):
 
                 if(self.fig_col_amount > 1):
                     ax_img = self.ax[go_row, go_col].imshow(col_img, vmin=self.one_ch_vmin, vmax=self.one_ch_vmax)  ### 小畫布 畫上影像，別忘記要bgr -> rgb喔！
-                    if  (len(self.r_c_titles) >  1):                  self.ax[go_row, go_col].set_title( proced_title, fontsize=16 )  ### 小畫布　標上小標題
-                    elif(len(self.r_c_titles) == 1 and go_row == 0): self.ax[go_row, go_col].set_title( proced_title, fontsize=16 )  ### 小畫布　標上小標題
+                    if  (len(self.r_c_titles) >  1):                 self.ax[go_row, go_col].set_title( proced_title, fontsize=self.fontsize )  ### 小畫布　標上小標題
+                    elif(len(self.r_c_titles) == 1 and go_row == 0): self.ax[go_row, go_col].set_title( proced_title, fontsize=self.fontsize )  ### 小畫布　標上小標題
 
                     plt.sca(self.ax[go_row, go_col])  ### plt指向目前的 小畫布 這是為了設定 yticks和xticks
                     plt.yticks( (0, col_img.shape[0]), (0, col_img.shape[0]) )   ### 設定 y軸 顯示的字，前面的tuple是位置，後面的tuple是要顯示的字
@@ -461,8 +467,8 @@ class Matplot_multi_row_imgs(Matplot_util):
                             self.fig.colorbar(ax_img, cax=cax, orientation="vertical")
                 else:  ### 要多這if/else是因為，col_imgs_amount == 1時，ax[]只會有一維！用二維的寫法會出錯！所以才獨立出來寫喔～
                     ax_img = self.ax[go_row].imshow(col_img)  ### 小畫布 畫上影像
-                    if  (len(self.r_c_titles) >  1):                 self.ax[go_row].set_title( proced_title, fontsize=16 )  ### 小畫布　標上小標題
-                    elif(len(self.r_c_titles) == 1 and go_row == 0): self.ax[go_row].set_title( proced_title, fontsize=16 )  ### 小畫布　標上小標題
+                    if  (len(self.r_c_titles) >  1):                 self.ax[go_row].set_title( proced_title, fontsize=self.fontsize )  ### 小畫布　標上小標題
+                    elif(len(self.r_c_titles) == 1 and go_row == 0): self.ax[go_row].set_title( proced_title, fontsize=self.fontsize )  ### 小畫布　標上小標題
                     plt.yticks( (0, col_img.shape[0]), (0, col_img.shape[0]) )   ### 設定 y軸 顯示的字，前面的tuple是位置，後面的tuple是要顯示的字
                     plt.xticks( (0, col_img.shape[1]), ("", col_img.shape[1]) )  ### 設定 x軸 顯示的字，前面的tuple是位置，後面的tuple是要顯示的字
                     if(self.where_colorbar is not None):
