@@ -217,22 +217,69 @@ if(__name__ == "__main__"):
         bm_y = bm[..., 0]
         bm_x = bm[..., 1]
 
+        ### 測試網路上找的 tf2 來做bm的程式碼 能不能還原dis_img， 結果是成功的！
+        # from flow_bm_tf_try import bilinear_sampler
+        # tf_dis_img = dis_img[np.newaxis, ...].astype(np.float32)
+        # tf_x       = x      [np.newaxis, ...]
+        # tf_y       = y      [np.newaxis, ...]
+        # tf_bm_x    = bm_x   [np.newaxis, ...]
+        # tf_bm_y    = bm_y   [np.newaxis, ...]
+        # result = bilinear_sampler(tf_dis_img, tf_bm_x, tf_bm_y)
+        # # result = bilinear_sampler(tf_dis_img, tf_x, tf_y)
 
-        from flow_bm_tf_try import bilinear_sampler
-        tf_dis_img = dis_img[np.newaxis, ...].astype(np.float32)
-        tf_x       = x      [np.newaxis, ...]
-        tf_y       = y      [np.newaxis, ...]
-        tf_bm_x    = bm_x   [np.newaxis, ...]
-        tf_bm_y    = bm_y   [np.newaxis, ...]
-        result = bilinear_sampler(tf_dis_img, tf_bm_x, tf_bm_y)
-        # result = bilinear_sampler(tf_dis_img, tf_x, tf_y)
-        
-        print(result.shape)
-        print(result.numpy().max())
-        print(result.numpy().min())
-        # fig, ax = plt.subplots(nrows=1, ncols=3)
+        # print(result.shape)
+        # print(result.numpy().max())
+        # print(result.numpy().min())
+        # fig, ax = plt.subplots(nrows=1, ncols=3, figsize=(15, 5))
         # ax[0].imshow(m)
         # ax[1].imshow(dis_img)
         # ax[2].imshow(result[0].numpy().astype(np.uint8))
+        # fig.tight_layout()
         # plt.show()
 
+        ### 測試 取 mask 要用 2d 還 3d 的寫法，結論是看狀況
+        #   做 bm 或 tight_crop 的時候用 2d就好， 因為 mask 會丟給 np.nonzero， 這樣 3d 多一個用不到的 z_channel
+        #   給 dis_img 或 wc 套用時 用 3d， 因為 要做 相乘 這樣子 shape 才對應的到 才可以 broadcast 
+        # mask2d = uv[..., 0]   > 0.99  ### shape = (512, 512)
+        # mask3d = uv[..., 0:1] > 0.99  ### shape = (512, 512, 1)
+        ### bm中使用 nonzero：
+        # data2d = np.nonzero(mask2d)   ### 會有 xy  的結果
+        # data3d = np.nonzero(mask3d)   ### 會有 xyz 的結果， 多一個z_channel 且 值全為0
+        ### dis_img, wc 只取 mask 部分：
+        # img = dis_img * mask2d  ### 無法會出錯
+        # img = dis_img * mask3d  ### 正確
+
+
+        ### 測試 dis_img, uv(flow) 一起 crop, resize回原本大小後， uv(flow) 做出來的bm能不能直接套用， 我預測是可以， 測試結果也確定沒問題！ 
+        # 只是會變得有點務， 所以 Doc3D 才從 448 -> 256 以避免放大變霧吧我猜
+        # 所以我覺得也許我也該弄個 1024 的 Dataset， crop 後 再 resize 到 512 也許就沒問題了～
+        # 比較麻煩的是我能用 Doc3D 的 448 套用到我的model 嗎
+        ord_mask2d = uv[..., 0]   > 0.99
+        ord_y, ord_x = np.nonzero(ord_mask2d)
+        ord_y_min = min(ord_y)
+        ord_y_max = max(ord_y)
+        ord_x_min = min(ord_x)
+        ord_x_max = max(ord_x)
+
+        crop_dis_img = dis_img[ord_y_min : ord_y_max + 1, ord_x_min : ord_x_max + 1]
+        crop_uv      = uv     [ord_y_min : ord_y_max + 1, ord_x_min : ord_x_max + 1]
+
+        crop_resize_dis_img = cv2.resize(crop_dis_img, (w, h))
+        crop_resize_uv      = cv2.resize(crop_uv     , (w, h))
+        crop_resize_bm  = use_flow_to_get_bm(crop_resize_uv, flow_scale=h)
+        crop_resize_rec = use_bm_to_rec_img (crop_resize_bm, flow_scale=h, dis_img=crop_resize_dis_img)
+
+        rec             = use_bm_to_rec_img (bm            , flow_scale=h, dis_img=dis_img            )
+
+        fig_base_size = 8
+        col_imgs_amount = 6
+        fig, ax = plt.subplots(nrows=1, ncols=col_imgs_amount, figsize=(fig_base_size * col_imgs_amount, fig_base_size))
+        ax[0].imshow(ord_mask2d)
+        ax[1].imshow(dis_img)
+        ax[2].imshow(crop_dis_img)
+        ax[2].imshow(crop_resize_dis_img)
+        ax[3].imshow(crop_resize_rec)
+        ax[4].imshow(rec)
+        fig.tight_layout()
+        plt.show()
+        print("finish")
