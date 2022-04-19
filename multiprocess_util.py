@@ -82,7 +82,7 @@ def multi_processing_interface(core_amount, task_amount, task, task_start_index=
 
         if(task_args is None): processes.append(Process( target=task, args=(task_start_index + core_start_index, core_task_amount) ) )              ### 起始點從 task_start_index 開始，根據上面的 core_start_index 和 core_task_amount 來 創建 Process
         else:                  processes.append(Process( target=task, args=(task_start_index + core_start_index, core_task_amount, *task_args) ) )  ### 起始點從 task_start_index 開始，根據上面的 core_start_index 和 core_task_amount 來 創建 Process
-        if(print_msg): print("registering process_%02i dealing %04i~%04i task" % (go_core_i, task_start_index + core_start_index, core_start_index + core_task_amount - 1) )  ### 大概顯示這樣的資訊：registering process_00 dealing 0000~0003 task
+        if(print_msg): print("registering process_%02i dealing %04i~%04i task" % (go_core_i, task_start_index + core_start_index, task_start_index + core_start_index + core_task_amount - 1) )  ### 大概顯示這樣的資訊：registering process_00 dealing 0000~0003 task
 
     ###############################################################################################################################################################################################
     ###############################################################################################################################################################################################
@@ -108,8 +108,8 @@ def multi_processing_interface(core_amount, task_amount, task, task_start_index=
                 workers[worker_id] = processes[go_p]
                 workers[worker_id].start()  ### .is_alive() 會變True
                 if(print_msg): print(" workers[%i] doing %i/%i process is starting" % (worker_id, go_p + 1, process_amount))
+                go_p += 1   ### 換下一個Process
                 break   ### 目前的 Process 已分配完畢， 可以換下一個Process了，所以就break出 worker迴圈 囉！
-        go_p += 1   ### 換下一個Process
 
     ### 方法1，但還是要等前面的process做完 才分配 下一個 process
     # for go_p, process in enumerate(processes):
