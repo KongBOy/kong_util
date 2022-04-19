@@ -24,8 +24,9 @@ def check_flow_quality_then_I_w_F_to_R(dis_img, flow):
         rec = use_bm_to_rec_img (bm  , flow_scale=h, dis_img=dis_img)
         # print("here1~~~~~~~~~")
     else:
+        dis_h, dis_w = dis_img.shape[:2]
         bm  = np.zeros(shape=(h, w, 2))
-        rec = np.zeros(shape=(h, w, 3))
+        rec = np.zeros(shape=(dis_h, dis_w, 3))
         # print("here2~~~~~~~~~")
     return bm, rec
 
