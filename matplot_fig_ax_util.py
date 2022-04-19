@@ -98,7 +98,7 @@ class Matplot_util(Matplot_fig_util): pass
 
 
 class Matplot_single_row_imgs(Matplot_util):
-    def __init__(self, imgs, img_titles, fig_title, pure_img=False, bgr2rgb=False, add_loss=False, where_colorbar=None, w_same_as_first=False, one_ch_vmin=None, one_ch_vmax=None, fontsize=16, title_fontsize=28):
+    def __init__(self, imgs, img_titles, fig_title, pure_img=False, bgr2rgb=False, add_loss=False, where_colorbar=None, w_same_as_first=False, one_ch_vmin=None, one_ch_vmax=None, fontsize=16, title_fontsize=28, fix_size=(800, 800)):
         self.imgs       = imgs  ### imgs是個list，裡面放的圖片可能不一樣大喔
         self.img_titles = img_titles
         self.fig_title  = fig_title
@@ -123,6 +123,15 @@ class Matplot_single_row_imgs(Matplot_util):
         self.canvas_1_ax_w = None
         self.fig = None
         self.ax  = None
+
+        self.img_shapes = [ img.shape for img in self.imgs ]
+
+        if(fix_size is not None):
+            import cv2
+            fix_size_imgs = []
+            for img in self.imgs: fix_size_imgs.append( cv2.resize(img, fix_size) )
+            self.imgs = fix_size_imgs
+
         self._step0_b_set_canvas_hw_and_build()
 
         self.first_time_row_col_finish = False
@@ -150,8 +159,11 @@ class Matplot_single_row_imgs(Matplot_util):
     def _step0_b_get_one_row_canvas_height(self):
         height_list = []    ### imgs是個list，裡面放的圖片可能不一樣大喔
         for img in self.imgs: height_list.append(img.shape[0])
-        if(self.pure_img): return  (max(height_list) / 100 + 0.0) * 1.00  ### 純影像 沒有任何其他東西
-        else:              return  (max(height_list) / 100 + 0.0) * 1.15  ### 1.15 就慢慢試出來的囉～因為除了圖以外 還會有旁邊軸的標籤 和 margin也會被算進圖的大小裡， 所以要算比原圖大一點 才能讓show出的影像跟原始影像差不多大
+        max_height_unit = max(height_list) / 100
+        if(self.pure_img): return  (max_height_unit + 0.0) * 1.00  ### 純影像 沒有任何其他東西
+        else:
+            if(max_height_unit < 20): return  (max_height_unit) * 1.15 + 1.0  ### 1.15 就慢慢試出來的囉～因為除了圖以外 還會有旁邊軸的標籤 和 margin也會被算進圖的大小裡， 所以要算比原圖大一點 才能讓show出的影像跟原始影像差不多大
+            else:                     return  (max_height_unit) * 1.00 + 0.0  ### 1.15 就慢慢試出來的囉～因為除了圖以外 還會有旁邊軸的標籤 和 margin也會被算進圖的大小裡， 所以要算比原圖大一點 才能讓show出的影像跟原始影像差不多大
 
     def _step0_b_get_one_row_canvas_width(self):
         width = 0
@@ -272,8 +284,12 @@ class Matplot_single_row_imgs(Matplot_util):
                 if("_&&_" in self.img_titles[go_img]): proced_title = proced_title.replace("_&&_", "\n")
                 if("__" in self.img_titles[go_img] and "_&&_" not in self.img_titles[go_img]):  proced_title = proced_title.replace("__", "\n")
                 used_ax[go_img].set_title( proced_title, fontsize=self.fontsize )  ### 小畫布上的 title
-                used_ax[go_img].set_yticks( (0, img.shape[0]) )   ### 設定 y軸 顯示的字，tuple是要顯示的數字， 目前是顯示 0 和 h
-                used_ax[go_img].set_xticks( (0, img.shape[1]) )   ### 設定 x軸 顯示的字，tuple是要顯示的數字
+                # used_ax[go_img].set_yticks( (0, self.img_shapes[go_img][0]) )   ### 設定 y軸 顯示的字，tuple是要顯示的數字， 目前是顯示 0 和 h
+                # used_ax[go_img].set_xticks( (0, self.img_shapes[go_img][1]) )   ### 設定 x軸 顯示的字，tuple是要顯示的數字
+                used_ax[go_img].set_yticks( () )   ### 設定 y軸 顯示的字，tuple是要顯示的數字， 目前是顯示 0 和 h
+                used_ax[go_img].set_xticks( () )   ### 設定 x軸 顯示的字，tuple是要顯示的數字
+                used_ax[go_img].set_ylabel( self.img_shapes[go_img][0] )   ### 設定 y軸 顯示的字，tuple是要顯示的數字， 目前是顯示 0 和 h
+                used_ax[go_img].set_xlabel( self.img_shapes[go_img][1] )   ### 設定 x軸 顯示的字，tuple是要顯示的數字
                 if(self.where_colorbar is not None):
                     if(self.where_colorbar[go_img] is not None):
                         divider = make_axes_locatable(used_ax[go_img])  ### 參考：https://matplotlib.org/stable/gallery/axes_grid1/simple_colorbar.html#sphx-glr-gallery-axes-grid1-simple-colorbar-py
@@ -300,9 +316,9 @@ class Matplot_single_row_imgs(Matplot_util):
         ###############################################################
         ### 想畫得更漂亮一點，兩種還是有些一咪咪差距喔~
         if(not self.pure_img):
-            if(not self.add_loss): self.fig.tight_layout(rect=[0, 0, 1, 0.93])
-            else:                  self.fig.tight_layout(rect=[0, 0.006, 1, 0.95])
-        elif(self.pure_img):       self.fig.subplots_adjust(top=1, bottom=0, right=1, left=0, hspace=0, wspace=0)
+            if(self.add_loss is False): self.fig.tight_layout(rect=[0, 0, 1, 1])
+            else:                       self.fig.tight_layout(rect=[0, 0.006, 1, 0.95])
+        elif(self.pure_img):            self.fig.subplots_adjust(top=1, bottom=0, right=1, left=0, hspace=0, wspace=0)
         ###############################################################
         ### Draw_img完，不一定要馬上Draw_loss喔！像是train的時候 就是分開的 1.see(Draw_img), 2.train, 3.loss(Draw_loss)
 
