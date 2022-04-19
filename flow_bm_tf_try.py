@@ -83,7 +83,7 @@ def get_pixel_value(img, x, y):
     batch = tf.tile(batch_idx, (1, height, width))  ### 1, 512, 512
 
     indices = tf.stack([batch, y, x], 3)  ### 1, 512, 512, 3
-    breakpoint()
+    # breakpoint()
 
     return tf.gather_nd(img, indices)
 
@@ -184,7 +184,7 @@ def bilinear_sampler(img, x, y):
     x1 = x0 + 1
     y0 = tf.cast(tf.floor(y), 'int32')
     y1 = y0 + 1
-    breakpoint()
+    # breakpoint()
 
     # clip to range [0, H-1/W-1] to not violate img boundaries
     x0 = tf.clip_by_value(x0, zero, max_x)
