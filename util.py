@@ -246,6 +246,21 @@ def move_dir_certain_file(ord_dir, certain_word, certain_ext=".", dst_dir=".", p
         shutil.move(ord_path, dst_path)
         if(print_msg): print(f"move {ord_path} to {dst_path} finish")
 
+def Rescale_dir_imgs(ord_dir, rescale=1.0):
+    '''
+    size: (w, h)
+    '''
+    file_names = get_dir_img_file_names(ord_dir)
+    file_paths = [ord_dir + "/" + file_name for file_name in file_names]
+    for file_path in tqdm(file_paths):
+        img = cv2.imread(file_path)
+        h, w = img.shape[:2]
+        re_h = np.round(h * rescale).astype(np.int32)
+        re_w = np.round(w * rescale).astype(np.int32)
+        rescaled_img = cv2.resize(img, (re_w, re_h))
+        cv2.imwrite(file_path, rescaled_img)
+
+
 ##########################################################
 def apply_move_map_boundary_mask(move_maps):
     boundary_width = 20
