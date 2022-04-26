@@ -106,7 +106,7 @@ def use_bm_to_rec_img(bm, flow_scale, dis_img):
     sh = dis_img.shape[0]
     sw = dis_img.shape[1]
     bm = cv2.blur(bm, (3, 3))
-    bm = cv2.resize(bm, (sw, sh), interpolation=cv2.INTER_LANCZOS4)
+    bm = cv2.resize(bm, (sw, sh))
     s2 = np.array([[[sh, sw]]])
     bm = bm * s2
     # bm = np.around(bm * s2)
