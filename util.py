@@ -6,7 +6,27 @@ import shutil
 from tqdm import tqdm
 
 
+def Visit_sub_dir_include_self_and_get_dir_paths(src_dir, dir_containor):
+    '''
+    從 function 外面 傳 dir_containor 近來， 直接對 containor 渲染， 所以不用return， 我覺得這樣最省空間不用建立一堆list 所以就用這樣的寫法囉～
+    '''
+    # time.sleep(1)
+    # print("now at " + src_dir)
+    file_list = os.listdir(src_dir)
+    # print(file_list)
+    for f in file_list:
+        if( os.path.isdir(src_dir + "\\" + f)):
+            if(f == "System Volume Information" or
+               f == "$RECYCLE.BIN" or
+               f == "dir_data"):
+                continue
+            # print(f,"is dir")
+            # print(src_dir + "\\" + f)
+            Visit_sub_dir_include_self_and_get_dir_paths(src_dir + "\\" + f, dir_containor)
 
+    dir_containor.append(src_dir)
+
+#####################################################################################################################################
 def rename_by_order(ord_dir, split_symbol="-", start_one=True):  ### 使用的時候要非常小心喔！
     import math
     file_names = os.listdir(ord_dir)
@@ -222,8 +242,13 @@ def get_dir_mats(ord_dir, key):
 
 
 def get_db_amount(ord_dir):
-    file_names = [file_name for file_name in os.listdir(ord_dir) if Check_img_filename(file_name) or (".npy" in file_name) or (".knpy" in file_name) ]
-    return len(file_names)
+    dir_containor = []
+    file_amount = 0
+    Visit_sub_dir_include_self_and_get_dir_paths(ord_dir, dir_containor=dir_containor)
+    for dir_path in dir_containor:
+        file_names = [file_name for file_name in os.listdir(dir_path) if Check_img_filename(file_name) or (".npy" in file_name) or (".knpy" in file_name) ]
+        file_amount += len(file_names)
+    return file_amount
 
 
 @Check_dir_exist_decorator
