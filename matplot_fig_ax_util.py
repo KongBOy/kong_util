@@ -326,7 +326,7 @@ class Matplot_single_row_imgs(Matplot_util):
 ##########################################################################################################################################################
 ##########################################################################################################################################################
 class Matplot_multi_row_imgs(Matplot_util):
-    def __init__(self, rows_cols_imgs, rows_cols_titles, fig_title, bgr2rgb=True, add_loss=False, where_colorbar=None, w_same_as_first=False, one_ch_vmin=None, one_ch_vmax=None, fontsize=16, title_fontsize=20):
+    def __init__(self, rows_cols_imgs, rows_cols_titles, fig_title, bgr2rgb=True, add_loss=False, where_colorbar=None, w_same_as_first=False, one_ch_vmin=None, one_ch_vmax=None, fontsize=16, title_fontsize=20, fix_size=None):
         self.r_c_imgs = rows_cols_imgs
         self.r_c_titles = rows_cols_titles
         self.fig_title = fig_title
@@ -338,6 +338,23 @@ class Matplot_multi_row_imgs(Matplot_util):
         self.one_ch_vmax = one_ch_vmax
 
         self.fig_row_amount   = len(self.r_c_imgs)
+
+        self.img_shapes = []
+        for c_imgs in self.r_c_imgs:
+            c_shapes = []
+            for r_c_img in c_imgs:
+                c_shapes.append(r_c_img.shape)
+            self.img_shapes.append(c_shapes)
+
+        if(fix_size is not None):
+            import cv2
+            fix_size_r_c_imgs = []
+            for c_imgs in self.r_c_imgs:
+                fix_size_c_imgs = []
+                for r_c_img in c_imgs:
+                    fix_size_c_imgs.append( cv2.resize(r_c_img, fix_size) )
+                fix_size_r_c_imgs.append(fix_size_c_imgs)
+            self.r_c_imgs = fix_size_r_c_imgs
 
         col_amounts = []
         for c_imgs in self.r_c_imgs: col_amounts.append(len(c_imgs))
@@ -474,8 +491,12 @@ class Matplot_multi_row_imgs(Matplot_util):
                     elif(len(self.r_c_titles) == 1 and go_row == 0): self.ax[go_row, go_col].set_title( proced_title, fontsize=self.fontsize )  ### 小畫布　標上小標題
 
                     plt.sca(self.ax[go_row, go_col])  ### plt指向目前的 小畫布 這是為了設定 yticks和xticks
-                    plt.yticks( (0, col_img.shape[0]), (0, col_img.shape[0]) )   ### 設定 y軸 顯示的字，前面的tuple是位置，後面的tuple是要顯示的字
-                    plt.xticks( (0, col_img.shape[1]), ("", col_img.shape[1]) )  ### 設定 x軸 顯示的字，前面的tuple是位置，後面的tuple是要顯示的字
+                    self.ax[go_row, go_col].set_ylabel(self.img_shapes[go_row][go_col][0] )   ### 設定 y軸 顯示的字，目前是顯示 h
+                    self.ax[go_row, go_col].set_xlabel(self.img_shapes[go_row][go_col][1] )   ### 設定 y軸 顯示的字，目前是顯示 w
+                    plt.yticks( [] )  ### 設定 y軸 的刻度 不顯示喔
+                    plt.xticks( [] )  ### 設定 x軸 的刻度 不顯示喔
+                    # plt.yticks( (0, self.img_shapes[go_row][go_col][0]), (0 , self.img_shapes[go_row][go_col][0]) )   ### 設定 y軸 顯示的字，前面的tuple是位置，後面的tuple是要顯示的字
+                    # plt.xticks( (0, self.img_shapes[go_row][go_col][1]), ("", self.img_shapes[go_row][go_col][1]) )  ### 設定 x軸 顯示的字，前面的tuple是位置，後面的tuple是要顯示的字
                     if(self.where_colorbar is not None):
                         if(self.where_colorbar[go_row][go_col] is not None):
                             divider = make_axes_locatable(self.ax[go_row, go_col])  ### 參考：https://matplotlib.org/stable/gallery/axes_grid1/simple_colorbar.html#sphx-glr-gallery-axes-grid1-simple-colorbar-py
@@ -485,8 +506,12 @@ class Matplot_multi_row_imgs(Matplot_util):
                     ax_img = self.ax[go_row].imshow(col_img)  ### 小畫布 畫上影像
                     if  (len(self.r_c_titles) >  1):                 self.ax[go_row].set_title( proced_title, fontsize=self.fontsize )  ### 小畫布　標上小標題
                     elif(len(self.r_c_titles) == 1 and go_row == 0): self.ax[go_row].set_title( proced_title, fontsize=self.fontsize )  ### 小畫布　標上小標題
-                    plt.yticks( (0, col_img.shape[0]), (0, col_img.shape[0]) )   ### 設定 y軸 顯示的字，前面的tuple是位置，後面的tuple是要顯示的字
-                    plt.xticks( (0, col_img.shape[1]), ("", col_img.shape[1]) )  ### 設定 x軸 顯示的字，前面的tuple是位置，後面的tuple是要顯示的字
+                    self.self.ax[go_row].set_ylabel(self.img_shapes[go_row][go_col][0] )   ### 設定 y軸 顯示的字， 目前是顯示 h
+                    self.self.ax[go_row].set_xlabel(self.img_shapes[go_row][go_col][1] )   ### 設定 y軸 顯示的字， 目前是顯示 w
+                    plt.yticks( [] )  ### 設定 y軸 的刻度 不顯示喔
+                    plt.xticks( [] )  ### 設定 x軸 的刻度 不顯示喔
+                    # plt.yticks( (0, self.img_shapes[go_row][go_col][0]), (0 , self.img_shapes[go_row][go_col][0]) )   ### 設定 y軸 顯示的字，前面的tuple是位置，後面的tuple是要顯示的字
+                    # plt.xticks( (0, self.img_shapes[go_row][go_col][1]), ("", self.img_shapes[go_row][go_col][1]) )  ### 設定 x軸 顯示的字，前面的tuple是位置，後面的tuple是要顯示的字
                     if(self.where_colorbar is not None):
                         if(self.where_colorbar[go_row] is not None):
                             divider = make_axes_locatable(self.ax[go_row])  ### 參考：https://matplotlib.org/stable/gallery/axes_grid1/simple_colorbar.html#sphx-glr-gallery-axes-grid1-simple-colorbar-py
