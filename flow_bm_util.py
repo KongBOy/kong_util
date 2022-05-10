@@ -199,7 +199,7 @@ if(__name__ == "__main__"):
     import cv2
     import matplotlib.pyplot as plt
 
-    dis_dir = r"J:\kong_render_os_book_and_paper_all_have_dtd_hdr_mix_bg_512\0_image"
+    dis_dir = r"J:\kong_render_os_book_and_paper_all_have_dtd_hdr_mix_bg_512\0_dis_img"
     dis_file_names = os.listdir(dis_dir)
 
     uv_dir = r"J:\kong_render_os_book_and_paper_all_have_dtd_hdr_mix_bg_512\1_uv_npy"

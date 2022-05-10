@@ -41,9 +41,9 @@ def get_dir_blends_and_extract_texture_image_file_name(blender_ord_dir, dst_dir,
 
 if(__name__ == "__main__"):
     # get_dir_blends_and_extract_texture_image_file_name(blender_ord_dir="K:/kong_render_os_book_no_bg_768",
-    #                                                    dst_dir="K:/kong_render_os_book_no_bg_768/0_image_ord")
+    #                                                    dst_dir="K:/kong_render_os_book_no_bg_768/0_rec_hope")
     get_dir_blends_and_extract_texture_image_file_name(blender_ord_dir="J:/kong_render_os_book_have_bg_512",
-                                                       dst_dir="J:/kong_render_os_book_have_bg_512/0_image_ord")
+                                                       dst_dir="J:/kong_render_os_book_have_bg_512/0_rec_hope")
 
 ### cv2
 ### tqdm
