@@ -649,7 +649,7 @@ def _save_img(start_index, amount, image_type, ord_dir, dst_dir, file_names, gra
             if(delete_ord_file): os.remove(ord_dir + "/" + file_name)  ### 把原檔刪掉，做一張刪一張比較不占空間且時間跟 全部做完再刪印象中是差不多的~~
 
 
-def _Save_as_certain_image_type(image_type, ord_dir, dst_dir, gray=False, gray_three_channel=False, delete_ord_file=False, show_msg=False, quality_list=None, multiprocess=True, core_amount=8):
+def _Save_as_certain_image_type(image_type, ord_dir, dst_dir, gray=False, gray_three_channel=False, delete_ord_file=False, show_msg=False, quality_list=None, multiprocess=False, core_amount=1):
     ### 建立放結果的資料夾，如果有上次建立的結果要先刪掉
     ### 以下註解都是用 bmp當例子
     Check_dir_exist_and_build(dst_dir)
@@ -667,8 +667,11 @@ def Save_as_jpg(ord_dir, dst_dir, gray=False, gray_three_channel=False, delete_o
     _Save_as_certain_image_type("jpg", ord_dir, dst_dir, gray=gray, gray_three_channel=gray_three_channel, delete_ord_file=delete_ord_file, quality_list=quality_list, multiprocess=multiprocess, core_amount=core_amount)
     print("Save_as_jpg cost time:", time.time() - start_time)
 
-def Save_as_bmp(ord_dir, dst_dir, gray=False, gray_three_channel=False, delete_ord_file=False):
+def Save_as_bmp(ord_dir, dst_dir, gray=False, gray_three_channel=False, delete_ord_file=False, multiprocess=False, core_amount=1):
     _Save_as_certain_image_type("bmp", ord_dir, dst_dir, gray=gray, gray_three_channel=gray_three_channel, delete_ord_file=delete_ord_file)
+
+def Save_as_png(ord_dir, dst_dir, gray=False, gray_three_channel=False, delete_ord_file=False, multiprocess=False, core_amount=1):
+    _Save_as_certain_image_type("png", ord_dir, dst_dir, gray=gray, gray_three_channel=gray_three_channel, delete_ord_file=delete_ord_file)
 
 
 ##############################################################################################################################################################
