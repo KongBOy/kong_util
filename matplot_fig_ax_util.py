@@ -22,6 +22,14 @@ def get_cmap(color_amount, cmap_name='hsv'):
         return scalar_map.to_rgba(index)
     return map_index_to_rgb_color
 
+def resize_img_keepdims(img, resize):
+    import cv2
+    img_shape_dim = len(img.shape)                  ### 原始img 是 h, w, c
+    resized_img = cv2.resize(img, resize)           ### 如果 c = 1， 做完 cv2.resize 它會自動把 c 去掉
+    resized_img_shape_dim = len(resized_img.shape)  ### 如果 c = 1， 做完 cv2.resize 它會自動把 c 去掉， shape 會變 h, w
+    if(resized_img_shape_dim < img_shape_dim): resized_img = resized_img[..., np.newaxis]  ### 把 c 加回來， 在bgr2rgb才不左右顛倒
+    return resized_img
+
 ############################################################################################################
 ############################################################################################################
 class Matplot_ax_util():
@@ -98,7 +106,7 @@ class Matplot_util(Matplot_fig_util): pass
 
 
 class Matplot_single_row_imgs(Matplot_util):
-    def __init__(self, imgs, img_titles, fig_title, pure_img=False, bgr2rgb=False, add_loss=False, where_colorbar=None, w_same_as_first=False, one_ch_vmin=None, one_ch_vmax=None, fontsize=16, title_fontsize=28, fix_size=(800, 800)):
+    def __init__(self, imgs, img_titles, fig_title, pure_img=False, bgr2rgb=False, add_loss=False, where_colorbar=None, w_same_as_first=False, one_ch_vmin=None, one_ch_vmax=None, fontsize=16, title_fontsize=28, fix_size=(500, 500)):
         self.imgs       = imgs  ### imgs是個list，裡面放的圖片可能不一樣大喔
         self.img_titles = img_titles
         self.fig_title  = fig_title
@@ -127,9 +135,8 @@ class Matplot_single_row_imgs(Matplot_util):
         self.img_shapes = [ img.shape for img in self.imgs ]
 
         if(fix_size is not None):
-            import cv2
             fix_size_imgs = []
-            for img in self.imgs: fix_size_imgs.append( cv2.resize(img, fix_size) )
+            for img in self.imgs: fix_size_imgs.append( resize_img_keepdims(img, fix_size))
             self.imgs = fix_size_imgs
 
         self._step0_b_set_canvas_hw_and_build()
@@ -347,12 +354,11 @@ class Matplot_multi_row_imgs(Matplot_util):
             self.img_shapes.append(c_shapes)
 
         if(fix_size is not None):
-            import cv2
             fix_size_r_c_imgs = []
             for c_imgs in self.r_c_imgs:
                 fix_size_c_imgs = []
                 for r_c_img in c_imgs:
-                    fix_size_c_imgs.append( cv2.resize(r_c_img, fix_size) )
+                    fix_size_c_imgs.append( resize_img_keepdims(r_c_img, fix_size) )
                 fix_size_r_c_imgs.append(fix_size_c_imgs)
             self.r_c_imgs = fix_size_r_c_imgs
 
