@@ -105,10 +105,13 @@ def Check_dir_exist_decorator(get_dir_fun):         ### 加在 get_dir 那種fun
         if("ord_dir" in kwargs.keys()): ord_dir = kwargs["ord_dir"]
         else: ord_dir = args[0]
 
+        print_msg = True
+        if("print_msg" in kwargs.keys()): print_msg = kwargs["print_msg"]
+
         if os.path.isdir(ord_dir):                  ### 檢查 ord_dir 是否存在
             result = get_dir_fun(*args, **kwargs)   ### 如果資料夾存在，做事情
         else:                                       ### 如果資料夾不存在，回傳[]
-            print(args[0] + " 資料夾不存在，回傳[]")
+            if(print_msg): print(args[0] + " 資料夾不存在，回傳[]")
             result = []
         return result
     return wrapper
@@ -127,7 +130,7 @@ def get_dir_img_paths(ord_dir, float_return =False):
     return [ord_dir + "/" + file_name for file_name in file_names]
 
 @Check_dir_exist_decorator
-def get_dir_certain_file_names(ord_dir, certain_word, certain_ext=".", certain_word2="."):
+def get_dir_certain_file_names(ord_dir, certain_word, certain_ext=".", certain_word2=".", print_msg=True):
     file_names = [file_name for file_name in os.listdir(ord_dir) if (certain_word in file_name) and (certain_ext.lower() in file_name.lower()) and (certain_word2 in file_name)]
     return file_names
 # def get_dir_certain_file_names(ord_dir, certain_word):
