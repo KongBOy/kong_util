@@ -3,8 +3,8 @@ import sys
 sys.path.append("..")
 
 from step0_access_path import access_path
-from util import get_dir_certain_file_names
-from build_dataset_combine import Check_dir_exist_and_build
+from kong_util.util import get_dir_certain_file_names
+from kong_util.build_dataset_combine import Check_dir_exist_and_build
 
 
 def epoch_add_num_into_img(ord_dir, dst_dir):

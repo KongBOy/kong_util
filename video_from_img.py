@@ -2,7 +2,7 @@ import sys
 sys.path.append("..")
 
 # from step0_access_path import access_path
-from util import get_dir_certain_imgs, get_dir_imgs
+from kong_util.util import get_dir_certain_imgs, get_dir_imgs
 
 import cv2
 import numpy as np

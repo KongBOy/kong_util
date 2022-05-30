@@ -3,8 +3,8 @@ import shutil
 import cv2
 import numpy as np
 import random
-from util import get_dir_certain_file_names, get_dir_img_file_names, get_dir_exr, get_dir_mats, method1, get_dir_jpg_names
-from multiprocess_util import multi_processing_interface
+from kong_util.util import get_dir_certain_file_names, get_dir_img_file_names, get_dir_exr, get_dir_mats, method1, get_dir_jpg_names
+from kong_util.multiprocess_util import multi_processing_interface
 
 from tqdm import tqdm
 
@@ -656,7 +656,7 @@ def _Save_as_certain_image_type(image_type, ord_dir, dst_dir, gray=False, gray_t
 
     file_names = [file_name for file_name in os.listdir(ord_dir) if Check_img_filename(file_name)]
     if(multiprocess and core_amount > 1):  ### 有用multiprocess
-        from multiprocess_util import multi_processing_interface
+        from kong_util.multiprocess_util import multi_processing_interface
         multi_processing_interface(core_amount=core_amount, task_amount=len(file_names), task=_save_img, task_args= [image_type, ord_dir, dst_dir, file_names, gray, gray_three_channel, delete_ord_file, show_msg, quality_list] )
     else:  ### 沒有用multiprocess
         _save_img(0, len(file_names), image_type, ord_dir, dst_dir, file_names, gray, gray_three_channel, delete_ord_file, show_msg, quality_list)
@@ -695,7 +695,7 @@ def Save_exr_as_mat(ord_dir, dst_dir, key_name, matplot_visual=False, print_msg=
     Check_dir_exist_and_build(dst_dir)
 
     from hdf5storage import savemat
-    from util import get_dir_exr
+    from kong_util.util import get_dir_exr
 
     file_names = get_dir_certain_file_names(ord_dir, ".exr")
     imgs = get_dir_exr(ord_dir)
@@ -734,7 +734,7 @@ def Save_exr_as_npy(ord_dir, dst_dir, rgb=False, matplot_visual=False):  ### 不
     if(matplot_visual): _matplot_visual(imgs, file_names, dst_dir)
 
 
-from util import get_exr
+from kong_util.util import get_exr
 def _save_exr_as_npy(start_i, amount, ord_dir, dst_dir, file_names):
     for i in tqdm(range(start_i, start_i + amount)):
         file_name = file_names[i]
@@ -810,7 +810,7 @@ def _use_ltrd_crop(start_index, amount, ord_dir, dst_dir, file_names, l, t, r, d
         cv2.imwrite(dst_dir + "/" + file_name, crop_img)
 
 def _use_ltrd_crop_multiprocess(ord_dir, dst_dir, file_names, l, t, r, d, crop_according_lr_page, odd_x_shift, even_x_shift, core_amount=8, task_amount=100):
-    from multiprocess_util import multi_processing_interface
+    from kong_util.multiprocess_util import multi_processing_interface
     multi_processing_interface(core_amount=core_amount, task_amount=task_amount, task=_use_ltrd_crop, task_args= [ord_dir, dst_dir, file_names, l, t, r, d, crop_according_lr_page, odd_x_shift, even_x_shift] )
 
 

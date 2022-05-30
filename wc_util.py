@@ -5,7 +5,7 @@ import numpy as np
 import cv2
 import pdb
 
-from matplot_fig_ax_util import check_fig_ax_init, change_into_3D_coord_ax
+from kong_util.matplot_fig_ax_util import check_fig_ax_init, change_into_3D_coord_ax
 
 debug_dict = {}
 

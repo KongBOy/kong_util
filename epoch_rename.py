@@ -2,7 +2,7 @@ import shutil
 import sys
 sys.path.append("..")
 from step0_access_path import access_path
-from util import get_dir_certain_file_names, get_dir_dir_names
+from kong_util.util import get_dir_certain_file_names, get_dir_dir_names
 
 ### 應該用不到了，因為已經改寫好 訓練過程epoch產生的名字囉！
 def Rename_epoch(ord_dir):

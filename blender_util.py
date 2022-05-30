@@ -1,7 +1,7 @@
 import sys
 # sys.path.append("C:/Users/TKU/Desktop/kong_model2/kong_util")
-from build_dataset_combine import Check_dir_exist_and_build_new_dir
-from util import get_dir_certain_file_names
+from kong_util.build_dataset_combine import Check_dir_exist_and_build_new_dir
+from kong_util.util import get_dir_certain_file_names
 import os
 
 import bpy

@@ -1,5 +1,5 @@
 ### (128G 碩三下)H:\0 學校 碩三上\15篇吧\15_code_try
-from build_dataset_combine import Check_dir_exist_and_build
+from kong_util.build_dataset_combine import Check_dir_exist_and_build
 import cv2
 import numpy as np
 

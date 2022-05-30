@@ -2,8 +2,8 @@ import numpy as np
 import scipy.interpolate as spin
 import cv2
 
-from matplot_fig_ax_util import check_fig_ax_init, move_map_2D_arrow, img_scatter_visual
-from util import get_xy_f_and_m
+from kong_util.matplot_fig_ax_util import check_fig_ax_init, move_map_2D_arrow, img_scatter_visual
+from kong_util.util import get_xy_f_and_m
 
 
 def check_flow_quality_then_I_w_F_to_R(dis_img, flow):

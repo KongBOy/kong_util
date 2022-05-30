@@ -36,7 +36,7 @@ def multi_processing_interface(core_amount, task_amount, task, task_start_index=
 
 
     ### 給方法4用的
-    from multiprocess_triangle_task_util import get_tri_task_list
+    from kong_util.multiprocess_triangle_task_util import get_tri_task_list
     tri_task_list = get_tri_task_list(core_amount, fract_amount)
     if(print_msg): print("tri_task_list:", tri_task_list)
 

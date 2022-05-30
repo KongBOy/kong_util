@@ -265,7 +265,7 @@ def remove_dir_certain_file_name(ord_dir, certain_word, certain_ext=".", print_m
 
 @Check_dir_exist_decorator
 def move_dir_certain_file(ord_dir, certain_word, certain_ext=".", dst_dir=".", print_msg=False):
-    from build_dataset_combine import Check_dir_exist_and_build
+    from kong_util.build_dataset_combine import Check_dir_exist_and_build
     file_names = get_dir_certain_file_names(ord_dir, certain_word=certain_word, certain_ext=certain_ext)  ### 注意 get_dir_certain_file_names 的 ord_dir 只能用位置參數！不能用關鍵字參數喔！因為他有用decorator，然後我寫的不夠generalˊ口ˋ
     Check_dir_exist_and_build(dst_dir)
     for file_name in file_names:

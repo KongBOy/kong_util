@@ -1,4 +1,4 @@
-from util import get_dir_certain_file_names, method1
+from kong_util.util import get_dir_certain_file_names, method1
 import numpy as np
 
 import matplotlib.pyplot as plt
@@ -947,7 +947,7 @@ def img_scatter_visual(img,
     '''
     先假設 座標 值域在 -1~1
     '''
-    from util import get_xy_f_and_m
+    from kong_util.util import get_xy_f_and_m
     fig, ax, ax_c = check_fig_ax_init(fig=fig, ax=ax, ax_c=ax_c, fig_rows=1, fig_cols=1, ax_size=10, tight_layout=tight_layout)
     ##################################################################################################################
 

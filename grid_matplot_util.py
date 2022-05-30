@@ -1,5 +1,5 @@
 ### ...\碩一下 多媒體助教 密碼107summer\碩一下 多媒體助教\teach_filter_merge_ok\teach_filter_merge_ok
-from build_dataset_combine import Check_dir_exist_and_build
+from kong_util.build_dataset_combine import Check_dir_exist_and_build
 import numpy as np
 import matplotlib.pyplot as plt
 import time
