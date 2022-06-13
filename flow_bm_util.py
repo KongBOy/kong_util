@@ -20,7 +20,7 @@ def check_flow_quality_then_I_w_F_to_R(dis_img, flow):
     # print("valid_mask_pix_amount:", valid_mask_pix_amount)
     # print("valid_mask_pix_amount / total_pix_amount:", valid_mask_pix_amount / total_pix_amount)
     if( valid_mask_pix_amount / total_pix_amount > 0.20):
-        bm  = use_flow_to_get_bm(flow, flow_scale=h)
+        bm  = use_flow_to_get_bm(flow)
         rec = use_bm_to_rec_img (bm  , flow_scale=h, dis_img=dis_img)
         # print("here1~~~~~~~~~")
     else:
@@ -31,7 +31,7 @@ def check_flow_quality_then_I_w_F_to_R(dis_img, flow):
     return bm, rec
 
 
-def use_flow_to_get_bm(flow, flow_scale):
+def use_flow_to_get_bm(flow):
     '''
     input:
         flow: H, W, 3， ch1:Mask, ch2:y, ch3:x
@@ -63,8 +63,8 @@ def use_flow_to_get_bm(flow, flow_scale):
 
     # if(msk.sum() > 0):
     ### meshgrid 和 griddata 有匹配
-    sh = flow_scale
-    sw = flow_scale  ##340
+    sh = flow.shape[0]
+    sw = flow.shape[1]  ##340
     s2 = np.array([[[1, sh, sw]]])
     fl_s   = fl * s2
     fl_s_m = fl_s[msk][:, ::-1]   ### (143217, 3), mask, y, x，改成 x, y, mask，讓下面scipy.interpolate.griddata(第一個參數是 先x)比較好用
@@ -193,6 +193,106 @@ def dis_bm_rec_visual( dis_img, bm, rec_img, img_smaller=0.5,
     #     show_after_move_coord =True, after_alpha=0.10, after_C="red",
     #     fig=fig, ax=ax, ax_c=1)
 
+
+def get_pixel_value(img, x, y):
+    '''
+    img: h, w, 3
+    x: h, w
+    y: h, w
+    '''
+    h, w, c = img.shape
+    canvas_fm = np.zeros(shape=(h, w, c), dtype=np.uint8)
+    for go_row in range(h):
+        for go_col in range(w):
+            if(x[go_row, go_col] !=  0 and y[go_row, go_col] !=  0):
+                y_ind =  y[go_row, go_col]
+                x_ind =  x[go_row, go_col]
+                # canvas_fm[y_ind, x_ind] = img[go_row, go_col]
+                canvas_fm[go_row, go_col] = img[y_ind, x_ind]
+    return canvas_fm
+
+def bilinear_sampler(img, x, y):
+
+    import numpy as np
+    """
+    Performs bilinear sampling of the input images according to the
+    normalized coordinates provided by the sampling grid. Note that
+    the sampling is done identically for each channel of the input.
+    To test if the function works properly, output image should be
+    identical to input image when theta is initialized to identity
+    transform.
+    Input
+    -----
+    - img: batch of images in (B, H, W, C) layout.
+    - grid: x, y which is the output of affine_grid_generator.
+    Returns
+    -------
+    - out: interpolated images according to grids. Same size as grid.
+    """
+    H = img.shape[0]
+    W = img.shape[1]
+    max_y = H - 1  ### 511
+    max_x = W - 1  ### 511
+    zero  = 0
+
+    # rescale x and y to [0, W-1/H-1]
+    x = x.astype(np.float32)
+    y = y.astype(np.float32)
+    # x = 0.5 * ((x + 1.0) * tf.cast(max_x-1, 'float32'))
+    # y = 0.5 * ((y + 1.0) * tf.cast(max_y-1, 'float32'))
+    x = x * (max_x - 1)
+    y = y * (max_y - 1)
+
+    # breakpoint()
+
+    # grab 4 nearest corner points for each (x_i, y_i)
+    x0 = np.floor(x).astype(np.int32)
+    x1 = x0 + 1
+    y0 = np.floor(y).astype(np.int32)
+    y1 = y0 + 1
+    # breakpoint()
+
+    # clip to range [0, H-1/W-1] to not violate img boundaries
+    x0 = np.clip(x0, zero, max_x)
+    x1 = np.clip(x1, zero, max_x)
+    y0 = np.clip(y0, zero, max_y)
+    y1 = np.clip(y1, zero, max_y)
+
+    # get pixel value at corner coords
+    Ia = get_pixel_value(img, x0, y0)
+    Ib = get_pixel_value(img, x0, y1)
+    Ic = get_pixel_value(img, x1, y0)
+    Id = get_pixel_value(img, x1, y1)
+
+    # import matplotlib.pyplot as plt
+    # import numpy as np
+    # plt.figure()
+    # plt.imshow(Ia)
+    # plt.show()
+
+    # recast as float for delta calculation
+    x0 = x0.astype(np.float32)
+    x1 = x1.astype(np.float32)
+    y0 = y0.astype(np.float32)
+    y1 = y1.astype(np.float32)
+
+    # calculate deltas
+    wa = (x1 - x ) * (y1 - y )
+    wb = (x1 - x ) * (y  - y0)
+    wc = (x  - x0) * (y1 - y )
+    wd = (x  - x0) * (y  - y0)
+
+    # add dimension for addition
+    wa = np.expand_dims(wa, axis=-1)
+    wb = np.expand_dims(wb, axis=-1)
+    wc = np.expand_dims(wc, axis=-1)
+    wd = np.expand_dims(wd, axis=-1)
+
+    # compute output
+    out = wa * Ia + wb * Ib + wc * Ic + wd * Id
+
+    return out
+
 if(__name__ == "__main__"):
     import os
     import numpy as np
@@ -214,7 +314,7 @@ if(__name__ == "__main__"):
         m = uv[..., 0]
         y = uv[..., 1]
         x = uv[..., 2]
-        bm  = use_flow_to_get_bm(uv, flow_scale=h)
+        bm  = use_flow_to_get_bm(uv)
         bm_y = bm[..., 0]
         bm_x = bm[..., 1]
 
@@ -267,7 +367,7 @@ if(__name__ == "__main__"):
 
         crop_resize_dis_img = cv2.resize(crop_dis_img, (w, h))
         crop_resize_uv      = cv2.resize(crop_uv     , (w, h))
-        crop_resize_bm  = use_flow_to_get_bm(crop_resize_uv, flow_scale=h)
+        crop_resize_bm  = use_flow_to_get_bm(crop_resize_uv)
         crop_resize_rec = use_bm_to_rec_img (crop_resize_bm, flow_scale=h, dis_img=crop_resize_dis_img)
 
         rec             = use_bm_to_rec_img (bm            , flow_scale=h, dis_img=dis_img            )
