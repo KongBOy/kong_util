@@ -1,3 +1,22 @@
+#############################################################################################################################################################################################################
+#############################################################################################################################################################################################################
+### 把 kong_model2 加入 sys.path
+import os
+code_exe_path = os.path.realpath(__file__)                   ### 目前執行 step10_b.py 的 path
+code_exe_path_element = code_exe_path.split("\\")            ### 把 path 切分 等等 要找出 kong_model 在第幾層
+code_dir = "\\".join(code_exe_path_element[:-1])
+kong_layer = code_exe_path_element.index("kong_model2")      ### 找出 kong_model2 在第幾層
+kong_model2_dir = "\\".join(code_exe_path_element[:kong_layer + 1])  ### 定位出 kong_model2 的 dir
+import sys                                                   ### 把 kong_model2 加入 sys.path
+sys.path.append(kong_model2_dir)
+# print(__file__.split("\\")[-1])
+# print("    code_exe_path:", code_exe_path)
+# print("    code_exe_path_element:", code_exe_path_element)
+# print("    code_dir:", code_dir)
+# print("    kong_layer:", kong_layer)
+# print("    kong_model2_dir:", kong_model2_dir)
+#############################################################################################################################################################################################################
+
 ### ...\碩一下 多媒體助教 密碼107summer\碩一下 多媒體助教\teach_filter_merge_ok\teach_filter_merge_ok
 from kong_util.build_dataset_combine import Check_dir_exist_and_build
 import numpy as np
@@ -154,7 +173,8 @@ if(__name__ == "__main__"):
     x_t_gray = np.tile(x_t, (1, 1, 3)) / x_t.max()
     meshgrid = np.concatenate([x_t, y_t], axis=-1)
 
-    coord_color = np.dstack( (x / x.max(), y / y.max(), mask) )
+    coord_color_blue = np.dstack( (x / x.max(), y / y.max(), mask) )
+    coord_color_red  = np.dstack( (mask, y / y.max(), x / x.max()) )
 
     ### 轉 np.uint8 是為了 讓格子裡的字沒有小數點喔
     # Image_to_grid(x    .astype(np.uint8), fig_size= 5.8, out_file_name="map_x")
@@ -164,4 +184,5 @@ if(__name__ == "__main__"):
     # Image_to_grid(x    .astype(np.uint8), fig_size= 5.8, out_file_name="map_x_gray", color_list=x_t_gray)
 
     ### 這裡因為 empty_grid 為 True， img_1ch 只要 shape有對就好，直要丟 x, y 都沒差喔
-    Image_to_grid(x     .astype(np.uint8), fig_size= 5.8, out_file_name="map_color_blue", color_list=coord_color, empty_grid=True, dst_dir="grid_util_result")
+    Image_to_grid(x     .astype(np.uint8), fig_size= 5.8, out_file_name="map_color_blue", color_list=coord_color_blue, empty_grid=True, dst_dir="grid_util_result")
+    Image_to_grid(x     .astype(np.uint8), fig_size= 5.8, out_file_name="map_color_red" , color_list=coord_color_red , empty_grid=True, dst_dir="grid_util_result")
