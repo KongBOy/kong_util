@@ -7,6 +7,7 @@ from tqdm import tqdm
 
 
 def Visit_sub_dir_include_self_and_get_dir_paths(src_dir, dir_containor):
+    import os
     '''
     從 function 外面 傳 dir_containor 近來， 直接對 containor 渲染， 所以不用return， 我覺得這樣最省空間不用建立一堆list 所以就用這樣的寫法囉～
     '''
