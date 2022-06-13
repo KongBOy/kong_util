@@ -198,10 +198,11 @@ def bilinear_sampler(img, x, y):
     Ic = get_pixel_value(img, x1, y0)
     Id = get_pixel_value(img, x1, y1)
 
-    import matplotlib.pyplot as plt
-    import numpy as np
-    plt.imshow(Ia[0].numpy().astype(np.uint8))
-    plt.show()
+    # import matplotlib.pyplot as plt
+    # import numpy as np
+    # plt.figure()
+    # plt.imshow(Ia[0].numpy().astype(np.uint8))
+    # plt.show()
 
     # recast as float for delta calculation
     x0 = tf.cast(x0, 'float32')
