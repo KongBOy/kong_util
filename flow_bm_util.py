@@ -75,6 +75,67 @@ def use_flow_to_get_bm(flow):
     result = np.stack([vy, vx], axis=-1)  ### (540, 540, 2), ch1:y, ch2:x
     return result
 
+def use_flow_to_rec(dis_img, flow, debug_show=False):
+    '''
+    input:
+        flow: H, W, 3， ch1:Mask, ch2:y, ch3:x
+
+    參考code：https://github.com/cvlab-stonybrook/doc3D-dataset/issues/2
+
+    fl: the forward mapping in range [0,1]
+    s: shape of the image required to sample from, defines the range of image coordinates in
+
+    result: 值域 0~1
+    '''
+    flow = flow.copy()
+    flow [..., 1] = 1 - flow[..., 1]  ### y 上下 flip， 因為blender 裡面 y軸朝上， 影像的 y軸朝下
+    fl = flow  ### (540, 540, 3)
+    # msk = fl[:, :, 0] > 0    ### (540, 540)  ### 原本的DewarpNet這樣寫，但是可能是他們處理得很乾淨吧所以可以這樣，我的有雜邊所以需要 >=1 喔！
+
+    ### meshgrid 和 griddata 有匹配
+    sh = dis_img.shape[0]
+    sw = dis_img.shape[1]  ##340
+    fl = cv2.blur(fl, (3, 3))
+    fl = cv2.resize(fl, (sw, sh))
+    s2 = np.array([[[1, sh, sw]]])
+    fl_s   = fl * s2
+
+    msk = fl[:, :, 0] >= 0.99  # 1  ### 幹真的差好多，這樣就對了，self.mask是(540, 540, 3)，msk是(540, 540)所以這行還是要有喔， 原版只有 >0
+
+    fl_s_m = fl_s[msk][:, ::-1]   ### (143217, 3), mask, y, x，改成 x, y, mask，讓下面scipy.interpolate.griddata(第一個參數是 先x)比較好用
+
+    ch0 = dis_img[msk][..., 0]
+    ch1 = dis_img[msk][..., 1]
+    ch2 = dis_img[msk][..., 2]
+
+    grid = np.meshgrid(np.linspace(1, sw, sw), np.linspace(1, sh, sh))  ### meshgrid(先x, 再y)，return 也是 [先x, 再y]，shape為 [x(h540, w340), y(h540, w340)]
+
+    ch0_interplate = spin.griddata(fl_s_m[:, :2], ch0, tuple(grid), method='nearest')
+    ch1_interplate = spin.griddata(fl_s_m[:, :2], ch1, tuple(grid), method='nearest')
+    ch2_interplate = spin.griddata(fl_s_m[:, :2], ch2, tuple(grid), method='nearest')
+
+    rec = np.stack([ch0_interplate, ch1_interplate, ch2_interplate], axis=-1)  ### (540, 540, 2), ch1:y, ch2:x
+
+    if(debug_show):
+        import matplotlib.pyplot as plt
+        canvas_size = 5
+        nrows = 2
+        ncols = 4
+        fig, ax = plt.subplots(nrows=nrows, ncols=ncols, figsize=(canvas_size * ncols, canvas_size * nrows))
+        ax[0, 0].imshow(dis_img[..., 0])
+        ax[0, 1].imshow(dis_img[..., 1])
+        ax[0, 2].imshow(dis_img[..., 2])
+        ax[0, 3].imshow(dis_img)
+
+        ax[1, 0].imshow(ch0_interplate)
+        ax[1, 1].imshow(ch1_interplate)
+        ax[1, 2].imshow(ch2_interplate)
+        ax[1, 3].imshow(rec)
+        fig.tight_layout()
+        plt.show()
+
+    return rec
+
 # def use_bm_to_rec_img_old(bm, flow_scale, dis_img):
 #     bm = np.around(bm * flow_scale)
 
