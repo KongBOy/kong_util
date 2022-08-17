@@ -245,12 +245,21 @@ def get_dir_mats(ord_dir, key):
     return np.array(imgs)
 
 
-def get_db_amount(ord_dir):
+def get_db_npy_knpy_amount(ord_dir):
     dir_containor = []
     file_amount = 0
     Visit_sub_dir_include_self_and_get_dir_paths(ord_dir, dir_containor=dir_containor)
     for dir_path in dir_containor:
         file_names = [file_name for file_name in os.listdir(dir_path) if Check_img_filename(file_name) or (".npy" in file_name) or (".knpy" in file_name) ]
+        file_amount += len(file_names)
+    return file_amount
+
+def get_db_jpg_png_amount(ord_dir):
+    dir_containor = []
+    file_amount = 0
+    Visit_sub_dir_include_self_and_get_dir_paths(ord_dir, dir_containor=dir_containor)
+    for dir_path in dir_containor:
+        file_names = [file_name for file_name in os.listdir(dir_path) if Check_img_filename(file_name) or (".jpg" in file_name) or (".png" in file_name) ]
         file_amount += len(file_names)
     return file_amount
 
