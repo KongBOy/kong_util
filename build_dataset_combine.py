@@ -857,7 +857,7 @@ def Convert_dir_pdf_to_jpg(ord_dir, dst_dir="pdf_to_jpg_result", print_msg=False
     使用前的安裝：https://github.com/Belval/pdf2image
         1.  pip install pdf2image
         2a. 去 https://github.com/oschwartz10612/poppler-windows/releases/ 下載 Release-21.09.0.zip
-        2b. zip解壓縮，poppler-21.09.0/Library/bin 資料夾加入 環境變數 Path中
+        2b. zip解壓縮，poppler-21.09.0/Library/bin 資料夾加入 環境變數 Path中(建議解壓縮下來的東西放在C槽下，因為加入Path裡的路徑不能有中文，放C槽下最保險)
     '''
     from pdf2image import convert_from_path
     Check_dir_exist_and_build(dst_dir)
