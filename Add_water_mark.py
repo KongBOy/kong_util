@@ -4,11 +4,13 @@ import os
 import matplotlib.pyplot as plt
 
 def imread_chinese(img_path):
+    ### 參考: https://beabow2.medium.com/opencv-python-%E5%9C%96%E7%89%87%E5%9B%A0%E8%B7%AF%E5%BE%91%E5%90%AB%E6%9C%89%E4%B8%AD%E6%96%87%E7%84%A1%E6%B3%95%E4%BD%BF%E7%94%A8cv2-imread-%E8%AE%80%E5%8F%96%E7%9A%84%E8%A7%A3%E6%B1%BA%E6%96%B9%E6%B3%95-892f47eb02fd
     img = cv2.imdecode(np.fromfile(img_path, dtype=np.uint8), -1)
     # img = cv2.cvtColor(logo, cv2.COLOR_BGR2RGB)
     return img
 
 def imwrite_chinese(img_path:str, img):
+    ### 參考: https://blog.csdn.net/weixin_44912159/article/details/109920202
     cv2.imencode("." + img_path.split(".")[-1], img)[1].tofile(img_path)
 
 def add_water_mark(img_path, logo_path, result_path, result_ratio=None, u_crop=None, d_crop=None, l_crop=None, r_crop=None):
